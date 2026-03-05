@@ -8,7 +8,9 @@
  * whichever happens last.
  */
 
-const BACKEND = ""; // Relative — Vite proxy forwards /did/* to localhost:8181
+import { API_BASE_URL } from "../config";
+
+const BACKEND = API_BASE_URL; // Routes /did/* to Railway backend
 
 async function backendFetch<T>(method: string, path: string, body?: unknown): Promise<T> {
     const res = await fetch(`${BACKEND}${path}`, {

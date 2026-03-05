@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { searchJobs, Job } from "@/services/jobService";
 import { toast } from "sonner";
+import { JobSidebar } from "@/components/jobs/JobSidebar";
 
 const filters = {};
 
@@ -26,6 +27,7 @@ export default function Jobs() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [savedJobs, setSavedJobs] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState("Best Match");
+  const [selectedRole, setSelectedRole] = useState<string>("");
 
   const parseDate = (dateStr: string) => {
     const now = new Date();
@@ -136,6 +138,13 @@ export default function Jobs() {
     toast.success(savedJobs.includes(jobId) ? "Job unsaved" : "Job saved to your profile");
   };
 
+  const handleRoleSelect = (role: string) => {
+    setSelectedRole(role);
+    setSearchQuery(role);
+    fetchJobs(role);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -179,138 +188,147 @@ export default function Jobs() {
             </form>
           </motion.div>
 
-          <div className="max-w-4xl mx-auto space-y-4">
-            {/* Results Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center justify-between"
-            >
-              <div className="text-sm text-muted-foreground flex items-center gap-2">
-                {isRefreshing ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Finding best matches...
-                  </>
-                ) : (
-                  <>
-                    <span className="text-foreground font-medium">{jobs.length}</span> jobs found matching your profile
-                  </>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-secondary border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
-                >
-                  <option>Best Match</option>
-                  <option>Most Recent</option>
-                  <option>Highest Salary</option>
-                </select>
-              </div>
-            </motion.div>
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar */}
+            <aside className="lg:sticky lg:top-24 h-fit">
+              <JobSidebar
+                onSelectRole={handleRoleSelect}
+                selectedRole={selectedRole}
+              />
+            </aside>
 
-            {/* Job Listings */}
-            <div className="space-y-4">
-              {/* Job Cards */}
-              {isRefreshing ? (
-                <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                  <div className="relative">
-                    <div className="h-12 w-12 rounded-full border-t-2 border-accent animate-spin"></div>
-                    <Sparkles className="h-6 w-6 text-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                  </div>
-                  <p className="text-muted-foreground text-sm animate-pulse">Analyzing thousands of opportunities...</p>
+            {/* Main Content */}
+            <div className="flex-1 space-y-4">
+              {/* Results Header */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center justify-between"
+              >
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  {isRefreshing ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Finding best matches...
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-foreground font-medium">{jobs.length}</span> jobs found matching your profile
+                    </>
+                  )}
                 </div>
-              ) : jobs.length > 0 ? (
-                <>
-                  {jobs.map((job, index) => (
-                    <motion.div
-                      key={job.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 * (index % 10) }}
-                      className="glass-card-hover p-6 group"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                            <Building2 className="h-6 w-6 text-foreground" />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-secondary border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  >
+                    <option>Best Match</option>
+                    <option>Most Recent</option>
+                    <option>Highest Salary</option>
+                  </select>
+                </div>
+              </motion.div>
+
+              {/* Job Listings */}
+              <div className="space-y-4">
+                {/* Job Cards */}
+                {isRefreshing ? (
+                  <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                    <div className="relative">
+                      <div className="h-12 w-12 rounded-full border-t-2 border-accent animate-spin"></div>
+                      <Sparkles className="h-6 w-6 text-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    </div>
+                    <p className="text-muted-foreground text-sm animate-pulse">Analyzing thousands of opportunities...</p>
+                  </div>
+                ) : jobs.length > 0 ? (
+                  <>
+                    {jobs.map((job, index) => (
+                      <motion.div
+                        key={job.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * (index % 10) }}
+                        className="glass-card-hover p-6 group"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                              <Building2 className="h-6 w-6 text-foreground" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold group-hover:text-accent transition-colors">
+                                {job.title}
+                              </h3>
+                              <p className="text-muted-foreground">{job.company}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="text-lg font-semibold group-hover:text-accent transition-colors">
-                              {job.title}
-                            </h3>
-                            <p className="text-muted-foreground">{job.company}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 rounded-full bg-success/10 text-success text-sm font-medium">
+                              {job.match}% match
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => toggleSave(job.id)}
+                              className={savedJobs.includes(job.id) ? "text-accent" : "text-muted-foreground"}
+                            >
+                              <Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-3 py-1 rounded-full bg-success/10 text-success text-sm font-medium">
-                            {job.match}% match
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => toggleSave(job.id)}
-                            className={savedJobs.includes(job.id) ? "text-accent" : "text-muted-foreground"}
-                          >
-                            <Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} />
+
+                        <div className="flex flex-wrap gap-4 mb-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {job.location}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-4 w-4" />
+                            {job.salary}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {job.posted}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {job.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <Button variant="hero" size="sm" className="gap-2">
+                            <Send className="h-4 w-4" />
+                            Quick Apply
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => job.url && window.open(job.url, '_blank')}>
+                            View Details
                           </Button>
                         </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-4 mb-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {job.location}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          {job.salary}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {job.posted}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {job.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <Button variant="hero" size="sm" className="gap-2">
-                          <Send className="h-4 w-4" />
-                          Quick Apply
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => job.url && window.open(job.url, '_blank')}>
-                          View Details
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  {/* No more Load More needed as we fetch all upfront */}
-                </>
-              ) : (
-                <div className="text-center py-20 glass-card">
-                  <Briefcase className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No jobs found</h3>
-                  <p className="text-muted-foreground italic text-sm">Try adjusting your search to see more results.</p>
-                  <Button variant="outline" className="mt-6" onClick={() => fetchJobs("")}>
-                    Show All Jobs
-                  </Button>
-                </div>
-              )}
+                      </motion.div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center py-20 glass-card">
+                    <Briefcase className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No jobs found</h3>
+                    <p className="text-muted-foreground italic text-sm">Try adjusting your search to see more results.</p>
+                    <Button variant="outline" className="mt-6" onClick={() => fetchJobs("")}>
+                      Show All Jobs
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

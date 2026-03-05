@@ -13,11 +13,13 @@ import {
   AlertCircle,
   Edit3,
   Trash2,
-  CheckCircle2
+  CheckCircle2,
+  History
 } from "lucide-react";
 
 import { useResume } from "@/hooks/useResume";
 import { useNavigate } from "react-router-dom";
+import { GapAnalysisPanel } from "@/components/resume/GapAnalysisPanel";
 import {
   Select,
   SelectContent,
@@ -33,7 +35,7 @@ const suggestions = [
 ];
 
 export default function Resume() {
-  const [activeTab, setActiveTab] = useState<"build" | "upload">("build");
+  const [activeTab, setActiveTab] = useState<"build" | "upload" | "gap-analysis">("build");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAnalysisVisible, setIsAnalysisVisible] = useState(false);
   const {
@@ -105,7 +107,7 @@ export default function Resume() {
                 transition={{ delay: 0.1 }}
                 className="glass-card p-6"
               >
-                <div className="flex gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 mb-6">
                   <Button
                     variant={activeTab === "build" ? "default" : "ghost"}
                     onClick={() => setActiveTab("build")}
@@ -121,6 +123,14 @@ export default function Resume() {
                   >
                     <Upload className="h-4 w-4" />
                     Upload & Optimize
+                  </Button>
+                  <Button
+                    variant={activeTab === "gap-analysis" ? "default" : "ghost"}
+                    onClick={() => setActiveTab("gap-analysis")}
+                    className="gap-2"
+                  >
+                    <History className="h-4 w-4" />
+                    Gap Analysis
                   </Button>
                 </div>
 
@@ -143,7 +153,7 @@ export default function Resume() {
                       </Button>
                     </div>
                   </div>
-                ) : (
+                ) : activeTab === "upload" ? (
                   <div className="space-y-4">
                     <div
                       className="p-8 border-2 border-dashed border-border rounded-xl text-center hover:border-accent/50 transition-colors cursor-pointer"
@@ -172,6 +182,8 @@ export default function Resume() {
                       </Button>
                     </div>
                   </div>
+                ) : (
+                  <GapAnalysisPanel resumes={resumes} />
                 )}
               </motion.div>
 

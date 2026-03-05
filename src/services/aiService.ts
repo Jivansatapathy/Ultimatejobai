@@ -4,7 +4,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '3.11.174'}/pdf.worker.min.js`;
 
-import { Resume, ATSAnalysis } from "../types/resume";
+import { Resume, ATSAnalysis, GapAnalysis } from "../types/resume";
 import api from "@/services/api";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -277,4 +277,74 @@ export const suggestSummary = async (data: Partial<Resume>): Promise<string> => 
         contents: `Write a compelling, 3-sentence professional summary for a resume based on these details: ${JSON.stringify(data)}`,
     });
     return response.text || "";
+};
+
+export const performGapAnalysis = async (
+    resume: Resume,
+    jobRole: string,
+    jobDescription: string,
+    experienceYrs: string
+): Promise<GapAnalysis> => {
+    const response = await ai.models.generateContent({
+        model: "gemini-1.5-pro", // Using Pro for deeper analysis
+        contents: `You are an expert Career Strategist and Technical Recruiter. Perform a DEEP GAP ANALYSIS between the provided resume and the target job requirements.
+
+RESUME: ${JSON.stringify(resume)}
+TARGET ROLE: ${jobRole}
+TOTAL EXP REQUIRED: ${experienceYrs} years
+JOB DESCRIPTION: ${jobDescription}
+
+CRITICAL OBJECTIVE: 
+1. Identify EXACT technical skills missing (Hard Gaps).
+2. Identify soft skills or behavioral competencies missing (Soft Gaps).
+3. Evaluate experience gap (Years, Industry, or Responsibility level).
+4. Provide a "Perfect Roadmap" - a step-by-step actionable plan to bridge these gaps. Include specific project ideas, certifications, or technologies to learn.
+5. Provide a Match Score (0-100).`,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    matchScore: { type: Type.NUMBER },
+                    technicalGaps: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                skill: { type: Type.STRING },
+                                importance: { type: Type.STRING, enum: ["Critical", "High", "Medium"] },
+                                why: { type: Type.STRING }
+                            }
+                        }
+                    },
+                    softSkillGaps: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                    },
+                    experienceGap: { type: Type.STRING },
+                    roadmap: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                step: { type: Type.STRING },
+                                action: { type: Type.STRING },
+                                timeframe: { type: Type.STRING },
+                                resource: { type: Type.STRING }
+                            }
+                        }
+                    },
+                    advancedTips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                },
+                required: ["matchScore", "technicalGaps", "softSkillGaps", "experienceGap", "roadmap"]
+            }
+        }
+    });
+
+    try {
+        return JSON.parse(response.text || '{}');
+    } catch (error) {
+        console.error("Failed to parse Gap Analysis:", error);
+        throw new Error("Failed to generate Gap Analysis.");
+    }
 };

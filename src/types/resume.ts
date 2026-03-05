@@ -80,3 +80,21 @@ export interface SectionFeedback {
     improvement: string;
     priority: 'High' | 'Medium' | 'Low';
 }
+
+export interface GapAnalysis {
+    matchScore: number;
+    technicalGaps: Array<{
+        skill: string;
+        importance: 'Critical' | 'High' | 'Medium';
+        why: string;
+    }>;
+    softSkillGaps: string[];
+    experienceGap: string;
+    roadmap: Array<{
+        step: string;
+        action: string;
+        timeframe: string;
+        resource: string;
+    }>;
+    advancedTips?: string[];
+}

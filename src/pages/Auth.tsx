@@ -43,10 +43,6 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.email.toLowerCase().endsWith('@university.com')) {
-      toast.error("Only @university.com email addresses are allowed.");
-      return;
-    }
 
     setLoading(true);
 

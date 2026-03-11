@@ -163,7 +163,7 @@ export default function Resume() {
                         type="file"
                         ref={fileInputRef}
                         className="hidden"
-                        accept=".pdf,.docx,.doc"
+                        accept=".pdf"
                         onChange={handleFileUpload}
                       />
                       <div className="inline-flex p-4 rounded-full bg-secondary mb-4">

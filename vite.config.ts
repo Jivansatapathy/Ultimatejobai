@@ -6,17 +6,17 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
     proxy: {
       "/api": {
-        target: "https://jobai-production-7672.up.railway.app",
+        target: "http://localhost:8000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "/api"),
       },
-      // D-ID streaming proxy — routes /did/* to Railway backend
+      // D-ID streaming proxy
       "/did": {
-        target: "https://interviewai-production-c272.up.railway.app",
+        target: "http://localhost:8000",
         changeOrigin: true,
       },
     },

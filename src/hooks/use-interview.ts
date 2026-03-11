@@ -22,6 +22,7 @@ export function useInterview() {
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [validationFeedback, setValidationFeedback] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isRenderingVideo, setIsRenderingVideo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -44,28 +45,15 @@ export function useInterview() {
         });
         setState(initialState);
       } else if (error.status === 400) {
-        if (error.message.includes("finished")) {
+        if (error.message.toLowerCase().includes("finished")) {
           toast({
             title: "Interview completed",
             description: "This interview has already ended. Please view your feedback.",
           });
         } else {
-          // Instead of just a toast, let's add an interviewer message to the chat
-          const validationMessage: Message = {
-            role: "interviewer",
-            content: "I'm sorry, but I'll need a bit more detail in your response to properly evaluate it. Could you please expand on that?",
-            timestamp: new Date(),
-          };
-
-          setState((prev) => ({
-            ...prev,
-            messages: [...prev.messages, validationMessage],
-            loading: false,
-          }));
-
           toast({
-            title: "More detail needed",
-            description: "Please provide a more comprehensive answer.",
+            title: "Error",
+            description: error.message || "An error occurred with your request.",
           });
         }
       } else {
@@ -98,11 +86,43 @@ export function useInterview() {
         setState({
           ...initialState,
           sessionId: response.session_id,
-          interviewType: response.interview_type,
-          jobDescription: response.job_description || jobDescription || null,
+          interviewType: type,
+          jobDescription: jobDescription || null,
           messages: [firstMessage],
           loading: false,
+          questionCount: 0,
+          minQuestions: response.min_questions || 0,
+          maxQuestions: response.max_questions || 10,
         });
+      } catch (error) {
+        handleError(error);
+      }
+    },
+    [handleError]
+  );
+
+  const startLocalInterview = useCallback(
+    async (type: InterviewType, jobDescription?: string) => {
+      setState((prev) => ({ ...prev, loading: true }));
+      try {
+        const response = await api.startLocalInterview(type, jobDescription);
+        const firstMessage: Message = {
+          role: "interviewer",
+          content: response.interviewer_message,
+          timestamp: new Date(),
+        };
+        setState({
+          ...initialState,
+          sessionId: response.session_id,
+          interviewType: type,
+          jobDescription: jobDescription || null,
+          messages: [firstMessage],
+          loading: false,
+          questionCount: response.question_count,
+          minQuestions: response.min_questions,
+          maxQuestions: response.max_questions,
+        });
+        setAudioUrl(response.interviewer_audio_url);
       } catch (error) {
         handleError(error);
       }
@@ -130,13 +150,12 @@ export function useInterview() {
           setValidationFeedback(response.suggestions || response.message || null);
         } catch (error) {
           console.error("Validation error:", error);
-          // On error, we default to valid to not block the user if the validation service is down
           setIsValid(true);
           setValidationFeedback(null);
         } finally {
           setIsValidating(false);
         }
-      }, 800); // 800ms debounce
+      }, 800);
     },
     [state.sessionId]
   );
@@ -151,9 +170,6 @@ export function useInterview() {
         timestamp: new Date(),
       };
 
-      setIsValid(null);
-      setValidationFeedback(null);
-
       setState((prev) => ({
         ...prev,
         messages: [...prev.messages, candidateMessage],
@@ -165,7 +181,6 @@ export function useInterview() {
       try {
         const response = await api.sendMessage(state.sessionId, content);
 
-        // Simulate a brief typing delay for natural feel
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         const interviewerMessage: Message = {
@@ -178,8 +193,8 @@ export function useInterview() {
           ...prev,
           messages: [...prev.messages, interviewerMessage],
           questionCount: response.question_count,
-          minQuestions: response.min_questions,
-          maxQuestions: response.max_questions,
+          minQuestions: response.min_questions || prev.minQuestions,
+          maxQuestions: response.max_questions || prev.maxQuestions,
           isFinished: response.is_finished,
           loading: false,
         }));
@@ -190,6 +205,55 @@ export function useInterview() {
       }
     },
     [state.sessionId, state.isFinished, handleError]
+  );
+
+  const submitLocalAnswer = useCallback(
+    async (audioBlob: Blob) => {
+      if (!state.sessionId || state.isFinished) return;
+
+      setState((prev) => ({ ...prev, loading: true }));
+      setIsTyping(true);
+
+      try {
+        const response = await api.processLocalAnswer(state.sessionId, audioBlob);
+
+        const candidateMessage: Message = {
+          role: "candidate",
+          content: response.transcription,
+          timestamp: new Date(),
+        };
+
+        const newMessages = [...state.messages, candidateMessage];
+
+        if (response.status === "finished") {
+          setState((prev) => ({
+            ...prev,
+            messages: newMessages,
+            isFinished: true,
+            loading: false,
+          }));
+        } else if (response.interviewer_message && response.interviewer_audio_url) {
+          const interviewerMessage: Message = {
+            role: "interviewer",
+            content: response.interviewer_message,
+            timestamp: new Date(),
+          };
+
+          setState((prev) => ({
+            ...prev,
+            messages: [...newMessages, interviewerMessage],
+            questionCount: response.question_count || prev.questionCount,
+            loading: false,
+          }));
+          setAudioUrl(response.interviewer_audio_url);
+        }
+      } catch (error) {
+        handleError(error);
+      } finally {
+        setIsTyping(false);
+      }
+    },
+    [state.sessionId, state.isFinished, state.messages, handleError]
   );
 
   const getFeedback = useCallback(async () => {
@@ -211,8 +275,35 @@ export function useInterview() {
   const resetInterview = useCallback(() => {
     setState(initialState);
     setVideoUrl(null);
+    setAudioUrl(null);
     setIsRenderingVideo(false);
   }, []);
+
+  const renderVideo = useCallback(async () => {
+    if (!state.sessionId) return;
+    setIsRenderingVideo(true);
+    toast({
+      title: "Rendering video…",
+      description: "This may take 3–10 minutes. Please keep this tab open.",
+    });
+    try {
+      const response = await api.renderVideo(state.sessionId, true);
+      if (response.status === "done" && response.video_url) {
+        setVideoUrl(response.video_url);
+        toast({ title: "Video ready!", description: "Your interview video has been rendered." });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Video rendering failed",
+          description: response.logs?.[response.logs.length - 1] || "Unknown error",
+        });
+      }
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsRenderingVideo(false);
+    }
+  }, [state.sessionId, handleError]);
 
   const exportTranscript = useCallback(() => {
     if (state.messages.length === 0) return;
@@ -239,38 +330,8 @@ export function useInterview() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
-    toast({
-      title: "Transcript exported",
-      description: "Your interview transcript has been downloaded.",
-    });
-  }, [state.messages, state.interviewType, state.feedback]);
-
-  const renderVideo = useCallback(async () => {
-    if (!state.sessionId) return;
-    setIsRenderingVideo(true);
-    toast({
-      title: "Rendering video…",
-      description: "This may take 3–10 minutes. Please keep this tab open.",
-    });
-    try {
-      const response = await api.renderVideo(state.sessionId, true);
-      if (response.status === "done" && response.video_url) {
-        setVideoUrl(response.video_url);
-        toast({ title: "Video ready!", description: "Your interview video has been rendered." });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Video rendering failed",
-          description: response.logs?.at(-1) || "Unknown error",
-        });
-      }
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setIsRenderingVideo(false);
-    }
-  }, [state.sessionId, handleError]);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }, [state]);
 
   return {
     state,
@@ -279,14 +340,17 @@ export function useInterview() {
     isValid,
     validationFeedback,
     videoUrl,
+    audioUrl,
     isRenderingVideo,
     messagesEndRef,
-    startInterview,
-    sendMessage,
     validateMessage,
+    sendMessage,
+    submitLocalAnswer,
+    startInterview,
+    startLocalInterview,
     getFeedback,
-    renderVideo,
     resetInterview,
+    renderVideo,
     exportTranscript,
   };
 }

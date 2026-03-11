@@ -1,10 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '@/config';
 
 const api = axios.create({
-    // In production, use the full Railway URL. In development, use '/' to support the Vite proxy.
-    baseURL: import.meta.env.PROD
-        ? 'https://jobai-production-7672.up.railway.app/'
-        : '/',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },

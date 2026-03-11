@@ -1,9 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, Video } from "lucide-react";
+import { MessageSquare, Video, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ModeSelectorProps {
-    onSelect: (mode: "text" | "video") => void;
+    onSelect: (mode: "text" | "audio") => void;
 }
 
 export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
@@ -12,7 +12,7 @@ export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
             <div className="text-center space-y-4 mb-12">
                 <h2 className="text-4xl font-bold tracking-tight">Choose Interview Mode</h2>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    Practice your skills with a traditional text-based interface or an immersive AI voice avatar.
+                    Practice your skills with a traditional text-based interface or an immersive AI voice interview.
                 </p>
             </div>
 
@@ -39,23 +39,25 @@ export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
 
                 <Card
                     className="cursor-pointer transition-all hover:scale-105 hover:border-primary/50 relative overflow-hidden"
-                    onClick={() => onSelect("video")}
+                    onClick={() => onSelect("audio")}
                 >
                     <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 rounded-bl-lg text-xs font-bold">
                         NEW
                     </div>
                     <CardHeader>
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                            <Video className="h-6 w-6 text-primary" />
+                        <div className="flex gap-4 mb-4">
+                            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <Volume2 className="h-6 w-6 text-primary" />
+                            </div>
                         </div>
-                        <CardTitle className="text-2xl">Video Interview</CardTitle>
+                        <CardTitle className="text-2xl">Audio Interview</CardTitle>
                         <CardDescription className="text-base text-muted-foreground">
-                            An immersive experience featuring an AI avatar. Speak your answers naturally and hear the AI recruiter talk back to you!
+                            An immersive experience powered by GROQ. Speak naturally and hear the AI recruiter talk back!
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="text-sm font-medium text-primary flex items-center gap-2 mt-4">
-                            Select Mode →
+                            Select Voice Mode →
                         </div>
                     </CardContent>
                 </Card>

@@ -24,13 +24,16 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
     const {
         state,
         isTyping,
-        startInterview,
         sendMessage,
+        submitLocalAnswer,
         getFeedback,
         renderVideo,
         videoUrl,
+        audioUrl,
         isRenderingVideo,
         resetInterview,
+        startInterview,
+        startLocalInterview,
         exportTranscript,
     } = useInterview();
 
@@ -52,13 +55,17 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
     const [isTracking, setIsTracking] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
 
-    // D-ID avatar state
+    // D-ID avatar state (now unused but keeping refs for minimal breakage)
     const didVideoRef = useRef<HTMLVideoElement>(null);
-    const didStreamRef = useRef<MediaStream | null>(null); // holds the WebRTC stream
     const [didReady, setDidReady] = useState(false);
     const [didConnecting, setDidConnecting] = useState(false);
 
-    // When D-ID stream becomes ready: wire video + trigger first talk to show the avatar
+    // Local recording state
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+
+    // D-ID logic removed as it is currently unused and using GROQ only
+    /*
     useEffect(() => {
         if (!didReady || !didVideoRef.current || !didStreamRef.current) return;
 
@@ -76,62 +83,14 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [didReady]);
+    */
 
-    // Initialize Speech Recognition
+    // Removed Browser SpeechRecognition to use GROQ STT via backend
     useEffect(() => {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = true;
-
-            recognitionRef.current.onresult = (event: any) => {
-                let currentTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    currentTranscript += event.results[i][0].transcript;
-                }
-                setTranscript(currentTranscript);
-            };
-
-            recognitionRef.current.onerror = (event: any) => {
-                console.error("Speech recognition error", event.error);
-                if (event.error !== 'no-speech') {
-                    setIsListening(false);
-                    toast({
-                        title: "Microphone Error",
-                        description: `Could not access microphone: ${event.error}`,
-                        variant: "destructive"
-                    });
-                }
-            };
-
-            recognitionRef.current.onend = () => {
-                // Auto restart if still supposed to be listening
-                if (isListening && recognitionRef.current) {
-                    try {
-                        recognitionRef.current.start();
-                    } catch (e) {
-                        setIsListening(false);
-                    }
-                } else {
-                    setIsListening(false);
-                }
-            };
-        } else {
-            toast({
-                title: "Not Supported",
-                description: "Your browser does not support Speech Recognition.",
-                variant: "destructive"
-            });
-        }
-
         return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
             stopSpeaking();
         };
-    }, [isListening]);
+    }, []);
 
     // Initialize Face Detection
     useEffect(() => {
@@ -219,100 +178,73 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
     }, [state.messages, isTyping, state.isFinished]);
 
 
-    // Speak AI questions — D-ID avatar if ready, silent if connecting, ElevenLabs otherwise
+    // Speak AI questions
     const speak = async (text: string) => {
-        if (didReady) {
-            // D-ID is live — speak through the avatar
-            try {
-                await sendTalkToDID(text);
-                setIsSpeaking(true);
-                const wordCount = text.split(" ").length;
-                setTimeout(() => setIsSpeaking(false), wordCount * 400 + 1000);
-            } catch (e) {
-                console.warn("[D-ID talk] failed, falling back to ElevenLabs:", e);
-                speakWithElevenLabs(text, setIsSpeaking);
-            }
-        } else if (!didConnecting) {
-            // D-ID not configured / not connecting — use ElevenLabs
-            speakWithElevenLabs(text, setIsSpeaking);
-        }
-        // If didConnecting=true, stay silent — useEffect([didReady]) will speak when ready
+        // Audio mode: the backend provides a .wav URL in audioUrl.
+        // We handle playback via the <audio> element in the JSX.
+        console.log("AI needs to speak:", text);
     };
 
     const handleStart = async () => {
         if (!selectedType || !isHealthy) return;
         setIsStarting(true);
-        await startInterview(selectedType, jobDescription);
+        // Start local interview as requested
+        await startLocalInterview(selectedType, jobDescription);
         setIsStarting(false);
         // Start camera tracking
         startTracking();
-        // Initialize D-ID avatar stream
-        if (isDIDConfigured()) {
-            setDidConnecting(true);
-            try {
-                await initDIDStream(
-                    (mediaStream) => {
-                        // Store stream in ref; useEffect will wire it to the video element
-                        didStreamRef.current = mediaStream;
-                        setDidConnecting(false);
-                        setDidReady(true);
-                    },
-                    (iceState) => {
-                        if (iceState === "failed" || iceState === "disconnected") {
-                            setDidReady(false);
-                            setDidConnecting(false);
-                        }
-                    }
-                );
-            } catch (err) {
-                console.error("[D-ID] Stream init failed:", err);
-                toast({
-                    title: "D-ID Avatar unavailable",
-                    description: "Falling back to animated avatar.",
-                });
-                setDidConnecting(false);
-            }
-        }
     };
 
     const handleRestart = () => {
         stopTracking();
-        destroyDIDStream().catch(() => { });
-        setDidReady(false);
-        setDidConnecting(false);
         setIsSpeaking(false);
         resetInterview();
         setSelectedType(null);
         setJobDescription("");
         setTranscript("");
-        if (isListening) toggleListening();
-        stopSpeaking();
-    };
-
-    const toggleListening = () => {
-        if (!recognitionRef.current) return;
-
         if (isListening) {
-            recognitionRef.current.stop();
-            setIsListening(false);
-        } else {
-            try {
-                setTranscript(""); // Clear old transcript
-                recognitionRef.current.start();
-                setIsListening(true);
-                stopSpeaking(); // Stop AI talking if user interrupts
-            } catch (e) {
-                console.error(e);
-            }
+             // stop recording if on
+             if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
+             setIsListening(false);
         }
     };
 
-    const handleSendSpokenResponse = () => {
-        if (!transcript.trim()) return;
-        sendMessage(transcript);
-        setTranscript("");
+    const toggleListening = async () => {
         if (isListening) {
-            toggleListening(); // Stop listening while AI thinks
+            // Stop recording
+            if (mediaRecorderRef.current) {
+                mediaRecorderRef.current.stop();
+            }
+            setIsListening(false);
+        } else {
+            // Start recording
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorderRef.current = mediaRecorder;
+                audioChunksRef.current = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunksRef.current.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+                    // The backend processLocalAnswer uses Groq Whisper for STT
+                    const resp = await submitLocalAnswer(audioBlob);
+                    
+                    // Stop tracks to release mic
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                setIsListening(true);
+            } catch (err) {
+                console.error("Mic access denied:", err);
+                toast({ title: "Mic Error", description: "Could not access microphone.", variant: "destructive" });
+            }
         }
     };
 
@@ -329,7 +261,7 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
                         <div className="p-2 rounded-xl bg-primary">
                             <Sparkles className="h-5 w-5 text-primary-foreground" />
                         </div>
-                        <h1 className="text-xl font-semibold">Video Interview Setup</h1>
+                        <h1 className="text-xl font-semibold">Audio Interview Setup</h1>
                     </div>
                     <div className="flex items-center gap-3">
                         <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
@@ -375,10 +307,10 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
                         {isStarting ? (
                             <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Connecting Audio/Video...
+                                Connecting Audio...
                             </>
                         ) : (
-                            "Start Video Interview"
+                            "Start Audio Interview"
                         )}
                     </button>
                 </main>
@@ -434,13 +366,40 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
                                     </div>
                                 )}
 
-                                {/* D-ID video — hidden until stream is ready */}
-                                <video
-                                    ref={didVideoRef}
-                                    autoPlay
-                                    playsInline
-                                    className={`w-full h-full object-cover transition-opacity duration-700 ${didReady ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}
-                                />
+                                {audioUrl && (
+                                    <audio
+                                        key={audioUrl}
+                                        src={audioUrl}
+                                        autoPlay
+                                        onEnded={() => setIsSpeaking(false)}
+                                        onPlay={() => setIsSpeaking(true)}
+                                        className="hidden"
+                                    />
+                                )}
+
+                                {videoUrl && (
+                                    <video
+                                        key={videoUrl}
+                                        ref={didVideoRef}
+                                        src={videoUrl}
+                                        autoPlay
+                                        playsInline
+                                        className={`w-full h-full object-cover transition-opacity duration-700 opacity-100`}
+                                        onEnded={() => setIsSpeaking(false)}
+                                        onPlay={() => setIsSpeaking(true)}
+                                    />
+                                )}
+
+                                {/* Floating Speaker Icon for Audio Mode indication */}
+                                <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+                                     <div className="bg-primary/20 backdrop-blur-md p-2 rounded-full border border-primary/30 shadow-lg animate-pulse">
+                                         <Volume2 className="h-6 w-6 text-primary" />
+                                     </div>
+                                     <div className="bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-white flex items-center gap-1 border border-white/10 uppercase tracking-widest font-bold">
+                                         <Sparkles className="h-3 w-3 text-amber-400" />
+                                         Groq Powered
+                                     </div>
+                                </div>
 
                                 {/* Loading screen — shown while D-ID is connecting */}
                                 {didConnecting && !didReady && (
@@ -558,10 +517,15 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
                                 </div>
                             )}
 
-                            {/* Spoken Response Preview */}
-                            {isListening && transcript && (
-                                <div className="bg-secondary p-4 rounded-xl shadow-inner border border-border">
-                                    <p className="text-muted-foreground">{transcript}</p>
+                            {/* Response Preview */}
+                            {isListening && (
+                                <div className="bg-secondary/50 p-6 rounded-xl shadow-inner border border-dashed border-primary/30 flex flex-col items-center justify-center gap-3 animate-pulse">
+                                    <div className="flex gap-1 justify-center items-end h-6">
+                                        {[...Array(5)].map((_, i) => (
+                                            <div key={i} className="w-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s`, height: `${40 + Math.random() * 60}%` }} />
+                                        ))}
+                                    </div>
+                                    <p className="text-primary font-medium">Recording Answer with GROQ STT...</p>
                                 </div>
                             )}
 
@@ -579,14 +543,6 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
                                     {isListening ? "Stop Recording" : "Speak Answer"}
                                 </button>
 
-                                {transcript && !isListening && (
-                                    <button
-                                        onClick={handleSendSpokenResponse}
-                                        className="h-14 rounded-full px-8 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-                                    >
-                                        Submit Answer
-                                    </button>
-                                )}
                             </div>
                         </div>
                     </>

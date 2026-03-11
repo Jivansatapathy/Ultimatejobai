@@ -13,9 +13,13 @@ import { API_BASE_URL } from "../config";
 const BACKEND = API_BASE_URL; // Routes /did/* to Railway backend
 
 async function backendFetch<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const token = localStorage.getItem('access_token');
     const res = await fetch(`${BACKEND}${path}`, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": token ? `Bearer ${token}` : ""
+        },
         body: body !== undefined ? JSON.stringify(body) : undefined,
     });
     if (!res.ok) {
@@ -46,7 +50,7 @@ export async function initDIDStream(
         session_id: string;
         offer: RTCSessionDescriptionInit;
         ice_servers: RTCIceServer[];
-    }>("POST", "/did/stream/create");
+    }>("POST", "/api/interviews/did/stream/create/");
 
     const { id: streamId, session_id: sessionId, offer, ice_servers: iceServers } = streamData;
     console.log("[D-ID] Session created:", streamId);
@@ -95,7 +99,7 @@ export async function initDIDStream(
     pc.onicecandidate = async (ev) => {
         if (!ev.candidate) return;
         try {
-            await backendFetch("POST", `/did/stream/${streamId}/ice`, {
+            await backendFetch("POST", `/api/interviews/did/stream/${streamId}/ice/`, {
                 candidate: ev.candidate.candidate,
                 sdpMid: ev.candidate.sdpMid,
                 sdpMLineIndex: ev.candidate.sdpMLineIndex,
@@ -110,7 +114,7 @@ export async function initDIDStream(
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer); // ICE gathering starts here — handler already set
-    await backendFetch("POST", `/did/stream/${streamId}/sdp`, {
+    await backendFetch("POST", `/api/interviews/did/stream/${streamId}/sdp/`, {
         answer: pc.localDescription,
         session_id: sessionId,
     });
@@ -126,7 +130,7 @@ export async function initDIDStream(
 export async function sendTalkToDID(text: string): Promise<void> {
     if (!activeDIDSession) return;
     const { streamId, sessionId } = activeDIDSession;
-    await backendFetch("POST", `/did/stream/${streamId}/talk`, {
+    await backendFetch("POST", `/api/interviews/did/stream/${streamId}/talk/`, {
         text: text.substring(0, 500),
         session_id: sessionId,
     });
@@ -138,7 +142,7 @@ export async function destroyDIDStream(): Promise<void> {
     activeDIDSession = null;
     pc.close();
     try {
-        await backendFetch("DELETE", `/did/stream/${streamId}?session_id=${sessionId}`);
+        await backendFetch("DELETE", `/api/interviews/did/stream/${streamId}/delete/?session_id=${sessionId}`);
     } catch (e) {
         console.warn("[D-ID] destroy failed:", e);
     }

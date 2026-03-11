@@ -13,21 +13,30 @@ import {
   Sparkles,
   Briefcase,
   TrendingUp,
-  Loader2
+  Loader2,
+  Zap
 } from "lucide-react";
 import { searchJobs, Job } from "@/services/jobService";
 import { toast } from "sonner";
 import { JobSidebar } from "@/components/jobs/JobSidebar";
-
-const filters = {};
+import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 
 export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [savedJobs, setSavedJobs] = useState<number[]>([]);
+  const [savedJobs, setSavedJobs] = useState<(string | number)[]>([]);
   const [sortBy, setSortBy] = useState("Best Match");
   const [selectedRole, setSelectedRole] = useState<string>("");
+  const [totalResults, setTotalResults] = useState(0);
+  const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
+  const [autoApplyOpen, setAutoApplyOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    location: "",
+    employment_type: "",
+    workplace_type: "",
+    job_type: ""
+  });
 
   const parseDate = (dateStr: string) => {
     const now = new Date();
@@ -57,62 +66,17 @@ export default function Jobs() {
     }
   };
 
-  const fetchJobs = async (query: string = "") => {
+  const fetchJobs = async (query: string = "", currentFilters: any = filters) => {
     setIsRefreshing(true);
-    let allJobs: Job[] = [];
-    const seenIds = new Set<number>();
-    let page = 1;
-    let hasNext = true;
-
     try {
-      while (hasNext) {
-        console.log(`[JobDiscovery] Fetching page ${page}...`);
-        const { jobs: newJobs, hasNext: apiHasNext } = await searchJobs(query, page);
+      // Single API call with page_size=100 — no slow multi-page loop
+      const { jobs: newJobs, totalResults: total } = await searchJobs(
+        query, 1, { ...currentFilters, page_size: 100 }
+      );
 
-        if (newJobs.length === 0) {
-          console.log(`[JobDiscovery] Page ${page} returned no jobs. Stopping loop.`);
-          break;
-        }
-
-        // Strict local filtering
-        const filteredNewJobs = query.trim() !== ""
-          ? newJobs.filter(job =>
-            job.title.toLowerCase().includes(query.toLowerCase()) ||
-            job.company.toLowerCase().includes(query.toLowerCase()) ||
-            job.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
-          )
-          : newJobs;
-
-        // Deduplication & Tracking new items
-        let newUniqueCount = 0;
-        filteredNewJobs.forEach(job => {
-          if (!seenIds.has(job.id)) {
-            seenIds.add(job.id);
-            allJobs.push(job);
-            newUniqueCount++;
-          }
-        });
-
-        console.log(`[JobDiscovery] Page ${page}: ${newJobs.length} total, ${filteredNewJobs.length} filtered, ${newUniqueCount} new unique jobs.`);
-
-        // If a page returns NO new unique jobs that match our filter, we might be looping over the last available page
-        if (newUniqueCount === 0 && filteredNewJobs.length > 0) {
-          console.log(`[JobDiscovery] Page ${page} returned no new items after deduplication. Stopping loop.`);
-          break;
-        }
-
-        hasNext = apiHasNext;
-        page++;
-
-        // Safety break for extremely large or misbehaving datasets
-        if (page > 50) {
-          console.warn(`[JobDiscovery] Safety break reached at page 50.`);
-          break;
-        }
-      }
-
-      console.log(`[JobDiscovery] Fetch complete. Total unique jobs found: ${allJobs.length}`);
-      setJobs(sortJobs(allJobs, sortBy));
+      const sorted = sortJobs(newJobs, sortBy);
+      setJobs(sorted);
+      setTotalResults(total || newJobs.length);
     } catch (error: any) {
       toast.error("Failed to fetch jobs: " + (error.response?.data?.message || error.message));
     } finally {
@@ -121,15 +85,22 @@ export default function Jobs() {
   };
 
   useEffect(() => {
-    fetchJobs(searchQuery);
-  }, [sortBy]);
+    const loadJobs = async () => {
+      await fetchJobs(searchQuery, filters);
+    };
+    loadJobs();
+  }, [sortBy, filters]);
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
-    fetchJobs(searchQuery);
+    fetchJobs(searchQuery, filters);
   };
 
-  const toggleSave = (jobId: number) => {
+  const handleFilterChange = (name: string, value: string) => {
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const toggleSave = (jobId: string | number) => {
     setSavedJobs(prev =>
       prev.includes(jobId)
         ? prev.filter(id => id !== jobId)
@@ -141,11 +112,12 @@ export default function Jobs() {
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role);
     setSearchQuery(role);
-    fetchJobs(role);
+    fetchJobs(role, filters);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <Navbar />
 
@@ -179,7 +151,27 @@ export default function Jobs() {
                   className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <select
+                  value={filters.employment_type}
+                  onChange={(e) => handleFilterChange("employment_type", e.target.value)}
+                  className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
+                >
+                  <option value="">All Types</option>
+                  <option value="full-time">Full-time</option>
+                  <option value="part-time">Part-time</option>
+                  <option value="contract">Contract</option>
+                </select>
+                <select
+                  value={filters.workplace_type}
+                  onChange={(e) => handleFilterChange("workplace_type", e.target.value)}
+                  className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
+                >
+                  <option value="">Any Workplace</option>
+                  <option value="on-site">On-site</option>
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
                 <Button variant="hero" type="submit" className="gap-2 min-w-[120px]" disabled={isRefreshing}>
                   {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                   Search
@@ -214,7 +206,11 @@ export default function Jobs() {
                     </>
                   ) : (
                     <>
-                      <span className="text-foreground font-medium">{jobs.length}</span> jobs found matching your profile
+                      <span className="text-foreground font-medium">{jobs.length}</span>
+                      {totalResults > jobs.length && (
+                        <span> of <span className="text-foreground font-medium">{totalResults}</span></span>
+                      )}
+                      {" "}jobs found
                     </>
                   )}
                 </div>
@@ -306,14 +302,30 @@ export default function Jobs() {
                           ))}
                         </div>
 
-                        <div className="flex items-center gap-3">
-                          <Button variant="hero" size="sm" className="gap-2">
-                            <Send className="h-4 w-4" />
-                            Quick Apply
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Button
+                            variant="hero"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => {
+                              setAutoApplyJob(job);
+                              setAutoApplyOpen(true);
+                            }}
+                          >
+                            <Zap className="h-4 w-4" />
+                            Auto Apply
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => job.url && window.open(job.url, '_blank')}>
                             View Details
                           </Button>
+                          {(job as any).company_emails?.length > 0 && (
+                            <a
+                              href={`mailto:${(job as any).company_emails[0]}`}
+                              className="text-xs text-accent underline truncate max-w-[180px]"
+                            >
+                              ✉ {(job as any).company_emails[0]}
+                            </a>
+                          )}
                         </div>
                       </motion.div>
                     ))}
@@ -334,5 +346,13 @@ export default function Jobs() {
         </div>
       </main>
     </div>
+
+      {/* Auto Apply Modal */}
+      <AutoApplyModal
+        job={autoApplyJob ? { id: String(autoApplyJob.id), title: autoApplyJob.title, company: autoApplyJob.company } : null}
+        open={autoApplyOpen}
+        onClose={() => { setAutoApplyOpen(false); setAutoApplyJob(null); }}
+      />
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '@/services/api';
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -27,10 +28,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(true);
     };
 
-    const logout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        setIsAuthenticated(false);
+    const logout = async () => {
+        try {
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (refreshToken) {
+                await api.post('/api/auth/logout/', { refresh: refreshToken });
+            }
+        } catch (error) {
+            console.error("Logout failed at backend:", error);
+        } finally {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            setIsAuthenticated(false);
+        }
     };
 
     return (

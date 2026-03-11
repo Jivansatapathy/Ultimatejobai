@@ -9,7 +9,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { Sparkles } from "lucide-react";
 
 const InterviewPanel = () => {
-  const [selectedMode, setSelectedMode] = useState<"text" | "video" | null>(null);
+  const [selectedMode, setSelectedMode] = useState<"text" | "audio" | null>(null);
   const { isHealthy, isChecking } = useHealthCheck();
   const { theme, toggleTheme } = useTheme();
 
@@ -37,7 +37,7 @@ const InterviewPanel = () => {
         <TextInterview onBack={() => setSelectedMode(null)} />
       )}
 
-      {selectedMode === "video" && (
+      {selectedMode === "audio" && (
         <VideoInterview onBack={() => setSelectedMode(null)} />
       )}
     </div>

@@ -12,6 +12,7 @@ export interface Job {
     saved: boolean;
     description?: string;
     url?: string;
+    hasEmail: boolean;
 }
 
 export interface JobSearchResponse {
@@ -57,16 +58,13 @@ export const searchJobs = async (query: string = '', page: number = 1, filters: 
 
         const mappedJobs = results.map((job: any) => {
             const mockMatch = Math.floor(Math.random() * (98 - 75 + 1)) + 75;
-            const companyEmails: string[] = Array.isArray(job.company?.emails)
-                ? job.company.emails
-                : [];
 
             return {
                 id: job.id,
                 title: job.title || 'Untitled Role',
                 company: job.company?.name || 'Unknown Company',
                 company_website: job.company?.website || null,
-                company_emails: companyEmails,
+                hasEmail: !!job.company?.has_email,
                 location: flatten(job.location) || 'Remote',
                 salary: job.salary || flatten(job.employment_type) || 'Competitive',
                 posted: job.posted_at ? new Date(job.posted_at).toLocaleDateString() : 'Recently',

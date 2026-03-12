@@ -116,6 +116,25 @@ export default function Jobs() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Handle auto-reopening modal after Gmail OAuth redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("gmail_connected") === "1") {
+      const savedJob = localStorage.getItem("pending_apply_job");
+      if (savedJob) {
+        try {
+          const parsedJob = JSON.parse(savedJob);
+          setAutoApplyJob(parsedJob);
+          setAutoApplyOpen(true);
+          // clear storage so it doesn't pop up again on next refresh
+          localStorage.removeItem("pending_apply_job");
+        } catch (e) {
+          console.error("Failed to parse saved job", e);
+        }
+      }
+    }
+  }, []);
+
   return (
     <>
     <div className="min-h-screen bg-background">
@@ -303,29 +322,23 @@ export default function Jobs() {
                         </div>
 
                         <div className="flex items-center gap-3 flex-wrap">
-                          <Button
-                            variant="hero"
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => {
-                              setAutoApplyJob(job);
-                              setAutoApplyOpen(true);
-                            }}
-                          >
-                            <Zap className="h-4 w-4" />
-                            Auto Apply
-                          </Button>
+                          {job.hasEmail && (
+                            <Button
+                              variant="hero"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => {
+                                setAutoApplyJob(job);
+                                setAutoApplyOpen(true);
+                              }}
+                            >
+                              <Zap className="h-4 w-4" />
+                              Auto Apply
+                            </Button>
+                          )}
                           <Button variant="outline" size="sm" onClick={() => job.url && window.open(job.url, '_blank')}>
                             View Details
                           </Button>
-                          {(job as any).company_emails?.length > 0 && (
-                            <a
-                              href={`mailto:${(job as any).company_emails[0]}`}
-                              className="text-xs text-accent underline truncate max-w-[180px]"
-                            >
-                              ✉ {(job as any).company_emails[0]}
-                            </a>
-                          )}
                         </div>
                       </motion.div>
                     ))}

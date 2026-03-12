@@ -37,8 +37,23 @@ export function AutoApplyModal({ job, open, onClose }: Props) {
   // Load credential status when modal opens
   useEffect(() => {
     if (open && job) {
-      loadStatus();
-      setStep("disclaimer");
+      const init = async () => {
+        setLoading(true);
+        await loadStatus();
+        setLoading(false);
+        
+        // Auto-advance if redirected back from Google
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("gmail_connected") === "1") {
+          setStep("confirm");
+          // Clean up URL without reload
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          setStep("disclaimer");
+        }
+      };
+      
+      init();
       setError("");
       setResult(null);
     }
@@ -73,10 +88,13 @@ export function AutoApplyModal({ job, open, onClose }: Props) {
 
   async function handleGmailOAuth() {
     try {
+      // Store current job context so we can re-open after redirect
+      if (job) {
+        localStorage.setItem("pending_apply_job", JSON.stringify(job));
+      }
       const authUrl = await autoApplyService.getGmailAuthUrl();
-      window.open(authUrl, "_blank", "width=500,height=600");
-      // Poll for credential after OAuth
-      toast.info("Complete Google sign-in in the popup. Then click 'Refresh' to continue.");
+      // Use location.href instead of window.open to ensure the main window reloads with the param
+      window.location.href = authUrl;
     } catch (e: any) {
       toast.error("Failed to initiate Gmail OAuth");
     }
@@ -88,6 +106,12 @@ export function AutoApplyModal({ job, open, onClose }: Props) {
     try {
       const res = await autoApplyService.apply(job.id);
       setResult(res);
+      // Update local status with new counts from backend
+      setCredStatus((prev: any) => ({
+        ...prev,
+        applies_used: res.applies_used,
+        applies_remaining: res.applies_remaining
+      }));
       setStep("success");
     } catch (e: any) {
       const msg = e.response?.data?.message || e.response?.data?.error || "Failed to send application";

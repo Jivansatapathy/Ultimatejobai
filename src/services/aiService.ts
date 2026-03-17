@@ -348,3 +348,32 @@ CRITICAL OBJECTIVE:
         throw new Error("Failed to generate Gap Analysis.");
     }
 };
+
+export const getCareerAdvice = async (offerText: string, resumeContent: string): Promise<string> => {
+    const prompt = `You are a Senior Career Advisor. A user has received a job offer and wants your advice on whether it's a good move for their career.
+    
+    USER'S CURRENT PROFILE/RESUME:
+    ${resumeContent}
+    
+    THE JOB OFFER DETAILS:
+    ${offerText}
+    
+    STRICT GUIDELINES:
+    1. DO NOT provide a "Yes" or "No" answer. 
+    2. Provide a balanced, nuanced perspective. 
+    3. Analyze the offer based on:
+        - Career Growth potential.
+        - Alignment with their current skills and trajectory.
+        - Potential technical/professional challenges.
+        - Long-term marketability.
+    4. Help the user identify what questions they should ask the employer before deciding.
+    5. Use professional, encouraging, and objective tone.
+    6. Return the advice in clear Markdown format.`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+
+    return response.text || "I'm sorry, I couldn't generate career advice at this moment.";
+};

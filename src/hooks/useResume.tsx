@@ -74,6 +74,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    useEffect(() => {
+        if (resumes.length > 0) {
+            localStorage.setItem('resumes', JSON.stringify(resumes));
+        }
+    }, [resumes]);
+
     const saveToLocalStorage = (updatedResumes: Resume[]) => {
         localStorage.setItem('resumes', JSON.stringify(updatedResumes));
     };

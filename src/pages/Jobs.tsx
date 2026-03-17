@@ -20,6 +20,7 @@ import { searchJobs, Job } from "@/services/jobService";
 import { toast } from "sonner";
 import { JobSidebar } from "@/components/jobs/JobSidebar";
 import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
+import { JobDetailsSheet } from "@/components/jobs/JobDetailsSheet";
 
 export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +32,8 @@ export default function Jobs() {
   const [totalResults, setTotalResults] = useState(0);
   const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
   const [autoApplyOpen, setAutoApplyOpen] = useState(false);
+  const [selectedDetailsJob, setSelectedDetailsJob] = useState<Job | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [filters, setFilters] = useState({
     location: "",
     employment_type: "",
@@ -134,6 +137,11 @@ export default function Jobs() {
       }
     }
   }, []);
+
+  const openJobDetails = (job: Job) => {
+    setSelectedDetailsJob(job);
+    setDetailsOpen(true);
+  };
 
   return (
     <>
@@ -274,7 +282,10 @@ export default function Jobs() {
                               <Building2 className="h-6 w-6 text-foreground" />
                             </div>
                             <div>
-                              <h3 className="text-lg font-semibold group-hover:text-accent transition-colors">
+                              <h3 
+                                className="text-lg font-semibold group-hover:text-accent transition-colors cursor-pointer"
+                                onClick={() => openJobDetails(job)}
+                              >
                                 {job.title}
                               </h3>
                               <p className="text-muted-foreground">{job.company}</p>
@@ -336,7 +347,7 @@ export default function Jobs() {
                               Auto Apply
                             </Button>
                           )}
-                          <Button variant="outline" size="sm" onClick={() => job.url && window.open(job.url, '_blank')}>
+                          <Button variant="outline" size="sm" onClick={() => openJobDetails(job)}>
                             View Details
                           </Button>
                         </div>
@@ -359,6 +370,13 @@ export default function Jobs() {
         </div>
       </main>
     </div>
+
+      {/* Job Details Sheet */}
+      <JobDetailsSheet 
+        job={selectedDetailsJob}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
 
       {/* Auto Apply Modal */}
       <AutoApplyModal

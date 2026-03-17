@@ -16,13 +16,18 @@ import {
 const navLinks = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Resume Builder", href: "/resume", icon: FileText },
+  { name: "Career Insights", href: "/insights", icon: Sparkles },
   { name: "Job Discovery", href: "/jobs", icon: Briefcase },
   { name: "AI Interview", href: "/interview", icon: Users },
 ];
 
+import { useAuth } from "@/context/AuthContext";
+import { LogOut } from "lucide-react";
+
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -42,7 +47,7 @@ export const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {isAuthenticated && navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
@@ -57,17 +62,26 @@ export const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/auth">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <LogIn className="h-4 w-4" />
-                Sign In
+            {!isAuthenticated ? (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <LogIn className="h-4 w-4" />
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth?mode=signup">
+                  <Button variant="hero" size="sm">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Button variant="ghost" size="sm" className="gap-2 text-destructive hover:text-destructive/80" onClick={logout}>
+                <LogOut className="h-4 w-4" />
+                Sign Out
               </Button>
-            </Link>
-            <Link to="/auth?mode=signup">
-              <Button variant="hero" size="sm">
-                Get Started
-              </Button>
-            </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}

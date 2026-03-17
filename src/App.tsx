@@ -10,6 +10,8 @@ import Resume from "./pages/Resume";
 import Jobs from "./pages/Jobs";
 import Auth from "./pages/Auth";
 import { ResumeBuilder } from "./components/resume/ResumeBuilder";
+import CareerInsights from "./pages/CareerInsights";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import InterviewPanel from "./pages/InterviewPanel";
 import { AuthProvider } from "./context/AuthContext";
@@ -49,8 +51,18 @@ const App = () => (
                   <Jobs />
                 </ProtectedRoute>
               } />
+              <Route path="/insights" element={
+                <ProtectedRoute>
+                  <CareerInsights />
+                </ProtectedRoute>
+              } />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/onboarding" element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              } />
               <Route path="/interview" element={
                 <ProtectedRoute>
                   <InterviewPanel />

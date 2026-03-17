@@ -14,11 +14,12 @@ import { initDIDStream, sendTalkToDID, destroyDIDStream, isDIDConfigured } from 
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Sparkles, ArrowLeft, Mic, MicOff, Volume2, AlertTriangle, ShieldCheck, Wifi } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { activityService } from "@/services/activityService";
 import * as faceDetection from "@tensorflow-models/face-detection";
 import "@mediapipe/face_detection";
 import "@tensorflow/tfjs-backend-webgl";
 
-export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
+export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack: () => void, initialJobDescription?: string }) => {
     const { isHealthy, isChecking } = useHealthCheck();
     const { theme, toggleTheme } = useTheme();
     const {
@@ -38,7 +39,7 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
     } = useInterview();
 
     const [selectedType, setSelectedType] = useState<InterviewType | null>(null);
-    const [jobDescription, setJobDescription] = useState("");
+    const [jobDescription, setJobDescription] = useState(initialJobDescription);
     const [isStarting, setIsStarting] = useState(false);
 
     // Speech Recognition state
@@ -190,6 +191,11 @@ export const VideoInterview = ({ onBack }: { onBack: () => void }) => {
         setIsStarting(true);
         // Start local interview as requested
         await startLocalInterview(selectedType, jobDescription);
+        activityService.logActivity({
+            activity_type: 'INTERVIEW',
+            description: `Started Video/Audio ${selectedType} interview`,
+            metadata: { type: selectedType, jobDescription: jobDescription.substring(0, 100) }
+        });
         setIsStarting(false);
         // Start camera tracking
         startTracking();

@@ -9,14 +9,18 @@ import {
   CheckCircle2,
   ArrowUpRight,
   BarChart3,
-  Calendar
+  Calendar,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useResume } from "@/hooks/useResume";
 import { ActivityDetailsDialog } from "@/components/dashboard/ActivityDetailsDialog";
 import { AutoApplySettingsSheet } from "@/components/dashboard/AutoApplySettingsSheet";
 import { AtsOptimizerDialog } from "@/components/dashboard/AtsOptimizerDialog";
+import { activityService, ActivityLog } from "@/services/activityService";
+import { useEffect } from "react";
 
 const stats = [
   {
@@ -49,7 +53,8 @@ const stats = [
   },
 ];
 
-const recentActivity = [
+// Mock data for initial refernce - will be replaced by API calls
+const mockRecentActivity = [
   { type: "applied", company: "TechCorp", role: "Senior Developer", time: "2 hours ago", status: "pending" },
   { type: "interview", company: "StartupXYZ", role: "Lead Engineer", time: "Yesterday", status: "scheduled" },
   { type: "applied", company: "BigTech Inc", role: "Staff Engineer", time: "2 days ago", status: "viewed" },
@@ -64,10 +69,58 @@ const recommendedJobs = [
   { title: "Frontend Lead", company: "Netflix", location: "Los Gatos, CA", match: 85 },
 ];
 
+
 export default function Dashboard() {
+  const { activeResume } = useResume();
   const [showActivityDetails, setShowActivityDetails] = useState(false);
   const [showAutoApply, setShowAutoApply] = useState(false);
   const [showOptimizer, setShowOptimizer] = useState(false);
+  const [history, setHistory] = useState<ActivityLog[]>([]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+       try {
+         const data = await activityService.getUserHistory();
+         setHistory(data);
+       } catch (err) {
+         console.error("Failed to load history:", err);
+       }
+    };
+    loadHistory();
+  }, []);
+
+  const score = activeResume?.score || 94; // fallback to 94 if none exists
+
+  const stats = [
+    {
+      label: "Resume Score",
+      value: score.toString(),
+      change: score > 90 ? "Excellent" : "+12%",
+      icon: Target,
+      color: "text-success",
+    },
+    {
+      label: "Jobs Applied",
+      value: "127",
+      change: "+23 this week",
+      icon: Briefcase,
+      color: "text-foreground",
+    },
+    {
+      label: "Interviews",
+      value: "23",
+      change: "+5 pending",
+      icon: Calendar,
+      color: "text-foreground",
+    },
+    {
+      label: "Response Rate",
+      value: "32%",
+      change: "+8% vs avg",
+      icon: TrendingUp,
+      color: "text-accent",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,6 +233,12 @@ export default function Dashboard() {
                   <Send className="h-4 w-4" />
                   Auto-Apply Settings
                 </Button>
+                <Link to="/insights">
+                  <Button variant="outline" className="w-full justify-start gap-3 bg-accent/5 border-accent/20">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                    Career Insights
+                  </Button>
+                </Link>
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3"
@@ -210,37 +269,34 @@ export default function Dashboard() {
               </div>
 
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
+                {history.length > 0 ? history.slice(0, 5).map((activity, index) => (
                   <div key={index} className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors">
-                    <div className={`p-2 rounded-lg ${activity.status === 'received' ? 'bg-success/10' :
-                        activity.status === 'scheduled' ? 'bg-secondary' :
-                          activity.status === 'viewed' ? 'bg-secondary' :
-                            'bg-secondary'
-                      }`}>
-                      {activity.type === 'offer' ? (
-                        <CheckCircle2 className="h-4 w-4 text-success" />
-                      ) : activity.type === 'interview' ? (
+                    <div className={`p-2 rounded-lg bg-secondary`}>
+                      {activity.activity_type === 'CAREER_ADVICE' ? (
+                        <Sparkles className="h-4 w-4 text-accent" />
+                      ) : activity.activity_type === 'INTERVIEW' ? (
                         <Calendar className="h-4 w-4 text-foreground" />
+                      ) : activity.activity_type === 'CAREER_INSIGHT' ? (
+                        <BarChart3 className="h-4 w-4 text-success" />
                       ) : (
                         <Send className="h-4 w-4 text-foreground" />
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">{activity.role}</p>
-                      <p className="text-sm text-muted-foreground">{activity.company}</p>
+                      <p className="font-medium text-sm">{activity.activity_type.replace('_', ' ')}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{activity.description}</p>
                     </div>
-                    <div className="text-right">
-                      <span className={`text-xs px-2 py-1 rounded-full ${activity.status === 'received' ? 'bg-success/10 text-success' :
-                          activity.status === 'scheduled' ? 'bg-secondary text-foreground' :
-                            activity.status === 'viewed' ? 'bg-secondary text-foreground' :
-                              'bg-secondary text-muted-foreground'
-                        }`}>
-                        {activity.status}
-                      </span>
-                      <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                    <div className="text-right whitespace-nowrap">
+                       <p className="text-[10px] text-muted-foreground">
+                         {activity.timestamp ? new Date(activity.timestamp).toLocaleDateString() : 'Just now'}
+                       </p>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    No recent activity found.
+                  </div>
+                )}
               </div>
             </motion.div>
 

@@ -15,6 +15,8 @@ import {
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 const features = [
   "AI-powered resume optimization",
@@ -42,35 +44,41 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-
     setLoading(true);
 
     try {
+      let firebaseUser;
       if (isSignUp) {
-        // Sign Up Logic
-        console.log("Attempting sign up with:", { name: formData.name, email: formData.email });
-        await api.post("/api/auth/register/", {
-          username: formData.email, // Using email as username
-          email: formData.email,
-          password: formData.password,
-          name: formData.name
-        });
-        toast.success("Account created successfully! Please sign in.");
-        setIsSignUp(false);
+        // Sign Up with Firebase
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        firebaseUser = userCredential.user;
+        await updateProfile(firebaseUser, { displayName: formData.name });
+        toast.success("Account created successfully!");
       } else {
-        // Login Logic
-        console.log("Attempting login with:", { email: formData.email, password: formData.password });
-        const response = await api.post("/api/auth/login/", {
-          email: formData.email,
-          password: formData.password,
-        });
+        // Sign In with Firebase
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        firebaseUser = userCredential.user;
+      }
 
-        console.log("Login response success:", response.data);
-        const { access, refresh } = response.data;
-        login(access, refresh);
-        toast.success("Welcome back!");
-        navigate("/dashboard");
+      // Exchange Firebase ID Token for Backend JWT
+      const token = await firebaseUser.getIdToken();
+      const response = await api.post("/api/auth/firebase-login/", { token });
+
+      const { access, refresh, is_new_user } = response.data;
+      login(access, refresh);
+      
+      if (!isSignUp) toast.success("Welcome back!");
+
+      // If new user or specifically requested, show resume builder
+      if (is_new_user) {
+        navigate("/resume");
+      } else {
+        const savedResumes = localStorage.getItem('resumes');
+        if (!savedResumes || JSON.parse(savedResumes).length === 0) {
+          navigate("/resume");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error: any) {
       console.error(`${isSignUp ? "Sign up" : "Login"} failed:`, error);

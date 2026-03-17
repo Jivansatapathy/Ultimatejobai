@@ -16,8 +16,9 @@ import { Label } from "@/components/ui/label";
 import { InterviewType } from "@/lib/interview-api";
 import { useState } from "react";
 import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
+import { activityService } from "@/services/activityService";
 
-export const TextInterview = ({ onBack }: { onBack: () => void }) => {
+export const TextInterview = ({ onBack, initialJobDescription = "" }: { onBack: () => void, initialJobDescription?: string }) => {
     const { isHealthy, isChecking } = useHealthCheck();
     const { theme, toggleTheme } = useTheme();
     const {
@@ -36,13 +37,18 @@ export const TextInterview = ({ onBack }: { onBack: () => void }) => {
     } = useInterview();
 
     const [selectedType, setSelectedType] = useState<InterviewType | null>(null);
-    const [jobDescription, setJobDescription] = useState("");
+    const [jobDescription, setJobDescription] = useState(initialJobDescription);
     const [isStarting, setIsStarting] = useState(false);
 
     const handleStart = async () => {
         if (!selectedType || !isHealthy) return;
         setIsStarting(true);
         await startInterview(selectedType, jobDescription);
+        activityService.logActivity({
+            activity_type: 'INTERVIEW',
+            description: `Started Text ${selectedType} interview`,
+            metadata: { type: selectedType, jobDescription: jobDescription.substring(0, 100) }
+        });
         setIsStarting(false);
     };
 

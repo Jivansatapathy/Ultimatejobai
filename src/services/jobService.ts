@@ -1,4 +1,25 @@
 import api from './api';
+import axios from 'axios';
+
+export interface LeverJobDetails {
+    text: string;
+    description: string;
+    descriptionHtml: string;
+    lists: Array<{ text: string, content: string }>;
+    additional: string;
+    additionalHtml: string;
+}
+
+export const fetchLeverJobDetails = async (companySlug: string, jobId: string): Promise<LeverJobDetails | null> => {
+    try {
+        console.log(`[LeverAPI] Fetching details for ${companySlug}/${jobId}`);
+        const response = await axios.get(`https://api.lever.co/v0/postings/${companySlug}/${jobId}`);
+        return response.data;
+    } catch (error) {
+        console.error("[LeverAPI] Error fetching job details:", error);
+        return null;
+    }
+};
 
 export interface Job {
     id: string | number;
@@ -12,6 +33,7 @@ export interface Job {
     saved: boolean;
     description?: string;
     url?: string;
+    apply_url?: string;
     hasEmail: boolean;
 }
 
@@ -72,11 +94,64 @@ export const searchJobs = async (query: string = '', page: number = 1, filters: 
                 tags: [flatten(job.department), flatten(job.employment_type)].filter(Boolean),
                 saved: false,
                 description: job.description || '',
-                url: job.apply_url || job.source_url || '#'
+                url: job.source_url || job.job_url || '#',
+                apply_url: job.apply_url || job.source_url || job.job_url || '#'
             };
         });
 
-        return { jobs: mappedJobs, hasNext, totalResults };
+        // Inject Amstar DMC job for demonstration
+        const amstarJob: Job = {
+            id: 'amstar-legacy-modernization',
+            title: 'Senior Developer - Legacy Modernization',
+            company: 'Amstar DMC (Hyatt Corporation)',
+            location: 'Fully Remote',
+            salary: 'Competitive',
+            posted: 'Today',
+            match: 99,
+            tags: ['Python', 'FastAPI', 'Modernization'],
+            saved: false,
+            hasEmail: true,
+            description: `
+                <div class="space-y-6">
+                    <section>
+                        <h2 class="text-2xl font-bold text-accent mb-3">About Us</h2>
+                        <p>We are a 26-year established Destination Management Company (DMC) operating under the <strong>Amstar DMC brand</strong>, the official destination services and tour operator brand of <strong>Hyatt Corporation</strong>.</p>
+                        <p class="mt-2">We support major North American travel brands including: Apple Vacations, American Express Vacations, Expedia, Hyatt, and more than 12 additional travel brands.</p>
+                    </section>
+
+                    <section>
+                        <h3 class="text-xl font-semibold mb-2">The Migration Mission</h3>
+                        <p>We are executing a phased migration from a 24-year-old Perl-based monolithic application to a modern Python/FastAPI architecture. Current modernization streams include AI-driven email/WhatsApp handling and rebuilding core order management.</p>
+                        <div class="bg-accent/5 p-4 rounded-lg mt-3 border border-accent/10">
+                            <p class="font-medium text-accent">Goal: >80% migrated within 12 months.</p>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 class="text-xl font-semibold mb-2">Required Technical Skills</h3>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Strong Python & <strong>FastAPI</strong> experience</li>
+                            <li>MySQL (schema, indexing, query optimization)</li>
+                            <li>Linux (Ubuntu) CLI & Docker</li>
+                            <li>pytest & GitHub Actions CI/CD</li>
+                            <li>API design and system decoupling</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-xl font-bold text-success mb-2">How to Apply</h3>
+                        <div class="p-4 bg-secondary/50 rounded-xl border border-border">
+                            <p className="mb-2 italic">"Please mention the word <strong>FRUITFUL</strong> and tag <strong>RNjAuMjU0LjAuNjg=</strong> when applying to show you read the job post completely."</p>
+                            <p class="text-xs text-muted-foreground mt-2">#RNjAuMjU0LjAuNjg= (Beta Feature to avoid spam)</p>
+                        </div>
+                    </section>
+                </div>
+            `,
+            url: 'https://www.amstardmc.com/careers',
+            apply_url: 'https://www.amstardmc.com/careers'
+        };
+
+        return { jobs: [amstarJob, ...mappedJobs], hasNext, totalResults: totalResults + 1 };
     } catch (error: any) {
         console.error("Search API Error:", error.response?.data || error.message);
         throw error;

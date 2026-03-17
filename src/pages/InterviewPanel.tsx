@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { ModeSelector } from "@/components/interview/ModeSelector";
 import { TextInterview } from "@/components/interview/TextInterview";
 import { VideoInterview } from "@/components/interview/VideoInterview";
@@ -9,9 +10,18 @@ import { useTheme } from "@/hooks/use-theme";
 import { Sparkles } from "lucide-react";
 
 const InterviewPanel = () => {
-  const [selectedMode, setSelectedMode] = useState<"text" | "audio" | null>(null);
+  const location = useLocation();
+  const initialState = location.state as { 
+    mode?: "text" | "audio", 
+    jobDescription?: string,
+    interviewType?: string 
+  } | null;
+
+  const [selectedMode, setSelectedMode] = useState<"text" | "audio" | null>(initialState?.mode || null);
   const { isHealthy, isChecking } = useHealthCheck();
   const { theme, toggleTheme } = useTheme();
+  
+  const initialJD = initialState?.jobDescription || "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,11 +44,11 @@ const InterviewPanel = () => {
       {!selectedMode && <ModeSelector onSelect={setSelectedMode} />}
 
       {selectedMode === "text" && (
-        <TextInterview onBack={() => setSelectedMode(null)} />
+        <TextInterview onBack={() => setSelectedMode(null)} initialJobDescription={initialJD} />
       )}
 
       {selectedMode === "audio" && (
-        <VideoInterview onBack={() => setSelectedMode(null)} />
+        <VideoInterview onBack={() => setSelectedMode(null)} initialJobDescription={initialJD} />
       )}
     </div>
   );

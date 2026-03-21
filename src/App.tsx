@@ -17,6 +17,8 @@ import InterviewPanel from "./pages/InterviewPanel";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+import AdminDashboard from "./pages/AdminDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -57,7 +59,6 @@ const App = () => (
                 </ProtectedRoute>
               } />
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="/onboarding" element={
                 <ProtectedRoute>
                   <Onboarding />
@@ -66,6 +67,11 @@ const App = () => (
               <Route path="/interview" element={
                 <ProtectedRoute>
                   <InterviewPanel />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

@@ -23,15 +23,29 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
     const fetchFullDescription = async () => {
       if (!open || !job) return;
 
+      console.log('Opening JobDetailsSheet for:', job.title, 'Platform:', job.platform, 'Description length:', job.description?.length);
+
+      // If we have a substantial description in the DB already, use it and don't fetch from Lever
+      if (job.description && job.description.length > 20) {
+        console.log('Using database-stored description');
+        setLeverDetails(null);
+        setIsLoadingLever(false);
+        return;
+      }
+
       const urlToTest = job.url || job.apply_url || '';
-      // Improved regex to capture only the job ID and exclude trailing paths like /apply
       const leverMatch = urlToTest.match(/jobs\.lever\.co\/([^/]+)\/([^/?#\s/]+)/);
       
       if (leverMatch) {
         setIsLoadingLever(true);
         try {
+          console.log('Fetching from Lever API for ID:', leverMatch[2]);
           const details = await fetchLeverJobDetails(leverMatch[1], leverMatch[2]);
-          setLeverDetails(details);
+          if (details) {
+            setLeverDetails(details);
+          } else {
+            console.warn('Lever API returned no details (likely CORS)');
+          }
         } catch (error) {
           console.error("Failed to fetch Lever details", error);
         } finally {
@@ -115,6 +129,13 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
               <TabsContent value="description" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
                 <div className="glass-card p-6 bg-secondary/5">
                     <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {/* Debug Info */}
+                    {(job as any).debug && (
+                      <div className="mb-4 p-2 bg-accent/20 rounded text-[10px] font-mono">
+                        Source: {job.platform} | Desc Len: {job.description?.length || 0}
+                      </div>
+                    )}
+
                     {isLoadingLever ? (
                         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                             <Loader2 className="h-8 w-8 animate-spin mb-4 text-accent" />
@@ -180,63 +201,97 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
               </TabsContent>
               
               <TabsContent value="apply" className="mt-0 flex-1 flex flex-col focus-visible:outline-none focus-visible:ring-0 -mx-6 md:-mx-8 h-[calc(100vh-200px)]">
-                {job.apply_url && job.apply_url !== '#' ? (
-                   <div className="flex flex-col h-full bg-white relative">
-                      {/* Sub-header inside the apply view */}
-                      <div className="flex items-center justify-between px-6 py-2 border-b border-border bg-white z-10 shrink-0">
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-accent uppercase tracking-widest">
-                              <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                              Live Portal
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-muted-foreground hidden sm:inline">
-                                {new URL(job.apply_url!).hostname}
-                            </span>
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-7 px-2 text-[10px] gap-1 hover:bg-secondary/50"
-                                onClick={() => window.open(job.apply_url!, '_blank')}
-                            >
-                                <ExternalLink className="h-3 w-3" />
-                                Open External
-                            </Button>
-                          </div>
+                {(() => {
+                  const isIframeable = job.platform === 'lever' || 
+                                      job.platform === 'greenhouse' || 
+                                      job.apply_url?.includes('lever.co') || 
+                                      job.apply_url?.includes('greenhouse.io');
+                  
+                  if (!job.apply_url || job.apply_url === '#') {
+                    return (
+                      <div className="flex flex-col items-center justify-center h-full glass-card border-dashed">
+                        <Globe className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                        <p className="text-muted-foreground text-center">
+                            Sorry, the direct application portal is unavailable for this job.
+                        </p>
                       </div>
-                      
-                      <div className="flex-1 w-full relative overflow-hidden bg-white">
-                          {isIframeLoading && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-20">
-                                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4" />
-                                <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading Application Form...</p>
+                    );
+                  }
+
+                  if (!isIframeable) {
+                    return (
+                      <div className="flex flex-col items-center justify-center h-full p-12 bg-secondary/5 space-y-6">
+                        <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center">
+                           <ExternalLink className="h-10 w-10 text-accent" />
+                        </div>
+                        <div className="text-center space-y-2">
+                           <h3 className="text-xl font-bold">Apply on External Site</h3>
+                           <p className="text-muted-foreground max-w-xs mx-auto">
+                              This application portal doesn't support embedding. Please click below to apply on the company's official website.
+                           </p>
+                        </div>
+                        <Button 
+                          className="w-full max-w-xs h-12 text-lg font-bold gap-2 shadow-xl hover:shadow-accent/20 transition-all"
+                          onClick={() => {
+                            window.open(job.apply_url, '_blank');
+                            activityService.logActivity({
+                              activity_type: 'JOB_APPLY',
+                              description: `Redirected to external application for ${job.title}`,
+                              metadata: { jobId: job.id, url: job.apply_url }
+                            });
+                          }}
+                        >
+                          Continue to Application
+                          <ArrowLeft className="h-4 w-4 rotate-180" />
+                        </Button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="flex flex-col h-full bg-white relative">
+                        {/* Sub-header inside the apply view */}
+                        <div className="flex items-center justify-between px-6 py-2 border-b border-border bg-white z-10 shrink-0">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-accent uppercase tracking-widest">
+                                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                                Live Portal
                             </div>
-                          )}
-                          <iframe 
-                            key={job.id}
-                            src={job.apply_url?.includes('lever.co') && !job.apply_url.includes('embed=true') 
-                                ? `${job.apply_url}${job.apply_url.includes('?') ? '&' : '?'}embed=true` 
-                                : job.apply_url} 
-                            className="w-full h-full border-0 absolute inset-0 bg-white"
-                            title={`Apply for ${job.title} at ${job.company}`}
-                            onLoad={() => setIsIframeLoading(false)}
-                          />
-                          {/* Loading overlay / Iframe check message */}
-                          <div className="absolute inset-0 -z-10 flex items-center justify-center bg-secondary/20">
-                             <div className="text-center p-6">
-                                <p className="text-muted-foreground text-sm font-medium">Connecting to Portal...</p>
-                                <p className="text-xs text-muted-foreground/60 mt-1">If the portal is blocked, use the button above to apply directly.</p>
-                             </div>
-                          </div>
-                      </div>
-                   </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full glass-card border-dashed">
-                    <Globe className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                    <p className="text-muted-foreground text-center">
-                        Sorry, the direct application portal is unavailable for this job.
-                    </p>
-                  </div>
-                )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                                  {new URL(job.apply_url!).hostname}
+                              </span>
+                              <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 px-2 text-[10px] gap-1 hover:bg-secondary/50"
+                                  onClick={() => window.open(job.apply_url!, '_blank')}
+                              >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Open External
+                              </Button>
+                            </div>
+                        </div>
+                        
+                        <div className="flex-1 w-full relative overflow-hidden bg-white">
+                            {isIframeLoading && (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-20">
+                                  <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4" />
+                                  <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading Application Form...</p>
+                              </div>
+                            )}
+                            <iframe 
+                              key={job.id}
+                              src={job.apply_url?.includes('lever.co') && !job.apply_url.includes('embed=true') 
+                                  ? `${job.apply_url}${job.apply_url.includes('?') ? '&' : '?'}embed=true` 
+                                  : job.apply_url} 
+                              className="w-full h-full border-0 absolute inset-0 bg-white"
+                              title={`Apply for ${job.title} at ${job.company}`}
+                              onLoad={() => setIsIframeLoading(false)}
+                            />
+                        </div>
+                    </div>
+                  );
+                })()}
               </TabsContent>
             </Tabs>
           </div>

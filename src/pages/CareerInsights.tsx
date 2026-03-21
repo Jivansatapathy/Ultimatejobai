@@ -25,39 +25,109 @@ import { searchJobs, Job } from "@/services/jobService";
 import { Loader2, RefreshCw, Send, FileText } from "lucide-react";
 import { getCareerAdvice } from "@/services/aiService";
 import { activityService } from "@/services/activityService";
+import { careerService, CareerProfile, JobMatch, UserScore, CareerRoadmap, JobFair } from "@/services/careerService";
 
 export default function CareerInsights() {
   const [activeTab, setActiveTab] = useState("skills");
   const { activeResume, optimizeWithAI } = useResume();
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
+  const [backendMatches, setBackendMatches] = useState<JobMatch[]>([]);
+  const [jobFairs, setJobFairs] = useState<JobFair[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const [isLoadingFairs, setIsLoadingFairs] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [profile, setProfile] = useState<CareerProfile | null>(null);
+  const [userScore, setUserScore] = useState<UserScore | null>(null);
+  const [backendRoadmap, setBackendRoadmap] = useState<CareerRoadmap | null>(null);
   const [offerText, setOfferText] = useState("");
   const [advice, setAdvice] = useState("");
   const [isAdvising, setIsAdvising] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchMatchingJobs = async () => {
-      if (activeResume?.targetJobRole) {
-        setIsLoadingJobs(true);
-        try {
+    const loadData = async () => {
+      setIsLoadingJobs(true);
+      setIsLoadingFairs(true);
+
+      // Fetch Job Fairs independently (Public data)
+      careerService.getJobFairs().then(data => {
+        setJobFairs(data);
+        setIsLoadingFairs(false);
+      }).catch(err => {
+        console.error("Fairs load error:", err);
+        setIsLoadingFairs(false);
+      });
+
+      // Fetch Authenticated Data
+      try {
+        const [profileData, matchesData, scoreData, roadmapData, advicesData] = await Promise.all([
+          careerService.getProfile(),
+          careerService.getJobMatches(),
+          careerService.getUserScore(),
+          careerService.getRoadmap(),
+          careerService.getAdvices()
+        ]);
+        
+        setProfile(profileData);
+        setBackendMatches(matchesData);
+        setUserScore(scoreData);
+        setBackendRoadmap(roadmapData);
+        
+        if (advicesData.length > 0) {
+          setAdvice(advicesData[0].advice);
+        }
+
+        const mapped: Job[] = matchesData.map(m => ({
+          id: m.id,
+          title: m.job_details.title,
+          company: m.job_details.company || 'Unknown',
+          location: m.job_details.location || 'Remote',
+          match: m.match_percentage,
+          posted: m.job_details.posted || 'Recently',
+          tags: m.matched_skills,
+          saved: false,
+          hasEmail: m.job_details.hasEmail || false,
+          apply_url: m.job_details.apply_url
+        }));
+        
+        if (mapped.length > 0) {
+          setRecommendedJobs(mapped.slice(0, 3));
+        } else if (activeResume?.targetJobRole) {
           const resp = await searchJobs(activeResume.targetJobRole);
           setRecommendedJobs(resp.jobs.slice(0, 3));
-        } catch (error) {
-          console.error("Failed to fetch jobs:", error);
-        } finally {
-          setIsLoadingJobs(false);
         }
+      } catch (error) {
+        console.error("Authenticated data load error:", error);
+      } finally {
+        setIsLoadingJobs(false);
       }
     };
-    fetchMatchingJobs();
+
+    loadData();
   }, [activeResume?.targetJobRole]);
 
   const handleStartAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      await optimizeWithAI();
+      // 1. Local AI Optimization
+      const analysis = await optimizeWithAI();
+      
+      // 2. Sync with Backend
+      if (activeResume) {
+        await careerService.updateProfile({
+          skills: activeResume.skills,
+          target_roles: [activeResume.targetJobRole].filter(Boolean) as string[],
+        });
+        
+        // Refresh matches and score
+        const [matchesData, scoreData] = await Promise.all([
+          careerService.getJobMatches(),
+          careerService.getUserScore()
+        ]);
+        setBackendMatches(matchesData);
+        setUserScore(scoreData);
+      }
+
       activityService.logActivity({
         activity_type: 'CAREER_INSIGHT',
         description: `Analyzed career insights for role: ${activeResume?.targetJobRole || 'Not specified'}`,
@@ -92,6 +162,10 @@ export default function CareerInsights() {
       const resumeContent = JSON.stringify(activeResume);
       const resp = await getCareerAdvice(offerText, resumeContent);
       setAdvice(resp);
+      
+      // Save advice to backend
+      await careerService.createAdvice(offerText, resp);
+
       activityService.logActivity({
         activity_type: 'CAREER_ADVICE',
         description: `Requested career advice for an offer/dilemma`,
@@ -165,10 +239,12 @@ export default function CareerInsights() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold mb-4">{score}%</div>
-                  <Progress value={score} className="h-2 bg-secondary" />
+                  <div className="text-3xl font-bold mb-4">
+                    {userScore ? Math.round(userScore.overall_score) : score}%
+                  </div>
+                  <Progress value={userScore ? userScore.overall_score : score} className="h-2 bg-secondary" />
                   <p className="text-xs text-muted-foreground mt-4">
-                    {score > 80 ? "Match is strong for target roles." : "Improve your resume to increase match score."}
+                    {(userScore?.overall_score || score) > 80 ? "Match is strong for target roles." : "Improve your resume to increase match score."}
                   </p>
                   <Button 
                     variant="ghost" 
@@ -192,16 +268,20 @@ export default function CareerInsights() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Technical</span>
-                    <span className="font-semibold text-success">Strong</span>
+                    <span className="text-muted-foreground">Resume Score</span>
+                    <span className={`font-semibold ${userScore && userScore.resume_score > 80 ? 'text-success' : 'text-accent'}`}>
+                        {userScore ? Math.round(userScore.resume_score) : score}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Leadership</span>
-                    <span className="font-semibold text-accent">+12% Req.</span>
+                    <span className="text-muted-foreground">Interview Score</span>
+                    <span className={`font-semibold ${userScore && userScore.interview_score > 70 ? 'text-success' : 'text-accent'}`}>
+                         {userScore ? Math.round(userScore.interview_score) : 0}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Communication</span>
-                    <span className="font-semibold text-success">Excellent</span>
+                    <span className="text-muted-foreground">Target Role</span>
+                    <span className="font-semibold text-success">{activeResume?.targetJobRole || 'Not Set'}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -243,6 +323,15 @@ export default function CareerInsights() {
                     <TabsTrigger value="advisor" className="flex items-center gap-2">
                       <Sparkles className="h-4 w-4" />
                       Career Advisor
+                    </TabsTrigger>
+                    <TabsTrigger value="fairs" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Job Fairs
+                      {jobFairs.length > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-accent text-white text-[10px] font-bold">
+                          {jobFairs.length}
+                        </span>
+                      )}
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -292,7 +381,15 @@ export default function CareerInsights() {
                       </CardHeader>
                       <CardContent>
                         <div className="relative space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-accent/20">
-                          {[
+                          {(backendRoadmap?.steps?.length || 0) > 0 ? (backendRoadmap?.steps || []).map((step, idx) => (
+                            <div key={idx} className="relative pl-8">
+                              <div className={`absolute left-0 top-1 w-6 h-6 rounded-full border-2 ${step.completed ? 'bg-accent border-accent' : 'bg-background border-accent/20'} flex items-center justify-center`}>
+                                {step.completed && <CheckCircle2 className="h-4 w-4 text-white" />}
+                              </div>
+                              <h4 className={`font-semibold ${step.completed ? 'text-foreground' : 'text-foreground/70'}`}>{step.title}</h4>
+                              <p className="text-sm text-muted-foreground">{step.desc}</p>
+                            </div>
+                          )) : [
                             { title: "Master System Design", desc: "Build a distributed cache system.", completed: false },
                             { title: "Lead a Project", desc: "Successfully manage a team of 3 devs.", completed: true },
                             { title: "AWS Solutions Architect", desc: "Get certified in SAA-C03.", completed: false },
@@ -539,6 +636,83 @@ export default function CareerInsights() {
                           </CardContent>
                         </Card>
                       </motion.div>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="fairs" className="space-y-6">
+                  <div className="grid gap-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold">
+                          Upcoming Job Fairs
+                          {jobFairs.length > 0 && (
+                            <span className="text-accent ml-2 opacity-70">({jobFairs.length})</span>
+                          )}
+                        </h2>
+                        <p className="text-muted-foreground">Networking events and career expos in your region.</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={isLoadingFairs}
+                        onClick={async () => {
+                          setIsLoadingFairs(true);
+                          try {
+                            const data = await careerService.getJobFairs();
+                            setJobFairs(data);
+                          } finally {
+                            setIsLoadingFairs(false);
+                          }
+                        }}
+                      >
+                        {isLoadingFairs ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />} 
+                        Refresh
+                      </Button>
+                    </div>
+
+                    {isLoadingFairs ? (
+                      <div className="py-20 flex flex-col items-center justify-center gap-4">
+                         <Loader2 className="h-8 w-8 animate-spin text-accent" />
+                         <p className="text-muted-foreground">Fetching latest job fair events...</p>
+                      </div>
+                    ) : jobFairs.length > 0 ? (
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {jobFairs.map((fair, idx) => (
+                          <div
+                            key={fair.id || `fair-${idx}`}
+                            className="p-5 rounded-2xl bg-secondary/20 border border-white/5 hover:border-accent/30 transition-all group flex flex-col justify-between"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
+                                  {fair.source || 'General'}
+                                </span>
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {fair.date_text || 'Date TBA'}
+                                </span>
+                              </div>
+                              <h3 className="text-lg font-bold mb-1 group-hover:text-accent transition-colors">{fair.title}</h3>
+                              <p className="text-sm text-muted-foreground mb-4 flex items-start gap-1">
+                                <Users className="h-4 w-4 shrink-0 mt-0.5" />
+                                {fair.location || fair.city || 'Online/Virtual'}
+                              </p>
+                            </div>
+                            <Button className="w-full gap-2" variant="secondary" asChild>
+                              <a href={fair.link} target="_blank" rel="noopener noreferrer">
+                                View Event Details
+                                <ArrowRight className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-20 text-center bg-secondary/10 rounded-3xl border border-dashed border-white/10">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                        <h3 className="text-xl font-bold mb-2">No Events Found</h3>
+                        <p className="text-muted-foreground">Check back later for upcoming job fairs and recruitment events.</p>
+                      </div>
                     )}
                   </div>
                 </TabsContent>

@@ -1,6 +1,6 @@
 import api_instance from "@/services/api";
 
-export type InterviewType = "technical" | "behavioral" | "general" | "mock";
+export type InterviewType = "technical" | "behavioral" | "general" | "mock" | "salary_negotiation" | "career_advice";
 
 export interface Message {
   role: "interviewer" | "candidate";

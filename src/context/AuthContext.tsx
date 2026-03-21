@@ -3,7 +3,8 @@ import api from '@/services/api';
 
 interface AuthContextType {
     isAuthenticated: boolean;
-    login: (accessToken: string, refreshToken: string) => void;
+    isAdmin: boolean;
+    login: (accessToken: string, refreshToken: string, isAdmin: boolean) => void;
     logout: () => void;
     loading: boolean;
 }
@@ -12,20 +13,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
+        const adminStatus = localStorage.getItem('is_admin') === 'true';
         if (token) {
             setIsAuthenticated(true);
+            setIsAdmin(adminStatus);
         }
         setLoading(false);
     }, []);
 
-    const login = (accessToken: string, refreshToken: string) => {
+    const login = (accessToken: string, refreshToken: string, adminStatus: boolean) => {
         localStorage.setItem('access_token', accessToken);
         localStorage.setItem('refresh_token', refreshToken);
+        localStorage.setItem('is_admin', adminStatus ? 'true' : 'false');
         setIsAuthenticated(true);
+        setIsAdmin(adminStatus);
     };
 
     const logout = async () => {
@@ -39,12 +45,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
+            localStorage.removeItem('is_admin');
             setIsAuthenticated(false);
+            setIsAdmin(false);
         }
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, loading }}>
+        <AuthContext.Provider value={{ isAuthenticated, isAdmin, login, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

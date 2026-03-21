@@ -35,6 +35,7 @@ export interface Job {
     url?: string;
     apply_url?: string;
     hasEmail: boolean;
+    platform?: string;
 }
 
 export interface JobSearchResponse {
@@ -95,7 +96,8 @@ export const searchJobs = async (query: string = '', page: number = 1, filters: 
                 saved: false,
                 description: job.description || '',
                 url: job.source_url || job.job_url || '#',
-                apply_url: job.apply_url || job.source_url || job.job_url || '#'
+                apply_url: job.apply_url || job.source_url || job.job_url || '#',
+                platform: job.platform || 'other'
             };
         });
 

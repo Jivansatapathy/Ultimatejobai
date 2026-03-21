@@ -39,6 +39,18 @@ const interviewTypes: {
       description: "Practice run with varied questions",
       icon: GraduationCap,
     },
+    {
+      type: "salary_negotiation",
+      title: "Salary Negotiation",
+      description: "Practice negotiating salary and benefits",
+      icon: MessageSquare,
+    },
+    {
+      type: "career_advice",
+      title: "Career Advice",
+      description: "Strategic planning and career growth session",
+      icon: GraduationCap,
+    },
   ];
 
 export function InterviewTypeSelector({

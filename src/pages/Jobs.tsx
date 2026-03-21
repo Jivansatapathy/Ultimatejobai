@@ -40,6 +40,9 @@ export default function Jobs() {
     workplace_type: "",
     job_type: ""
   });
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const parseDate = (dateStr: string) => {
     const now = new Date();
@@ -69,21 +72,36 @@ export default function Jobs() {
     }
   };
 
-  const fetchJobs = async (query: string = "", currentFilters: any = filters) => {
-    setIsRefreshing(true);
+  const fetchJobs = async (query: string = "", currentFilters: any = filters, p: number = 1, append: boolean = false) => {
+    if (append) setIsLoadingMore(true);
+    else setIsRefreshing(true);
+    
     try {
-      // Single API call with page_size=100 — no slow multi-page loop
-      const { jobs: newJobs, totalResults: total } = await searchJobs(
-        query, 1, { ...currentFilters, page_size: 100 }
+      const { jobs: newJobs, hasNext, totalResults: total } = await searchJobs(
+        query, p, { ...currentFilters, page_size: 10 }
       );
 
-      const sorted = sortJobs(newJobs, sortBy);
-      setJobs(sorted);
-      setTotalResults(total || newJobs.length);
+      if (append) {
+        setJobs(prev => [...prev, ...newJobs]);
+        setPage(p);
+      } else {
+        const sorted = sortJobs(newJobs, sortBy);
+        setJobs(sorted);
+        setPage(1);
+      }
+      setHasNextPage(hasNext);
+      setTotalResults(total || (append ? jobs.length + newJobs.length : newJobs.length));
     } catch (error: any) {
       toast.error("Failed to fetch jobs: " + (error.response?.data?.message || error.message));
     } finally {
       setIsRefreshing(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (hasNextPage && !isLoadingMore) {
+      fetchJobs(searchQuery, filters, page + 1, true);
     }
   };
 
@@ -270,7 +288,7 @@ export default function Jobs() {
                   <>
                     {jobs.map((job, index) => (
                       <motion.div
-                        key={job.id}
+                        key={`${job.id}-${index}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 * (index % 10) }}
@@ -353,6 +371,20 @@ export default function Jobs() {
                         </div>
                       </motion.div>
                     ))}
+                    
+                    {hasNextPage && (
+                      <div className="flex justify-center py-8">
+                        <Button 
+                          variant="outline" 
+                          onClick={loadMore} 
+                          disabled={isLoadingMore}
+                          className="min-w-[200px] h-12 rounded-xl border-accent/20 hover:border-accent hover:bg-accent/5 gap-2"
+                        >
+                          {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+                          {isLoadingMore ? "Searching for more..." : "Load More Opportunities"}
+                        </Button>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="text-center py-20 glass-card">

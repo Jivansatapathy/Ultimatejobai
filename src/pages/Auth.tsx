@@ -64,8 +64,8 @@ export default function Auth() {
       const token = await firebaseUser.getIdToken();
       const response = await api.post("/api/auth/firebase-login/", { token });
 
-      const { access, refresh, is_new_user } = response.data;
-      login(access, refresh);
+      const { access, refresh, is_new_user, is_admin } = response.data;
+      login(access, refresh, is_admin);
       
       if (!isSignUp) toast.success("Welcome back!");
 

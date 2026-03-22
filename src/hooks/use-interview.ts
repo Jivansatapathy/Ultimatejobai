@@ -35,32 +35,37 @@ export function useInterview() {
     scrollToBottom();
   }, [state.messages, scrollToBottom]);
 
-  const handleError = useCallback((error: unknown) => {
-    if (error instanceof ApiError) {
-      if (error.status === 404) {
+  const handleError = useCallback((error: any) => {
+    // If it's an Axios error, the backend's dictionary is in error.response.data
+    const backendMessage = error?.response?.data?.error || error?.message;
+
+    if (error instanceof ApiError || error?.response?.status) {
+      const status = error.status || error.response?.status;
+      if (status === 404) {
         toast({
           variant: "destructive",
           title: "Session not found",
           description: "Your interview session has expired. Please start a new interview.",
         });
         setState(initialState);
-      } else if (error.status === 400) {
-        if (error.message.toLowerCase().includes("finished")) {
+      } else if (status === 400) {
+        if (backendMessage && backendMessage.toLowerCase().includes("finished")) {
           toast({
             title: "Interview completed",
             description: "This interview has already ended. Please view your feedback.",
           });
         } else {
           toast({
-            title: "Error",
-            description: error.message || "An error occurred with your request.",
+            variant: "destructive",
+            title: "Interview Error",
+            description: backendMessage || "An error occurred with your request.",
           });
         }
       } else {
         toast({
           variant: "destructive",
           title: "Something went wrong",
-          description: "Please try again in a moment.",
+          description: backendMessage || "Please try again in a moment.",
         });
       }
     } else {

@@ -113,16 +113,16 @@ export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack:
         };
     }, []);
 
-    const startTracking = async () => {
-        // navigator.mediaDevices requires a secure context (HTTPS or localhost)
+    const startTracking = async (onTerminate: () => void) => {
+        // navigator.mediaDevices requires HTTPS or localhost
         if (!navigator.mediaDevices?.getUserMedia) {
-            console.warn("[Camera] navigator.mediaDevices unavailable — not a secure context or camera not supported.");
             toast({
-                title: "Camera Unavailable",
-                description: "Camera requires a secure connection (HTTPS). Interview will continue without camera tracking.",
+                title: "Camera Required",
+                description: "Camera access is required for this interview. Terminating session.",
                 variant: "destructive",
             });
-            return; // continue interview without camera
+            setTimeout(onTerminate, 2000);
+            return false;
         }
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -132,7 +132,7 @@ export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack:
             }
             setIsTracking(true);
 
-            // Start detection loop
+            // Start face-detection loop
             trackingIntervalRef.current = setInterval(async () => {
                 if (videoRef.current && detectorRef.current && videoRef.current.readyState === 4) {
                     try {
@@ -142,20 +142,25 @@ export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack:
                         } else if (faces.length > 1) {
                             setTrackingWarning("Multiple faces detected. Please ensure you are alone.");
                         } else {
-                            setTrackingWarning(null); // Clear warning
+                            setTrackingWarning(null);
                         }
                     } catch (err) {
                         console.error("Error estimating faces:", err);
                     }
                 }
-            }, 1000); // Check every second
-        } catch (error) {
-            console.error("Error accessing camera:", error);
+            }, 1000);
+            return true;
+        } catch (error: any) {
+            const isDenied = error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError";
             toast({
-                title: "Camera Error",
-                description: "Could not access the camera. Interview will continue without tracking.",
-                variant: "destructive"
+                title: "Camera Access Denied",
+                description: isDenied
+                    ? "Camera permission was denied. Camera is required — terminating interview."
+                    : "Could not access the camera. Terminating interview.",
+                variant: "destructive",
             });
+            setTimeout(onTerminate, 2000);
+            return false;
         }
     };
 
@@ -197,8 +202,12 @@ export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack:
             metadata: { type: selectedType, jobDescription: jobDescription.substring(0, 100) }
         });
         setIsStarting(false);
-        // Start camera tracking
-        startTracking();
+        // Camera is required — terminate if not available
+        await startTracking(() => {
+            stopTracking();
+            resetInterview();
+            onBack();
+        });
     };
 
     const handleRestart = () => {

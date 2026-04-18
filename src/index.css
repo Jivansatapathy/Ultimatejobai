@@ -1,0 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Cool light base */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Deep navy primary */
+    --primary: 222 47% 11%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Cool gray secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Teal accent */
+    --accent: 173 80% 36%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 173 80% 36%;
+
+    --radius: 0.625rem;
+
+    /* Extended palette */
+    --success: 142 72% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 7%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(214 32% 11% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(214 32% 11% / 0.08), 0 2px 4px -2px hsl(214 32% 11% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(214 32% 11% / 0.1), 0 4px 6px -4px hsl(214 32% 11% / 0.05);
+
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 173 80% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 18%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 173 80% 36%;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 210 40% 96%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 47% 16%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 222 47% 16%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 173 80% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 173 80% 42%;
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 173 80% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 14%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 47% 14%;
+    --sidebar-ring: 173 80% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card border border-border rounded-2xl;
+    box-shadow: var(--shadow-md);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 cursor-pointer;
+  }
+
+  .glass-card-hover:hover {
+    @apply border-accent/40;
+    box-shadow: 0 0 0 3px hsl(173 80% 36% / 0.1), var(--shadow-lg);
+    transform: translateY(-1px);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(173 80% 36%), hsl(217 91% 60%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-accent {
+    background: linear-gradient(135deg, hsl(173 80% 36%), hsl(217 91% 60%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-card {
+    @apply glass-card p-6 relative overflow-hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    @apply absolute top-0 left-0 bottom-0 w-1 rounded-l-2xl;
+    background: linear-gradient(180deg, hsl(173 80% 36%), hsl(217 91% 60%));
+  }
+
+  .gradient-hero {
+    background: linear-gradient(135deg, hsl(173 80% 97%) 0%, hsl(210 100% 96%) 50%, hsl(217 91% 97%) 100%);
+  }
+
+  .gradient-card {
+    background: linear-gradient(135deg, hsl(173 80% 36% / 0.05) 0%, hsl(217 91% 60% / 0.05) 100%);
+  }
+
+  .accent-bar {
+    background: linear-gradient(90deg, hsl(173 80% 36%), hsl(217 91% 60%));
+  }
+
+  .teal-glow {
+    box-shadow: 0 0 0 3px hsl(173 80% 36% / 0.15), var(--shadow-md);
+  }
+
+  .nav-link {
+    @apply text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm font-medium;
+  }
+
+  .nav-link-active {
+    @apply text-accent font-semibold;
+  }
+
+  .section-heading {
+    @apply text-3xl md:text-4xl font-bold tracking-tight;
+  }
+
+  .section-subheading {
+    @apply text-lg text-muted-foreground max-w-2xl;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+
+    50% {
+      opacity: 1;
+    }
+  }
+}
+
+/* Resume Pagination & Print Styles */
+@layer utilities {
+  /* A4 page — fixed 794px width, height grows naturally with content */
+  .resume-a4-page {
+    width: 794px;
+    min-height: 1123px;          /* one A4 sheet minimum */
+    background: white;
+    padding: 56px 62px;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #111;
+    box-sizing: border-box;
+  }
+
+  /* Visible gap between page 1 and page 2 in the preview */
+  .resume-page-gap {
+    height: 28px;
+    background: transparent;
+  }
+
+  .resume-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .resume-page-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 2px dashed #d1d5db;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .resume-page-indicator::after {
+    content: 'PAGE BREAK';
+    position: absolute;
+    right: 5mm;
+    top: -12px;
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 0.05em;
+  }
+}
+
+@media print {
+  /* margin: 0 removes the browser-generated headers/footers (URL, date, page numbers, title) */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide everything except the resume */
+  body * {
+    visibility: hidden;
+  }
+
+  #resume-preview-content,
+  #resume-preview-content * {
+    visibility: visible;
+  }
+
+  #resume-preview-content {
+    position: fixed !important;
+    inset: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  /* Reset zoom; each .resume-a4-page prints as one full A4 sheet */
+  #resume-preview-content > * {
+    zoom: 1 !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .resume-a4-page {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 18mm 16mm !important;   /* proper A4 margins in the PDF */
+    box-shadow: none !important;
+    background: white !important;
+    /* Page 1 forces a page break after it so page 2 starts on a new sheet */
+    break-after: page;
+    page-break-after: always;
+  }
+
+  /* Last page: no forced break after */
+  .resume-a4-page:last-of-type {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Gap div disappears in print */
+  .resume-page-gap {
+    display: none !important;
+  }
+
+  .resume-section {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Hide all UI chrome */
+  .no-print, button, header, nav, aside,
+  [role="button"], [role="navigation"] {
+    display: none !important;
+  }
+}

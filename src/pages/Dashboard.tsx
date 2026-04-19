@@ -94,10 +94,13 @@ export default function Dashboard() {
   const progressPct = (dashboardStats.daily_applied_count / dashboardStats.daily_goal_target) * 100;
 
   return (
-    <div className="min-h-screen" style={{ background: "#f9f9f8" }}>
+    <div className="min-h-screen bg-[#0a0f1e] relative overflow-hidden">
+      {/* Atmospheric glows */}
+      <div className="pointer-events-none absolute top-0 left-1/4 w-[600px] h-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full bg-teal-500/10 blur-[120px]" />
       <Navbar />
 
-      <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+      <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="container mx-auto max-w-6xl">
 
           {/* ── Page Header ─────────────────────────────────── */}
@@ -106,14 +109,15 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="mb-12 text-center"
+            data-tour="dash-header"
           >
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
               Overview
             </p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight mb-3">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3">
               Career Dashboard
             </h1>
-            <p className="text-base text-gray-400 max-w-md mx-auto">
+            <p className="text-base text-slate-400 max-w-md mx-auto">
               Your job search progress at a glance.
             </p>
           </motion.div>
@@ -127,17 +131,18 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14, duration: 0.4 }}
-              className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+              className="lg:col-span-2 bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
+              data-tour="dash-activity"
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Application Activity</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Last 30 days</p>
+                  <h2 className="text-base font-semibold text-white">Application Activity</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Last 30 days</p>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 rounded-lg text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  className="h-8 px-3 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/10"
                   onClick={() => setShowActivityDetails(true)}
                 >
                   <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
@@ -152,18 +157,18 @@ export default function Dashboard() {
                     <div
                       key={i}
                       className="flex-1 rounded-t-md transition-all duration-300 cursor-pointer hover:opacity-70 min-h-[3px]"
-                      style={{ height: `${Math.max(height, 4)}%`, backgroundColor: "#d1d5db" }}
+                      style={{ height: `${Math.max(height, 4)}%`, backgroundColor: "rgba(20,184,166,0.4)" }}
                       title={`${count} activities`}
                     />
                   );
                 }) : (
                   <div className="flex-1 flex items-center justify-center">
-                    <p className="text-xs text-gray-400">No activity data yet</p>
+                    <p className="text-xs text-slate-500">No activity data yet</p>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-between mt-3 text-[11px] text-gray-400 font-medium">
+              <div className="flex justify-between mt-3 text-[11px] text-slate-500 font-medium">
                 <span>30 days ago</span>
                 <span>Today</span>
               </div>
@@ -174,9 +179,10 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.18, duration: 0.4 }}
-              className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+              className="bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
+              data-tour="dash-quickactions"
             >
-              <h2 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h2>
+              <h2 className="text-base font-semibold text-white mb-4">Quick Actions</h2>
               <div className="space-y-2">
                 {[
                   {
@@ -210,18 +216,18 @@ export default function Dashboard() {
                       onClick={action.onClick}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left
                         ${action.locked
-                          ? "text-gray-400 bg-gray-50/60 cursor-pointer"
-                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                          ? "text-slate-500 bg-white/[0.02] cursor-pointer"
+                          : "text-slate-300 hover:bg-white/10 hover:text-white"
                         }`}
                     >
                       <div className={`h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0
-                        ${action.locked ? "bg-gray-100" : "bg-gray-100"}`}>
-                        <action.icon className={`h-3.5 w-3.5 ${action.locked ? "text-gray-300" : "text-gray-500"}`} />
+                        ${action.locked ? "bg-white/[0.03] border border-white/[0.06]" : "bg-white/[0.06] border border-white/10"}`}>
+                        <action.icon className={`h-3.5 w-3.5 ${action.locked ? "text-slate-600" : "text-slate-400"}`} />
                       </div>
                       <span className="flex-1">{action.label}</span>
                       {action.locked
-                        ? <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">Pro</span>
-                        : <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
+                        ? <span className="text-[10px] font-semibold text-slate-500 bg-white/[0.04] border border-white/[0.08] px-1.5 py-0.5 rounded-md">Pro</span>
+                        : <ChevronRight className="h-3.5 w-3.5 text-slate-600" />
                       }
                     </button>
                   );
@@ -237,24 +243,25 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22, duration: 0.4 }}
-              className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+              className="lg:col-span-2 bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
+              data-tour="dash-daily"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Daily Progress</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <h2 className="text-base font-semibold text-white">Daily Progress</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {dashboardStats.daily_applied_count} of {dashboardStats.daily_goal_target} applications today
                   </p>
                 </div>
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-white">
                   {dashboardStats.daily_applied_count}
-                  <span className="text-sm text-gray-400 font-medium ml-1">/ {dashboardStats.daily_goal_target}</span>
+                  <span className="text-sm text-slate-400 font-medium ml-1">/ {dashboardStats.daily_goal_target}</span>
                 </span>
               </div>
 
               <Progress
                 value={progressPct}
-                className="h-2 bg-gray-100 [&>div]:bg-gray-800 mb-6 rounded-full"
+                className="h-2 bg-white/[0.06] [&>div]:bg-teal-500 mb-6 rounded-full"
               />
 
               <div className="grid sm:grid-cols-2 gap-3">
@@ -263,15 +270,15 @@ export default function Dashboard() {
                     key={task.id}
                     className={`flex items-center gap-3 rounded-xl px-4 py-3 border transition-all
                       ${task.completed
-                        ? "bg-gray-50 border-gray-100"
-                        : "bg-white border-gray-100"
+                        ? "bg-white/[0.05] border-white/[0.08]"
+                        : "bg-white/[0.02] border-white/[0.06]"
                       }`}
                   >
                     <div className={`h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0
-                      ${task.completed ? "bg-gray-800" : "bg-gray-100"}`}>
-                      <CheckCircle2 className={`h-3 w-3 ${task.completed ? "text-white" : "text-gray-300"}`} />
+                      ${task.completed ? "bg-teal-500" : "bg-white/[0.06]"}`}>
+                      <CheckCircle2 className={`h-3 w-3 ${task.completed ? "text-white" : "text-slate-600"}`} />
                     </div>
-                    <span className={`text-xs font-medium ${task.completed ? "text-gray-500 line-through" : "text-gray-700"}`}>
+                    <span className={`text-xs font-medium ${task.completed ? "text-slate-500 line-through" : "text-slate-300"}`}>
                       {task.label}
                     </span>
                   </div>
@@ -284,35 +291,35 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.26, duration: 0.4 }}
-              className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+              className="bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Your Plan</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Usage summary</p>
+                  <h2 className="text-base font-semibold text-white">Your Plan</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Usage summary</p>
                 </div>
-                <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                  <ShieldCheck className="h-4 w-4 text-gray-500" />
+                <div className="h-8 w-8 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center">
+                  <ShieldCheck className="h-4 w-4 text-slate-400" />
                 </div>
               </div>
 
               {subscriptionSummary?.plan ? (
                 <div className="space-y-3">
-                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 flex items-center justify-between">
+                  <div className="rounded-xl bg-white/[0.05] border border-white/10 px-4 py-3 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{subscriptionSummary.plan.name}</p>
-                      <p className="text-[11px] text-gray-400 font-medium mt-0.5 capitalize">{subscriptionSummary.status}</p>
+                      <p className="text-sm font-semibold text-white">{subscriptionSummary.plan.name}</p>
+                      <p className="text-[11px] text-slate-400 font-medium mt-0.5 capitalize">{subscriptionSummary.status}</p>
                     </div>
-                    <span className="text-sm font-bold text-gray-900">
+                    <span className="text-sm font-bold text-white">
                       {subscriptionSummary.plan.price_display || "Active"}
                     </span>
                   </div>
 
                   <div className="space-y-1.5">
                     {subscriptionSummary.current_usage.slice(0, 4).map((item) => (
-                      <div key={item.feature_key} className="flex items-center justify-between py-1.5">
-                        <p className="text-xs text-gray-500 capitalize">{item.feature_key.replace(/_/g, " ")}</p>
-                        <p className="text-xs font-semibold text-gray-800">
+                      <div key={item.feature_key} className="flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0">
+                        <p className="text-xs text-slate-500 capitalize">{item.feature_key.replace(/_/g, " ")}</p>
+                        <p className="text-xs font-semibold text-slate-300">
                           {item.is_unlimited ? "Unlimited" : `${item.used_count} / ${item.limit}`}
                         </p>
                       </div>
@@ -320,10 +327,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-gray-200 px-4 py-8 text-center">
-                  <p className="text-xs text-gray-400 mb-3">No active subscription</p>
+                <div className="rounded-xl border border-dashed border-white/10 px-4 py-8 text-center">
+                  <p className="text-xs text-slate-500 mb-3">No active subscription</p>
                   <Link to="/plans">
-                    <Button size="sm" variant="outline" className="h-8 rounded-lg text-xs font-medium border-gray-200 text-gray-600 hover:bg-gray-50">
+                    <Button size="sm" variant="outline" className="h-8 rounded-lg text-xs font-medium border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white">
                       See Plans
                     </Button>
                   </Link>
@@ -336,17 +343,17 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.4 }}
-              className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+              className="lg:col-span-2 bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Recent Activity</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Your last few actions</p>
+                  <h2 className="text-base font-semibold text-white">Recent Activity</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Your last few actions</p>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 rounded-lg text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  className="h-8 px-3 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/10"
                   onClick={() => setShowActivityDetails(true)}
                 >
                   View All
@@ -364,24 +371,24 @@ export default function Dashboard() {
                              : Send;
 
                   return (
-                    <div key={index} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-all group cursor-default">
-                      <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <Icon className="h-3.5 w-3.5 text-gray-500" />
+                    <div key={index} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] transition-all group cursor-default">
+                      <div className="h-8 w-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                        <Icon className="h-3.5 w-3.5 text-slate-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 leading-none mb-0.5">
+                        <p className="text-sm font-medium text-slate-200 leading-none mb-0.5">
                           {activity.activity_type.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                         </p>
-                        <p className="text-xs text-gray-400 truncate">{activity.description}</p>
+                        <p className="text-xs text-slate-500 truncate">{activity.description}</p>
                       </div>
-                      <p className="text-[11px] text-gray-400 font-medium whitespace-nowrap">
+                      <p className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
                         {activity.timestamp ? new Date(activity.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
                       </p>
                     </div>
                   );
                 }) : (
                   <div className="py-10 text-center">
-                    <p className="text-sm text-gray-400">No activity yet. Start by applying to a job.</p>
+                    <p className="text-sm text-slate-500">No activity yet. Start by applying to a job.</p>
                   </div>
                 )}
               </div>
@@ -392,15 +399,15 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.34, duration: 0.4 }}
-              className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+              className="bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Recommended</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Matched for you</p>
+                  <h2 className="text-base font-semibold text-white">Recommended</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Matched for you</p>
                 </div>
                 <Link to="/jobs">
-                  <Button variant="ghost" size="sm" className="h-8 px-3 rounded-lg text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50">
+                  <Button variant="ghost" size="sm" className="h-8 px-3 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/10">
                     See All
                   </Button>
                 </Link>
@@ -408,17 +415,17 @@ export default function Dashboard() {
 
               <div className="space-y-3">
                 {recommendedJobs.length > 0 ? recommendedJobs.slice(0, 3).map((job, index) => (
-                  <div key={index} className="rounded-xl border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-all cursor-pointer group">
+                  <div key={index} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 hover:bg-white/[0.05] hover:border-white/[0.12] transition-all cursor-pointer group">
                     <div className="flex items-start justify-between mb-1">
-                      <p className="text-sm font-semibold text-gray-900 truncate leading-snug group-hover:text-gray-700">{job.title}</p>
-                      <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-lg ml-2 flex-shrink-0">{job.match}%</span>
+                      <p className="text-sm font-semibold text-white truncate leading-snug">{job.title}</p>
+                      <span className="text-[10px] font-semibold text-slate-400 bg-white/[0.06] border border-white/10 px-2 py-0.5 rounded-lg ml-2 flex-shrink-0">{job.match}%</span>
                     </div>
-                    <p className="text-xs text-gray-400 font-medium">{job.company}</p>
-                    <p className="text-[11px] text-gray-300 mt-1">{job.location}</p>
+                    <p className="text-xs text-slate-400 font-medium">{job.company}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">{job.location}</p>
                   </div>
                 )) : (
                   <div className="py-8 text-center">
-                    <p className="text-xs text-gray-400">Recommendations load after your first application.</p>
+                    <p className="text-xs text-slate-500">Recommendations load after your first application.</p>
                   </div>
                 )}
               </div>
@@ -429,15 +436,15 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.38, duration: 0.4 }}
-              className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+              className="lg:col-span-3 bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Recent Applications</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Your applied positions</p>
+                  <h2 className="text-base font-semibold text-white">Recent Applications</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Your applied positions</p>
                 </div>
                 <Link to="/applications">
-                  <Button variant="ghost" size="sm" className="h-8 px-3 rounded-lg text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 gap-1">
+                  <Button variant="ghost" size="sm" className="h-8 px-3 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/10 gap-1">
                     View All
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </Button>
@@ -445,38 +452,38 @@ export default function Dashboard() {
               </div>
 
               {recentApplications.length > 0 ? (
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-white/[0.04]">
                   {recentApplications.slice(0, 5).map((application) => (
                     <div key={application.id} className="flex items-center gap-4 py-3 group">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">{application.job_title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{application.company}</p>
+                        <p className="text-sm font-semibold text-white">{application.job_title}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{application.company}</p>
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap justify-end">
                         {application.pipeline_status && (
-                          <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
+                          <span className="text-[11px] font-medium text-slate-400 bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-lg">
                             ATS: {application.pipeline_status}
                           </span>
                         )}
                         {typeof application.match_score === "number" && (
-                          <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg">
+                          <span className="text-[11px] font-medium text-slate-400 bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-lg">
                             {application.match_score}% match
                           </span>
                         )}
-                        <span className="text-[11px] font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-lg capitalize">
+                        <span className="text-[11px] font-semibold text-slate-300 bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-lg capitalize">
                           {application.status}
                         </span>
                       </div>
 
-                      <div className="text-right text-[11px] text-gray-400 min-w-[80px]">
+                      <div className="text-right text-[11px] text-slate-500 min-w-[80px]">
                         <p>{application.created_at ? new Date(application.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Recently"}</p>
                         {application.selected_resume_link && (
                           <a
                             href={application.selected_resume_link}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-800 mt-0.5"
+                            className="inline-flex items-center gap-1 text-teal-400 hover:text-teal-300 mt-0.5"
                           >
                             <FileDown className="h-3 w-3" />
                             Resume
@@ -487,8 +494,8 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-gray-200 px-6 py-8 text-center">
-                  <p className="text-sm text-gray-400">Your applied jobs will appear here.</p>
+                <div className="rounded-xl border border-dashed border-white/10 px-6 py-8 text-center">
+                  <p className="text-sm text-slate-500">Your applied jobs will appear here.</p>
                 </div>
               )}
             </motion.div>

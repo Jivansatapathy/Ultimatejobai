@@ -13,8 +13,10 @@ import {
   Users,
   BrainCircuit,
   LogOut,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import NotificationBell from "@/components/NotificationBell";
 
 const navLinks = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -22,6 +24,7 @@ const navLinks = [
   { name: "Jobs", href: "/jobs", icon: Briefcase },
   { name: "Interview", href: "/interview", icon: Users },
   { name: "AI Mentor", href: "/ai-mentor", icon: BrainCircuit },
+  { name: "Settings", href: "/settings", icon: SettingsIcon },
   { name: "Plans", href: "/plans", icon: Sparkles },
 ];
 
@@ -38,7 +41,7 @@ export const Navbar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: "#0F172A" }}>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0f1e]/80 backdrop-blur-xl border-b border-white/[0.06]">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-6">
 
@@ -64,7 +67,7 @@ export const Navbar = () => {
                         ? "bg-teal-500/20 text-teal-300"
                         : "text-slate-300 hover:text-white hover:bg-white/8"
                     }`}
-                    style={!isActive(link.href) ? {} : {}}
+        
                   >
                     <link.icon className={`h-4 w-4 ${isActive(link.href) ? "text-teal-400" : "text-slate-500"}`} />
                     {link.name}
@@ -128,15 +131,21 @@ export const Navbar = () => {
                     </Button>
                   </Link>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                  onClick={logout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
+                  <NotificationBell />
+                  <Link to="/settings">
+                    <Button variant="ghost" size="sm" className="gap-1.5 text-slate-400 hover:text-white hover:bg-white/10">
+                      <SettingsIcon className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    onClick={logout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
               </>
             )}
           </div>
@@ -159,7 +168,7 @@ export const Navbar = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            style={{ backgroundColor: "#0F172A", borderTop: "1px solid rgba(255,255,255,0.08)" }}
+            className="bg-[#0a0f1e] border-t border-white/[0.06]"
           >
             <div className="container mx-auto px-4 py-4 space-y-1">
               {isAuthenticated ? (

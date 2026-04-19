@@ -16,7 +16,7 @@ interface JobDetailsSheetProps {
 }
 
 export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProps) {
-  const [activeTab, setActiveTab] = useState<string>("description");
+  const [activeTab, setActiveTab] = useState<string>("apply");
   const [isIframeLoading, setIsIframeLoading] = useState(true);
   const [leverDetails, setLeverDetails] = useState<LeverJobDetails | null>(null);
   const [isLoadingLever, setIsLoadingLever] = useState(false);
@@ -148,95 +148,12 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
 
             <Tabs value={activeTab} onValueChange={(val) => {
               setActiveTab(val);
-              if (val === 'apply' && job) {
-                activityService.logActivity({
-                  activity_type: 'JOB_APPLY',
-                  description: `Initiated application for ${job.title} at ${job.company}`,
-                  metadata: { jobId: job.id, company: job.company, title: job.title }
-                });
-              }
             }} className="w-full">
-              <TabsList className={`grid w-full grid-cols-2 h-12 transition-all duration-300 ${activeTab === 'apply' ? 'mb-4 px-6 md:px-8' : 'mb-8'}`}>
-                <TabsTrigger value="description" className="text-base py-2">Job Description</TabsTrigger>
-                <TabsTrigger value="apply" className="text-base py-2 gap-2">
-                    <Send className="h-4 w-4" />
-                    Quick Apply
-                </TabsTrigger>
+              <TabsList className="hidden">
+                <TabsTrigger value="apply">Quick Apply</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="description" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                <div className="glass-card p-6 bg-secondary/5">
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                    {/* Debug Info */}
-                    {(job as any).debug && (
-                      <div className="mb-4 p-2 bg-accent/20 rounded text-[10px] font-mono">
-                        Source: {job.platform} | Desc Len: {job.description?.length || 0}
-                      </div>
-                    )}
 
-                    {isLoadingLever ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                            <Loader2 className="h-8 w-8 animate-spin mb-4 text-accent" />
-                            <p className="text-sm font-medium animate-pulse">Fetching official job details...</p>
-                        </div>
-                    ) : leverDetails ? (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                            {/* Rich Badge for Direct Data */}
-                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 w-fit mb-6">
-                                <Sparkles className="h-3 w-3 text-accent" />
-                                <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Direct API Source</span>
-                            </div>
-
-                            {/* Lever HTML Description */}
-                            <div 
-                                className="text-foreground/90 leading-relaxed text-base job-html-content"
-                                dangerouslySetInnerHTML={{ __html: leverDetails.descriptionHtml }} 
-                            />
-
-                            {/* Lever Structured Lists (Responsibilities, Requirements, etc.) */}
-                            {leverDetails.lists?.map((list, idx) => (
-                                <div key={idx} className="space-y-4 pt-4">
-                                    <h3 className="text-xl font-bold text-foreground border-l-4 border-accent pl-4">{list.text}</h3>
-                                    <div 
-                                        className="text-foreground/80 leading-relaxed pl-5 list-content-html"
-                                        dangerouslySetInnerHTML={{ __html: list.content }}
-                                    />
-                                </div>
-                            ))}
-
-                            {/* Additional Information */}
-                            {leverDetails.additionalHtml && (
-                                <div className="pt-8 border-t border-border/50">
-                                    <h3 className="text-lg font-semibold mb-4 text-muted-foreground italic">Additional Information</h3>
-                                    <div 
-                                        className="text-foreground/70 text-sm leading-relaxed"
-                                        dangerouslySetInnerHTML={{ __html: leverDetails.additionalHtml }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    ) : job.description ? (
-                        job.description.includes('<') ? (
-                          <div 
-                            className="text-foreground/80 leading-relaxed text-base job-html-content"
-                            dangerouslySetInnerHTML={{ __html: job.description }} 
-                          />
-                        ) : (
-                          job.description.split('\n').map((line, i) => (
-                            <p key={i} className="mb-4 text-foreground/80 leading-relaxed text-base">
-                                {line.trim()}
-                            </p>
-                          ))
-                        )
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                            <Building2 className="h-12 w-12 mb-4 opacity-20" />
-                            <p className="italic">No description provided for this position.</p>
-                        </div>
-                    )}
-                    </div>
-                </div>
-              </TabsContent>
               
               <TabsContent value="apply" className="mt-0 flex-1 flex flex-col focus-visible:outline-none focus-visible:ring-0 -mx-6 md:-mx-8 h-[calc(100vh-200px)]">
                 {(() => {
@@ -402,6 +319,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
         }}
         open={autoApplyOpen}
         onClose={() => setAutoApplyOpen(false)}
+        onSuccess={() => onOpenChange(false)} // Close the sheet on success
         initialSelectedResumeId={selectedResumeId}
       />
     </Sheet>

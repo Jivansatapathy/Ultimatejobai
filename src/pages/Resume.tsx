@@ -99,10 +99,13 @@ export default function Resume() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0a0f1e] relative overflow-hidden">
+      {/* Atmospheric glows */}
+      <div className="pointer-events-none absolute top-0 right-1/4 w-[500px] h-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full bg-teal-500/10 blur-[120px]" />
       <Navbar />
 
-      <main className="pt-24 pb-12 px-4">
+      <main className="pt-24 pb-12 px-4 relative z-10">
         <div className="container mx-auto max-w-7xl">
           {/* Header */}
           <motion.div
@@ -110,8 +113,8 @@ export default function Resume() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold mb-2">Resume Intelligence</h1>
-            <p className="text-muted-foreground">Create, optimize, and manage ATS-ready resumes locally</p>
+            <h1 className="text-3xl font-bold mb-2 text-white" data-tour="resume-header">Resume Intelligence</h1>
+            <p className="text-slate-400">Create, optimize, and manage ATS-ready resumes locally</p>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-6">
@@ -122,9 +125,9 @@ export default function Resume() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="glass-card p-6"
+                className="bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
               >
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 mb-6" data-tour="resume-tabs">
                   <Button
                     variant={activeTab === "build" ? "default" : "ghost"}
                     onClick={() => setActiveTab("build")}
@@ -153,12 +156,12 @@ export default function Resume() {
 
                 {activeTab === "build" ? (
                   <div className="space-y-4">
-                    <div className="p-8 border-2 border-dashed border-teal-200 rounded-xl text-center hover:border-teal-400 hover:bg-teal-50/30 transition-colors">
-                      <div className="inline-flex p-4 rounded-full bg-teal-50 mb-4">
-                        <Sparkles className="h-8 w-8 text-teal-500" />
+                    <div className="p-8 border-2 border-dashed border-teal-500/30 rounded-xl text-center hover:border-teal-500/60 hover:bg-teal-500/5 transition-colors">
+                      <div className="inline-flex p-4 rounded-full bg-teal-500/10 border border-teal-500/20 mb-4">
+                        <Sparkles className="h-8 w-8 text-teal-400" />
                       </div>
-                      <h3 className="text-lg font-semibold mb-2">Smart Resume Builder</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <h3 className="text-lg font-semibold mb-2 text-white">Smart Resume Builder</h3>
+                      <p className="text-sm text-slate-400 mb-4">
                         Answer a few questions and let AI create an ATS-optimized resume tailored to your target role.
                       </p>
                       <Button variant="hero" className="gap-2" onClick={() => {
@@ -179,7 +182,7 @@ export default function Resume() {
                 ) : activeTab === "upload" ? (
                   <div className="space-y-4">
                     <div
-                      className="p-8 border-2 border-dashed border-teal-200 rounded-xl text-center hover:border-teal-400 hover:bg-teal-50/30 transition-colors cursor-pointer"
+                      className="p-8 border-2 border-dashed border-teal-500/30 rounded-xl text-center hover:border-teal-500/60 hover:bg-teal-500/5 transition-colors cursor-pointer"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <input
@@ -189,11 +192,11 @@ export default function Resume() {
                         accept=".pdf"
                         onChange={handleFileUpload}
                       />
-                      <div className="inline-flex p-4 rounded-full bg-teal-50 mb-4">
-                        <Upload className="h-8 w-8 text-teal-500" />
+                      <div className="inline-flex p-4 rounded-full bg-teal-500/10 border border-teal-500/20 mb-4">
+                        <Upload className="h-8 w-8 text-teal-400" />
                       </div>
-                      <h3 className="text-lg font-semibold mb-2">Upload Your Resume</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <h3 className="text-lg font-semibold mb-2 text-white">Upload Your Resume</h3>
+                      <p className="text-sm text-slate-400 mb-4">
                         Drop your PDF or DOCX file here, and we'll analyze it using multimodal AI.
                       </p>
                       <Button variant="outline" className="gap-2" onClick={(e) => {
@@ -215,32 +218,33 @@ export default function Resume() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="glass-card p-6"
+                className="bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
+                data-tour="resume-list"
               >
-                <h2 className="text-lg font-semibold mb-4">Your Resumes</h2>
+                <h2 className="text-lg font-semibold mb-4 text-white">Your Resumes</h2>
                 <div className="space-y-3">
                   {resumes.map((resume) => (
                     <div
                       key={resume.id}
-                      className={`p-4 rounded-lg border transition-all cursor-pointer border-border hover:border-teal-300 hover:bg-teal-50/20 dark:hover:bg-teal-900/10`}
+                      className={`p-4 rounded-lg border transition-all cursor-pointer border-white/[0.08] hover:border-teal-500/40 hover:bg-white/[0.04]`}
                       onClick={() => navigate(`/resume/${resume.id}`)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-teal-50 dark:bg-teal-900/20">
-                            <FileText className="h-5 w-5 text-teal-600" />
+                          <div className="p-2 rounded-lg bg-teal-500/10 border border-teal-500/20">
+                            <FileText className="h-5 w-5 text-teal-400" />
                           </div>
                           <div>
-                            <p className="font-medium flex items-center gap-2">
+                            <p className="font-medium flex items-center gap-2 text-white">
                               {resume.personalDetails.fullName || "Untitled Resume"}
                             </p>
-                            <p className="text-xs text-muted-foreground">Edited {new Date(resume.lastEdited).toLocaleDateString()}</p>
+                            <p className="text-xs text-slate-500">Edited {new Date(resume.lastEdited).toLocaleDateString()}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <p className="text-sm font-medium text-success">{resume.score}%</p>
-                            <p className="text-xs text-muted-foreground">ATS Score</p>
+                            <p className="text-sm font-medium text-teal-400">{resume.score}%</p>
+                            <p className="text-xs text-slate-500">ATS Score</p>
                           </div>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/resume/${resume.id}`); }}>
@@ -255,7 +259,7 @@ export default function Resume() {
                     </div>
                   ))}
                   {resumes.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-8 text-slate-500">
                       No resumes found. Create one to get started!
                     </div>
                   )}
@@ -270,16 +274,17 @@ export default function Resume() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="glass-card p-6"
+                className="bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-6"
+                data-tour="resume-ats"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">ATS Profile Optimization</h2>
-                  <Target className="h-5 w-5 text-teal-600" />
+                  <h2 className="text-lg font-semibold text-white">ATS Profile Optimization</h2>
+                  <Target className="h-5 w-5 text-teal-400" />
                 </div>
 
                 <div className="space-y-4 mb-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
                       <FileText className="h-3 w-3" /> Select Your Resume
                     </label>
                     <Select
@@ -289,10 +294,10 @@ export default function Resume() {
                         setIsAnalysisVisible(false);
                       }}
                     >
-                      <SelectTrigger className="w-full bg-background/50 border-border h-9">
+                      <SelectTrigger className="w-full bg-white/[0.05] border-white/10 text-slate-100 h-9">
                         <SelectValue placeholder="Choose a resume..." />
                       </SelectTrigger>
-                      <SelectContent className="glass-card border-border">
+                      <SelectContent className="bg-[#0d1225] border-white/10">
                         {resumes.map((resume) => (
                           <SelectItem key={resume.id} value={resume.id} className="text-sm">
                             {resume.personalDetails.fullName || `Untitled Resume (${resume.id.slice(0, 4)})`}
@@ -305,15 +310,15 @@ export default function Resume() {
 
                 {!isAnalysisVisible ? (
                   <div className="space-y-4">
-                    <div className="p-3 bg-secondary/50 rounded-lg border border-border">
-                      <p className="text-xs text-muted-foreground mb-3">
+                    <div className="p-3 bg-white/[0.03] rounded-lg border border-white/[0.08]">
+                      <p className="text-xs text-slate-400 mb-3">
                         Set your target role to analyze ATS match. The job description is optional and helps make the suggestions even more precise.
                       </p>
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Target Job Role</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-500">Target Job Role</label>
                           <input
-                            className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm"
+                            className="w-full bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
                             placeholder="e.g. Senior Software Engineer"
                             value={activeResume?.targetJobRole || ""}
                             onChange={(e) => {
@@ -322,9 +327,9 @@ export default function Resume() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Job Description (Optional)</label>
+                          <label className="text-[10px] uppercase font-bold text-slate-500">Job Description (Optional)</label>
                           <textarea
-                            className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm h-32"
+                            className="w-full bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded px-2 py-1.5 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
                             placeholder="Paste the job description here for a more targeted ATS check..."
                             value={activeResume?.targetJobDescription || ""}
                             onChange={(e) => {
@@ -375,8 +380,8 @@ export default function Resume() {
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-muted-foreground">Target Role</p>
-                        <p className="font-semibold">{activeResume.targetJobRole}</p>
+                        <p className="text-xs text-slate-400">Target Role</p>
+                        <p className="font-semibold text-white">{activeResume.targetJobRole}</p>
                       </div>
                       <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => {
                         updateTargetJobRole("");
@@ -388,20 +393,20 @@ export default function Resume() {
                     <div className="relative mb-6">
                       <div className="w-24 h-24 mx-auto relative">
                         <svg className="w-full h-full transform -rotate-90">
-                          <circle cx="48" cy="48" r="42" fill="none" stroke="hsl(173 80% 90%)" strokeWidth="8" />
-                          <circle cx="48" cy="48" r="42" fill="none" stroke="hsl(173 80% 36%)" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${(activeResume?.score || 0) * 2.64} 264`} />
+                          <circle cx="48" cy="48" r="42" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+                          <circle cx="48" cy="48" r="42" fill="none" stroke="rgb(20,184,166)" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${(activeResume?.score || 0) * 2.64} 264`} />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-2xl font-bold">{activeResume?.score || 0}%</span>
+                          <span className="text-2xl font-bold text-white">{activeResume?.score || 0}%</span>
                         </div>
                       </div>
-                      <p className="text-center text-xs text-muted-foreground mt-2 font-medium">ATS Match Score</p>
+                      <p className="text-center text-xs text-slate-400 mt-2 font-medium">ATS Match Score</p>
                     </div>
 
                     <div className="space-y-4">
                       {activeResume?.suggestions && activeResume.suggestions.some(s => s.type === 'keyword' && s.text.startsWith('Matched:')) && (
                         <div className="space-y-2">
-                          <h3 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+                          <h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2">
                             <CheckCircle2 className="h-3 w-3 text-success" />
                             Matched Keywords
                           </h3>
@@ -409,7 +414,7 @@ export default function Resume() {
                             {activeResume.suggestions
                               .filter(s => s.type === 'keyword' && s.text.startsWith('Matched:'))
                               .map((s, i) => (
-                                <span key={i} className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] rounded-full border border-teal-200">
+                                <span key={i} className="px-2 py-0.5 bg-teal-500/10 text-teal-400 text-[10px] rounded-full border border-teal-500/20">
                                   {s.text.replace('Matched: ', '')}
                                 </span>
                               ))}
@@ -419,7 +424,7 @@ export default function Resume() {
 
                       {activeResume?.suggestions && activeResume.suggestions.some(s => s.type === 'keyword' && s.text.startsWith('Missing:')) && (
                         <div className="space-y-2">
-                          <h3 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+                          <h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2">
                             <AlertCircle className="h-3 w-3 text-warning" />
                             Missing Keywords
                           </h3>
@@ -436,21 +441,21 @@ export default function Resume() {
                       )}
 
                       <div className="space-y-2">
-                        <h3 className="text-xs font-bold uppercase text-muted-foreground">Improvement Suggestions</h3>
+                        <h3 className="text-xs font-bold uppercase text-slate-400">Improvement Suggestions</h3>
                         {activeResume?.suggestions && activeResume.suggestions.filter(s => s.type === 'improvement').length > 0 ? (
                           activeResume.suggestions
                             .filter(s => s.type === 'improvement')
                             .map((suggestion, index) => (
-                              <div key={index} className="p-2.5 rounded-lg bg-secondary/50 border border-border">
+                              <div key={index} className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08]">
                                 <div className="flex items-start gap-2">
-                                  <Sparkles className="h-3.5 w-3.5 text-teal-500 mt-0.5 shrink-0" />
-                                  <p className="text-xs text-muted-foreground leading-relaxed">{suggestion.text}</p>
+                                  <Sparkles className="h-3.5 w-3.5 text-teal-400 mt-0.5 shrink-0" />
+                                  <p className="text-xs text-slate-400 leading-relaxed">{suggestion.text}</p>
                                 </div>
                               </div>
                             ))
                         ) : (
-                          <div className="p-2.5 rounded-lg bg-secondary/50 border border-border">
-                            <p className="text-xs text-muted-foreground italic">No suggestions yet. Upload your resume for analysis.</p>
+                          <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08]">
+                            <p className="text-xs text-slate-500 italic">No suggestions yet. Upload your resume for analysis.</p>
                           </div>
                         )}
                       </div>

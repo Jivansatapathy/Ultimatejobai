@@ -109,14 +109,14 @@ export default function CareerPlanner() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-[#0a0a0f] text-white">
+        <div className="h-screen flex flex-col bg-[#0a0f1e] text-white">
             {/* Header */}
-            <header className="shrink-0 border-b border-white/[0.06] px-6 py-4 flex items-center justify-between bg-[#0d0d14]">
+            <header className="shrink-0 border-b border-white/[0.06] px-6 py-4 flex items-center justify-between bg-[#0a0f1e]/90 backdrop-blur-md">
                 <div className="flex items-center gap-3">
                     <button onClick={() => navigate("/ai-mentor")} className="text-slate-400 hover:text-white transition-colors">
                         <ArrowLeft className="h-5 w-5" />
                     </button>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" data-tour="planner-header">
                         <div className="h-8 w-8 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center">
                             <TrendingUp className="h-4 w-4 text-accent" />
                         </div>
@@ -165,7 +165,7 @@ export default function CareerPlanner() {
                                 Start with a question, or pick one below
                             </p>
 
-                            <div className="space-y-2 mb-10">
+                            <div className="space-y-2 mb-10" data-tour="planner-prompts">
                                 {STARTER_PROMPTS.map((p, i) => (
                                     <motion.button
                                         key={i}
@@ -251,7 +251,7 @@ export default function CareerPlanner() {
             </div>
 
             {/* Input bar */}
-            <div className="shrink-0 border-t border-white/[0.06] bg-[#0d0d14] px-6 py-4">
+            <div className="shrink-0 border-t border-white/[0.06] bg-[#0a0f1e]/90 backdrop-blur-md px-6 py-4" data-tour="planner-input">
                 <div className="max-w-2xl mx-auto">
                     <div className="flex gap-3 items-end">
                         <Textarea

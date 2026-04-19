@@ -46,11 +46,17 @@ export const autoApplyService = {
     },
 
     // Send auto-apply email for a job
-    async apply(jobId: string, resumeId?: string, applicationAnswers?: Record<string, string>) {
+    async apply(jobId: string | number, resumeId?: string | number, answers?: Record<string, string>, coverLetter?: string, resumeUrl?: string) {
+        // Ensure IDs are sent as the expected type for the backend
+        const parsedJobId = typeof jobId === 'string' && /^\d+$/.test(jobId) ? parseInt(jobId, 10) : jobId;
+        const parsedResumeId = resumeId ? (typeof resumeId === 'string' && /^\d+$/.test(resumeId) ? parseInt(resumeId, 10) : resumeId) : null;
+
         const res = await api.post('/api/apply/', {
-            job_id: jobId,
-            resume_id: resumeId,
-            application_answers: applicationAnswers || {},
+            job_id: parsedJobId,
+            resume_id: parsedResumeId,
+            resume_url: resumeUrl,
+            answers: answers || {},
+            cover_letter: coverLetter
         });
         return res.data;
     },

@@ -134,9 +134,13 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-[#0a0f1e] flex relative overflow-hidden">
+      {/* Atmospheric glows */}
+      <div className="pointer-events-none absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-violet-600/20 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-teal-500/15 blur-[120px]" />
+
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -144,38 +148,38 @@ export default function Auth() {
         >
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg shadow-teal-500/25">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <span className="text-2xl font-bold">
-              Career<span className="text-accent">AI</span>
+            <span className="text-2xl font-bold text-white">
+              Career<span className="text-teal-400">AI</span>
             </span>
           </Link>
 
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2 text-white">
               {isSignUp ? "Create your account" : "Welcome back"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-slate-400">
               {isSignUp
                 ? "Start your AI-powered career journey today"
                 : "Sign in to access your career dashboard"}
             </p>
           </div>
 
-          <div className="mb-6 rounded-2xl border border-accent/20 bg-accent/5 p-4">
+          <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold text-white">
                     {isSignUp ? "Signing up as an employer?" : "Need employer access?"}
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-sm text-slate-400">
                     Use the employer workspace to post jobs, manage candidates, and stay inside the hiring console.
                   </p>
                 </div>
                 <Link to={`/employer/auth${isSignUp ? "" : ""}`}>
-                  <Button type="button" variant="outline" size="sm" className="gap-2 whitespace-nowrap">
+                  <Button type="button" variant="outline" size="sm" className="gap-2 whitespace-nowrap border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white">
                     <Building2 className="h-4 w-4" />
                     {isSignUp ? "Employer Signup" : "Employer Login"}
                   </Button>
@@ -188,15 +192,15 @@ export default function Auth() {
             {isSignUp && (
               <>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Full Name</label>
+                  <label className="text-sm font-medium text-slate-300">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                     <input
                       type="text"
                       placeholder="John Doe"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
+                      className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
                       required
                     />
                   </div>
@@ -206,36 +210,36 @@ export default function Auth() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium text-slate-300">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                 <input
                   type="email"
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
+              <label className="text-sm font-medium text-slate-300">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
+                  className="w-full pl-10 pr-12 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -245,14 +249,14 @@ export default function Auth() {
             {!isSignUp && (
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-border bg-secondary text-accent focus:ring-accent/50" />
-                  <span className="text-sm text-muted-foreground">Remember me</span>
+                  <input type="checkbox" className="w-4 h-4 rounded border-white/10 bg-white/5 text-teal-500 focus:ring-teal-500/40" />
+                  <span className="text-sm text-slate-400">Remember me</span>
                 </label>
-                <a href="#" className="text-sm text-accent hover:underline">Forgot password?</a>
+                <a href="#" className="text-sm text-teal-400 hover:underline">Forgot password?</a>
               </div>
             )}
 
-            <Button type="submit" variant="hero" size="lg" className="w-full gap-2" disabled={loading}>
+            <Button type="submit" size="lg" className="w-full gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white shadow-lg shadow-teal-500/25 font-semibold" disabled={loading}>
               {loading ? (
                 <>
                   <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
@@ -268,11 +272,11 @@ export default function Auth() {
           </form>
 
           {/* Toggle */}
-          <p className="text-center mt-6 text-muted-foreground">
+          <p className="text-center mt-6 text-slate-400">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-accent hover:underline font-medium"
+              className="text-teal-400 hover:underline font-medium"
             >
               {isSignUp ? "Sign in" : "Sign up"}
             </button>
@@ -281,18 +285,19 @@ export default function Auth() {
       </div>
 
       {/* Right Side - Features */}
-      <div className="hidden lg:flex flex-1 items-center justify-center p-8 bg-secondary relative overflow-hidden">
+      <div className="hidden lg:flex flex-1 items-center justify-center p-8 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
           className="relative z-10 max-w-md"
         >
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-3xl font-bold mb-4 text-white">
             Accelerate Your{" "}
-            <span className="text-accent">Career Growth</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-violet-400 to-rose-400">Career Growth</span>
           </h2>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-slate-400 mb-8">
             Join thousands of professionals who have transformed their job search
             with our AI-powered career intelligence platform.
           </p>
@@ -306,24 +311,24 @@ export default function Auth() {
                 transition={{ delay: 0.3 + index * 0.1 }}
                 className="flex items-center gap-3"
               >
-                <div className="p-1 rounded-full bg-success/10">
-                  <CheckCircle2 className="h-5 w-5 text-success" />
+                <div className="p-1 rounded-full bg-teal-500/10 border border-teal-500/20">
+                  <CheckCircle2 className="h-5 w-5 text-teal-400" />
                 </div>
-                <span className="text-foreground">{feature}</span>
+                <span className="text-slate-300">{feature}</span>
               </motion.div>
             ))}
           </div>
 
-          <div className="mt-12 glass-card p-6 bg-background">
-            <p className="text-sm text-muted-foreground italic mb-4">
+          <div className="mt-12 p-6 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08]">
+            <p className="text-sm text-slate-400 italic mb-4">
               "CareerAI helped me land my dream job at a top tech company.
               The ATS optimization alone increased my callback rate by 300%."
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-violet-500" />
               <div>
-                <p className="font-medium text-sm">Sarah Chen</p>
-                <p className="text-xs text-muted-foreground">Senior Engineer at Meta</p>
+                <p className="font-medium text-sm text-white">Sarah Chen</p>
+                <p className="text-xs text-slate-500">Senior Engineer at Meta</p>
               </div>
             </div>
           </div>

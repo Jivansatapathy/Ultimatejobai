@@ -59,6 +59,7 @@ export default function CareerInsights() {
   const [autoApplyOpen, setAutoApplyOpen] = useState(false);
   const navigate = useNavigate();
 
+
   useEffect(() => {
     const nextTab = searchParams.get("tab") || "skills";
     setActiveTab(nextTab);
@@ -267,10 +268,13 @@ export default function CareerInsights() {
   return (
     <>
 
-      <div className="min-h-screen bg-background text-foreground selection:bg-accent/30">
+      <div className="min-h-screen bg-[#0a0f1e] text-white selection:bg-teal-500/30 relative overflow-hidden">
+        {/* Atmospheric glows */}
+        <div className="pointer-events-none absolute top-0 left-1/3 w-[500px] h-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
+        <div className="pointer-events-none absolute bottom-1/3 right-0 w-[400px] h-[400px] rounded-full bg-teal-500/10 blur-[120px]" />
         <Navbar />
 
-        <main className="pt-24 pb-12 px-4 md:px-6">
+        <main className="pt-24 pb-12 px-4 md:px-6 relative z-10">
           <div className="container mx-auto max-w-7xl">
 
             {/* ── Landing picker ─────────────────────────────────────────── */}
@@ -283,10 +287,10 @@ export default function CareerInsights() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-6">
                   <Sparkles className="h-3.5 w-3.5" /> AI Mentor
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-center mb-4">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-center mb-4 text-white">
                   What do you want to work on?
                 </h1>
-                <p className="text-muted-foreground text-center max-w-md mb-14 leading-relaxed">
+                <p className="text-slate-400 text-center max-w-md mb-14 leading-relaxed">
                   Pick a section to get started. You can switch between them anytime from the top tabs.
                 </p>
 
@@ -327,14 +331,14 @@ export default function CareerInsights() {
                         setShowLanding(false);
                         setSearchParams((p) => { const n = new URLSearchParams(p); n.set("tab", tab); return n; });
                       }}
-                      className={`group flex flex-col items-start text-left rounded-2xl border bg-secondary/10 p-6 transition-all duration-200 ${accent}`}
+                      className={`group flex flex-col items-start text-left rounded-2xl border bg-white/[0.03] p-6 transition-all duration-200 ${accent}`}
                     >
                       <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl border ${iconCls}`}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <h3 className="text-base font-black text-foreground mb-1">{label}</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{sub}</p>
-                      <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                      <h3 className="text-base font-black text-white mb-1">{label}</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">{sub}</p>
+                      <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-slate-400 group-hover:text-white transition-colors">
                         Open <ArrowRight className="h-3.5 w-3.5" />
                       </div>
                     </motion.button>
@@ -360,10 +364,10 @@ export default function CareerInsights() {
                   <Sparkles className="h-4 w-4 text-accent" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-accent">AI-Powered Strategy</span>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">
+                <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-violet-400 to-rose-400">
                   Unlock Your Next Career Move
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl">
+                <p className="text-xl text-slate-400 max-w-2xl">
                   Get personalized insights, bridge your skill gaps, and optimize your path to leadership roles with our AI career strategist.
                 </p>
               </motion.div>
@@ -372,19 +376,19 @@ export default function CareerInsights() {
             <div className="grid lg:grid-cols-5 gap-8">
               {/* Sidebar Stats */}
               <div className="lg:col-span-2 space-y-6">
-                <Card className="border-accent/10 bg-secondary/30 backdrop-blur-sm">
+                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Target className="h-4 w-4 text-accent" />
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
+                      <Target className="h-4 w-4 text-teal-400" />
                       Market Readiness
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold mb-4">
+                    <div className="text-3xl font-bold mb-4 text-white">
                       {Math.round(Math.max(score, userScore?.overall_score || 0))}%
                     </div>
-                    <Progress value={Math.max(score, userScore?.overall_score || 0)} className="h-2 bg-secondary" />
-                    <p className="text-xs text-muted-foreground mt-4">
+                    <Progress value={Math.max(score, userScore?.overall_score || 0)} className="h-2 bg-white/[0.06] [&>div]:bg-teal-500" />
+                    <p className="text-xs text-slate-400 mt-4">
                       {Math.max(score, userScore?.overall_score || 0) > 80 ? "Match is strong for target roles." : "Improve your resume to increase match score."}
                     </p>
                     <Button
@@ -400,29 +404,29 @@ export default function CareerInsights() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-accent/10 bg-secondary/30 backdrop-blur-sm">
+                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-accent" />
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
+                      <Zap className="h-4 w-4 text-teal-400" />
                       Focus Areas
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Resume Score</span>
+                      <span className="text-slate-400">Resume Score</span>
                       <span className={`font-semibold ${Math.max(score, userScore?.resume_score || 0) > 80 ? 'text-success' : 'text-accent'}`}>
                         {Math.round(Math.max(score, userScore?.resume_score || 0))}%
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Interview Score</span>
+                      <span className="text-slate-400">Interview Score</span>
                       <span className={`font-semibold ${userScore && userScore.interview_score > 70 ? 'text-success' : 'text-accent'}`}>
                         {userScore ? Math.round(userScore.interview_score) : 0}%
                       </span>
                     </div>
-                    <div className="flex flex-col gap-1 text-sm pt-2 border-t border-white/5">
+                    <div className="flex flex-col gap-1 text-sm pt-2 border-t border-white/[0.06]">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Target Role</span>
+                        <span className="text-slate-400">Target Role</span>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -474,15 +478,15 @@ export default function CareerInsights() {
                   <div className="flex items-center gap-3 mb-4">
                     <button
                       onClick={() => setShowLanding(true)}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                      className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors shrink-0"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" /> Menu
                     </button>
                     <div className="h-4 w-px bg-border" />
                   </div>
 
-                  <div className="mb-6">
-                    <TabsList className="bg-secondary/50 p-1 w-full grid grid-cols-3">
+                  <div className="mb-6" data-tour="mentor-tabs">
+                    <TabsList className="bg-white/[0.04] border border-white/[0.08] p-1 w-full grid grid-cols-3">
                       <TabsTrigger value="ai-insights" className="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold">
                         <Sparkles className="h-4 w-4" />
                         AI Insights
@@ -503,7 +507,7 @@ export default function CareerInsights() {
                     </TabsList>
                   </div>
 
-                  <TabsContent value="ai-insights" className="space-y-5">
+                  <TabsContent value="ai-insights" className="space-y-5" data-tour="mentor-ai-insights">
 
                     {/* Career Strategic Planner — hero card */}
                     <motion.div
@@ -519,7 +523,7 @@ export default function CareerInsights() {
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent mb-1">AI-Powered</p>
                           <h3 className="text-xl font-black text-foreground tracking-tight">Career Strategic Planner</h3>
-                          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                          <p className="text-sm text-slate-400 mt-1 leading-relaxed">
                             Chat with your AI career advisor to build a concrete 12–24 month roadmap tailored to your goals.
                           </p>
                         </div>
@@ -539,7 +543,7 @@ export default function CareerInsights() {
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.07 }}
-                      className="rounded-2xl border border-white/[0.08] bg-secondary/20 overflow-hidden"
+                      className="rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden"
                     >
                       <div className="flex items-center gap-3 px-6 py-4 border-b border-white/[0.06]">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5">
@@ -547,19 +551,19 @@ export default function CareerInsights() {
                         </div>
                         <div>
                           <h3 className="text-base font-bold leading-tight">Career Move Analyzer</h3>
-                          <p className="text-xs text-muted-foreground">Paste an offer or dilemma — AI weighs the pros, cons, and fit</p>
+                          <p className="text-xs text-slate-400">Paste an offer or dilemma — AI weighs the pros, cons, and fit</p>
                         </div>
                       </div>
 
                       <div className="p-5 space-y-4">
                         <textarea
                           placeholder="Paste your offer letter, company details, or describe your career dilemma here…"
-                          className="w-full min-h-[120px] p-4 rounded-xl bg-background/50 border border-white/10 focus:border-accent/40 focus:ring-2 focus:ring-accent/20 outline-none transition-all resize-none text-sm leading-relaxed placeholder:text-muted-foreground/50"
+                          className="w-full min-h-[120px] p-4 rounded-xl bg-white/[0.05] border border-white/10 text-slate-100 focus:border-teal-500/40 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none text-sm leading-relaxed placeholder:text-slate-500"
                           value={offerText}
                           onChange={(e) => setOfferText(e.target.value)}
                         />
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs text-muted-foreground/60">Your resume profile is used as context automatically.</p>
+                          <p className="text-xs text-slate-500">Your resume profile is used as context automatically.</p>
                           <Button
                             onClick={handleGetAdvice}
                             disabled={isAdvising || !offerText.trim()}
@@ -589,11 +593,11 @@ export default function CareerInsights() {
                     </motion.div>
 
                   </TabsContent>
-                  <TabsContent value="fairs" className="space-y-6">
+                  <TabsContent value="fairs" className="space-y-6" data-tour="mentor-fairs">
                     <div className="grid gap-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h2 className="text-2xl font-bold">
+                          <h2 className="text-2xl font-bold text-white">
                             Upcoming Job Fairs
                             {jobFairs.length > 0 && (
                               <span className="text-accent ml-2 opacity-70">
@@ -611,7 +615,7 @@ export default function CareerInsights() {
                               </span>
                             )}
                           </h2>
-                          <p className="text-muted-foreground">Networking events and career expos in your region.</p>
+                          <p className="text-slate-400">Networking events and career expos in your region.</p>
                         </div>
                         <Button
                           variant="outline"
@@ -653,7 +657,7 @@ export default function CareerInsights() {
                                 key={field}
                                 value={fairFilters[field]}
                                 onChange={e => setFairFilters(prev => ({ ...prev, [field]: e.target.value }))}
-                                className="w-full h-10 rounded-xl border border-white/10 bg-card px-3 pr-8 text-sm text-foreground focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all appearance-none cursor-pointer"
+                                className="w-full h-10 rounded-xl border border-white/10 bg-white/[0.05] px-3 pr-8 text-sm text-slate-100 focus:outline-none focus:border-teal-500/40 focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none cursor-pointer"
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
                               >
                                 <option value="">All {label}s</option>
@@ -669,7 +673,7 @@ export default function CareerInsights() {
                       {isLoadingFairs ? (
                         <div className="py-20 flex flex-col items-center justify-center gap-4">
                           <Loader2 className="h-8 w-8 animate-spin text-accent" />
-                          <p className="text-muted-foreground">Fetching latest job fair events...</p>
+                          <p className="text-slate-400">Fetching latest job fair events...</p>
                         </div>
                       ) : (() => {
                         const f = fairFilters;
@@ -686,20 +690,20 @@ export default function CareerInsights() {
                             {filtered.map((fair, idx) => (
                               <div
                                 key={fair.id || `fair-${idx}`}
-                                className="p-5 rounded-2xl bg-secondary/20 border border-white/5 hover:border-accent/30 transition-all group flex flex-col justify-between"
+                                className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-teal-500/30 transition-all group flex flex-col justify-between"
                               >
                                 <div>
                                   <div className="flex items-center justify-between mb-3">
                                     <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
                                       {fair.source || 'General'}
                                     </span>
-                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <span className="text-xs text-slate-400 flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
                                       {fair.date_text || 'Date TBA'}
                                     </span>
                                   </div>
-                                  <h3 className="text-lg font-bold mb-1 group-hover:text-accent transition-colors">{fair.title}</h3>
-                                  <p className="text-sm text-muted-foreground mb-4 flex items-start gap-1">
+                                  <h3 className="text-lg font-bold mb-1 text-white group-hover:text-teal-400 transition-colors">{fair.title}</h3>
+                                  <p className="text-sm text-slate-400 mb-4 flex items-start gap-1">
                                     <Users className="h-4 w-4 shrink-0 mt-0.5" />
                                     {fair.location || fair.city || 'Online/Virtual'}
                                   </p>
@@ -714,12 +718,12 @@ export default function CareerInsights() {
                             ))}
                           </div>
                         ) : (
-                          <div className="py-20 text-center bg-secondary/10 rounded-3xl border border-dashed border-white/10">
+                          <div className="py-20 text-center bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
                             <Calendar className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                            <h3 className="text-xl font-bold mb-2">
+                            <h3 className="text-xl font-bold mb-2 text-white">
                               {jobFairs.length === 0 ? "No Events Found" : "No Results Match Your Filters"}
                             </h3>
-                            <p className="text-muted-foreground">
+                            <p className="text-slate-400">
                               {jobFairs.length === 0
                                 ? "Check back later for upcoming job fairs and recruitment events."
                                 : "Try adjusting the country, state, or city filters."}
@@ -739,7 +743,7 @@ export default function CareerInsights() {
                   </TabsContent>
 
                   <TabsContent value="negotiate" className="space-y-6">
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#0a0a0f] p-8 text-white">
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-8 text-white">
                       <div className="max-w-xl">
                         <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-5">
                           <DollarSign className="h-3 w-3" /> AI Salary Negotiator
@@ -769,6 +773,7 @@ export default function CareerInsights() {
                       </div>
                     </div>
                   </TabsContent>
+
                 </Tabs>
               </div>
             </div>

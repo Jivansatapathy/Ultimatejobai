@@ -24,12 +24,15 @@ import {
   Plus,
   Trash2,
   Wand2,
+  CheckCircle2,
+  LayoutDashboard,
 } from "lucide-react";
 import { useResume } from "@/hooks/useResume";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { notificationService } from "@/services/notificationService";
 
 import {
   DefaultDiscoveryFilter,
@@ -41,8 +44,12 @@ import {
   fetchAllCountries,
 } from "@/services/jobService";
 import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
+import { AutoApplyQueueBar } from "@/components/jobs/AutoApplyQueueBar";
 import { JobDetailsSheet } from "@/components/jobs/JobDetailsSheet";
 import { LoginRequiredModal } from "@/components/auth/LoginRequiredModal";
+import { autoApplyQueueService } from "@/services/autoApplyQueueService";
+import { autoApplyService } from "@/services/autoApplyService";
+import { careerService } from "@/services/careerService";
 
 type DiscoveryMode = "landing" | "results";
 type DiscoveryCard = DefaultDiscoveryFilter;
@@ -161,7 +168,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const targetRole = activeResume?.targetJobRole || notificationService.getPrefs().targetRole || "";
   const [savedJobs, setSavedJobs] = useState<(string | number)[]>([]);
   const [sortBy] = useState("Best Match");
   const [totalResults, setTotalResults] = useState(0);
@@ -200,6 +210,26 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [bulkApplying, setBulkApplying] = useState(false);
+  const [queueKey, setQueueKey] = useState(0);
+
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+
+  const loadAppliedHistory = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const data = await autoApplyService.getHistory();
+      if (data?.applications) {
+        setAppliedJobIds(new Set(data.applications.map(a => String(a.job_id))));
+      }
+    } catch (err) {
+      console.warn("Failed to load application history:", err);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    loadAppliedHistory();
+  }, [loadAppliedHistory]);
 
   const parseDate = (dateStr: string) => {
     const now = new Date();
@@ -303,8 +333,69 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     };
     setSearchQuery("");
     setFilters(cleared);
+    setShowAutoApplyOnly(false);
     navigateToJobs("", cleared);
   };
+
+  const toggleAutoApplyOnly = () => setShowAutoApplyOnly(prev => !prev);
+
+  const handleBulkAutoApply = async () => {
+    if (!isAuthenticated) { promptLogin("Login to auto-apply", "Sign in to use bulk auto-apply."); return; }
+    if (autoApplyQueueService.getDailyCount().count >= autoApplyQueueService.DAILY_LIMIT) {
+      toast.error(`Daily limit of ${autoApplyQueueService.DAILY_LIMIT} reached. Try again tomorrow.`);
+      return;
+    }
+
+    setBulkApplying(true);
+    try {
+      const status = await autoApplyService.getStatus();
+      const hasCredentials = !!(status?.has_credentials || status?.gmail_connected);
+      if (!hasCredentials) {
+        const first = autoApplyJobs[0];
+        if (first) { setAutoApplyJob(first); setAutoApplyOpen(true); }
+        toast.error("Email not configured. Set up your email below.");
+        setBulkApplying(false);
+        return;
+      }
+
+      // Important: Use cloud-saved resumes for backend API
+      const cloudResumes = await careerService.getResumes();
+      if (!cloudResumes || cloudResumes.length === 0) {
+        toast.error("Cloud-saved resume required for bulk apply.");
+        setBulkApplying(false);
+        return;
+      }
+      const cloudResumeId = String(cloudResumes[0].id);
+
+      const toQueue = autoApplyJobs.slice(0, 10);
+      const added = autoApplyQueueService.addToQueue(
+        toQueue.map(j => ({ id: String(j.id), title: j.title, company: j.company })),
+        cloudResumeId,
+      );
+
+      if (added === 0) {
+        toast.error("No slots left in today's queue.");
+      } else {
+        toast.success(`${added} jobs queued — applying gradually.`);
+        setQueueKey(k => k + 1);
+      }
+    } catch {
+      toast.error("Unexpected error starting bulk apply.");
+    } finally {
+      setBulkApplying(false);
+    }
+  };
+
+  // Visual list: Show everything (don't remove applied ones)
+  const toShow = jobs.filter((j) => {
+    if (showAutoApplyOnly && !j.hasEmail) return false;
+    return true;
+  });
+
+  // Apply All logic: Only pick jobs that are NOT applied yet
+  const autoApplyJobs = toShow.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id)));
+  const regularJobs = toShow.filter(j => !j.hasEmail);
+  const displayJobs = showAutoApplyOnly ? autoApplyJobs : [...toShow];
 
   useEffect(() => {
     let mounted = true;
@@ -401,6 +492,18 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   // Legacy city validation based on static map removed to allow dynamic backend cities to load reliably.
 
+  // Auto-navigate to target role with quick-apply filter on first visit
+  useEffect(() => {
+    if (!isAuthenticated || isLandingMode) return;
+    const params = new URLSearchParams(location.search);
+    if (params.toString()) return; // already has search params — don't override
+    if (!targetRole) return;
+    const next = new URLSearchParams();
+    next.set("search", targetRole);
+    navigate(`/jobs?${next.toString()}`, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isLandingMode]);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const initial = {
@@ -482,122 +585,166 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     setDetailsOpen(true);
   };
 
-  const renderJobCard = (job: Job, index: number) => (
-    <motion.div key={`${job.id}-${index}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 * (index % 10) }} className={`rounded-[30px] border border-slate-200 bg-white p-8 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.35)] relative ${job.source === 'employer' ? 'border-blue-100 ring-1 ring-blue-50' : ''}`}>
+  const renderJobCard = (job: Job, index: number) => {
+    const isApplied = appliedJobIds.has(String(job.id));
+    
+    return (
+    <motion.div 
+      key={`${job.id}-${index}`} 
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      transition={{ delay: 0.03 * (index % 10) }} 
+      className={`group rounded-[28px] border bg-white/[0.03] backdrop-blur-md p-7 relative transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] ${job.source === 'employer' ? 'border-teal-500/25 hover:border-teal-500/40' : 'border-white/[0.08] hover:border-white/[0.15]'} ${isApplied ? 'opacity-60' : ''}`}
+    >
+      {isApplied && (
+        <div className="absolute top-4 left-4 flex items-center gap-1 rounded-full bg-teal-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
+          <CheckCircle2 className="h-3 w-3" />
+          Applied
+        </div>
+      )}
       {job.source === 'employer' ? (
-        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal-700 border border-teal-100">
+        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-teal-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
           <Zap className="h-3 w-3 fill-current" />
           Verified
         </div>
       ) : (
-        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border border-slate-100">
+        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border border-white/[0.08]">
           <Globe2 className="h-3 w-3" />
-          External Discovery
+          External
         </div>
       )}
       <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 gap-5">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] bg-slate-50 border border-slate-100 shadow-sm"><Building2 className="h-8 w-8 text-slate-700" /></div>
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] bg-white/[0.06] border border-white/10"><Building2 className="h-8 w-8 text-slate-400" /></div>
           <div className="min-w-0">
-            <button type="button" className="text-left text-2xl font-black text-slate-900 tracking-tight hover:text-teal-700 transition-colors" onClick={() => openJobDetails(job)}>{job.title}</button>
+            <button type="button" className="text-left text-2xl font-black text-white tracking-tight hover:text-teal-400 transition-colors" onClick={() => openJobDetails(job)}>{job.title}</button>
             {job.company_slug ? (
               <button
                 type="button"
-                className="block mt-1 text-lg font-bold text-slate-500 transition hover:text-teal-700"
+                className="block mt-1 text-base font-bold text-slate-400 transition hover:text-teal-400"
                 onClick={() => navigate(`/companies/${job.company_slug}`)}
               >
                 {job.company}
               </button>
             ) : (
-              <p className="mt-1 text-lg font-bold text-slate-500">{job.company}</p>
+              <p className="mt-1 text-base font-bold text-slate-400">{job.company}</p>
             )}
-            <div className="mt-5 flex flex-wrap gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-              <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" />{job.location}</div>
-              <div className="flex items-center gap-2"><DollarSign className="h-3.5 w-3.5" />{job.salary}</div>
-              <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" />{job.posted}</div>
+            <div className="mt-4 flex flex-wrap gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+              <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-slate-600" />{job.location}</div>
+              <div className="flex items-center gap-2"><DollarSign className="h-3.5 w-3.5 text-slate-600" />{job.salary}</div>
+              <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-slate-600" />{job.posted}</div>
             </div>
             {isAuthenticated && job.match_reason ? (
-              <p className="mt-4 max-w-2xl text-[13px] font-medium text-slate-500 leading-relaxed">{job.match_reason}</p>
+              <p className="mt-3 max-w-2xl text-[13px] font-medium text-slate-500 leading-relaxed">{job.match_reason}</p>
             ) : null}
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap gap-3 xl:justify-end">
-          <Button variant="ghost" size="icon" onClick={() => toggleSave(job.id)} className={`h-11 w-11 rounded-xl border ${savedJobs.includes(job.id) ? "border-teal-200 bg-teal-50 text-teal-700" : "border-slate-100 bg-white text-slate-400 hover:text-slate-600"}`}><Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} /></Button>
-          {job.hasEmail && <Button variant="hero" size="sm" className="h-11 gap-2 rounded-xl px-6 font-bold" onClick={() => { if (!isAuthenticated) { promptLogin("Login to apply", "Sign in to start applying, save your progress, and unlock guided job actions."); return; } setAutoApplyJob(job); setAutoApplyOpen(true); }}><Zap className="h-4 w-4" />Auto Apply</Button>}
-          <Button variant="outline" size="sm" className="h-11 rounded-xl px-6 font-black uppercase tracking-widest text-[10px] border-slate-200" onClick={() => openJobDetails(job)}>View Details</Button>
+          <Button variant="ghost" size="icon" onClick={() => toggleSave(job.id)} className={`h-11 w-11 rounded-xl border ${savedJobs.includes(job.id) ? "border-teal-500/40 bg-teal-500/10 text-teal-400" : "border-white/10 bg-white/5 text-slate-500 hover:text-slate-300 hover:bg-white/10"}`}><Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} /></Button>
+
+          {appliedJobIds.has(String(job.id)) ? (
+            <Button variant="secondary" disabled className="h-11 gap-2 rounded-xl px-6 font-bold bg-white/5 text-slate-500 border-white/10">
+              <CheckCircle2 className="h-4 w-4" />
+              Applied
+            </Button>
+          ) : (
+            <>
+              {job.hasEmail && (
+                <Button
+                  variant={isApplied ? "outline" : "hero"}
+                  size="sm"
+                  disabled={isApplied}
+                  className={`h-11 gap-2 rounded-xl px-6 font-bold ${isApplied ? 'bg-white/5 border-white/10 text-slate-500' : 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/20'}`}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      promptLogin("Login to apply", "Sign in to start applying, save your progress, and unlock guided job actions.");
+                      return;
+                    }
+                    handleBulkAutoApply();
+                  }}
+                >
+                  {isApplied ? <CheckCircle2 className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
+                  {isApplied ? "Applied" : "Auto Apply"}
+                </Button>
+              )}
+            </>
+          )}
+
+          <Button variant="outline" size="sm" className="h-11 rounded-xl px-6 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
         </div>
       </div>
     </motion.div>
-  );
+    );
+  };
 
   const renderFilters = () => (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.35)] xl:sticky xl:top-24">
+    <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-5 xl:sticky xl:top-24">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Search Engine</p>
-          <h3 className="mt-1 text-lg font-semibold text-slate-900 tracking-tight">Refine Results</h3>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Search Engine</p>
+          <h3 className="mt-1 text-lg font-semibold text-white tracking-tight">Refine Results</h3>
         </div>
-        <button type="button" onClick={resetFilters} className="text-[10px] font-black text-slate-400 hover:text-teal-600 transition-colors uppercase tracking-[0.15em]">Reset All</button>
+        <button type="button" onClick={resetFilters} className="text-[10px] font-black text-slate-500 hover:text-teal-400 transition-colors uppercase tracking-[0.15em]">Reset All</button>
       </div>
-      
-      <div className="space-y-6">
+
+      <div className="space-y-5">
         <div className="space-y-2">
           <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Search Keywords</label>
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input 
-              value={filters.title || ""} 
-              onChange={(e) => setFilters((p) => ({ ...p, title: e.target.value }))} 
-              placeholder="Design, Engineering, etc..." 
-              className="w-full rounded-[20px] border border-slate-100 bg-slate-50/50 py-4 pl-11 pr-4 text-sm font-bold text-slate-950 placeholder:text-slate-400 outline-none focus:ring-4 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-white transition-all shadow-sm" 
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <input
+              value={filters.title || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, title: e.target.value }))}
+              placeholder="Design, Engineering, etc..."
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] py-4 pl-11 pr-4 text-sm font-bold text-slate-100 placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 focus:bg-white/10 transition-all"
             />
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Department</label>
-          <select 
-            value={filters.department || ""} 
-            onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))} 
-            className="w-full rounded-[20px] border border-slate-100 bg-slate-50/50 px-4 py-4 text-sm font-bold text-slate-950 outline-none focus:ring-4 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer shadow-sm"
+          <select
+            value={filters.department || ""}
+            onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))}
+            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
           >
-            <option value="">All Categories</option>
-            {departmentOptions.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
+            <option value="" className="bg-[#0a0f1e]">All Categories</option>
+            {departmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
           </select>
         </div>
 
         <div className="space-y-2">
           <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Engagement</label>
-          <select 
-            value={filters.employment_type || ""} 
-            onChange={(e) => setFilters((p) => ({ ...p, employment_type: e.target.value }))} 
-            className="w-full rounded-[20px] border border-slate-100 bg-slate-50/50 px-4 py-4 text-sm font-bold text-slate-950 outline-none focus:ring-4 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer shadow-sm"
+          <select
+            value={filters.employment_type || ""}
+            onChange={(e) => setFilters((p) => ({ ...p, employment_type: e.target.value }))}
+            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
           >
-            <option value="">Any Type</option>
-            {employmentOptions.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
+            <option value="" className="bg-[#0a0f1e]">Any Type</option>
+            {employmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
           </select>
         </div>
 
         <div className="space-y-2">
           <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Location</label>
-          <select 
-            value={filters.country || ""} 
-            onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))} 
-            disabled={isLoadingLocations} 
-            className="w-full rounded-[20px] border border-slate-100 bg-slate-50/50 px-4 py-4 text-sm font-bold text-slate-950 outline-none focus:ring-4 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer shadow-sm"
+          <select
+            value={filters.country || ""}
+            onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))}
+            disabled={isLoadingLocations}
+            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
           >
-            <option value="">{isLoadingLocations ? "Loading..." : "Everywhere"}</option>
+            <option value="" className="bg-[#0a0f1e]">{isLoadingLocations ? "Loading..." : "Everywhere"}</option>
             {(filterCountryOptions || []).map((country) => (
-              <option key={`country-${country.value}`} value={country.value}>
+              <option key={`country-${country.value}`} value={country.value} className="bg-[#0a0f1e]">
                 {country.label}
               </option>
             ))}
           </select>
         </div>
 
-        <Button 
-          type="button" 
-          className="mt-6 w-full h-16 rounded-[24px] bg-slate-950 hover:bg-slate-900 text-white font-black uppercase tracking-[0.25em] text-xs shadow-[0_20px_40px_-15px_rgba(15,23,42,0.4)] transition-all active:scale-[0.97] hover:-translate-y-0.5" 
+        <Button
+          type="button"
+          className="mt-2 w-full h-14 rounded-[24px] bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-black uppercase tracking-[0.2em] text-xs shadow-lg shadow-teal-500/20 transition-all active:scale-[0.97] hover:-translate-y-0.5"
           onClick={handleSidebarFilterSubmit}
         >
           {isLandingMode ? "Find Matches" : "Update Results"}
@@ -622,30 +769,30 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       });
   const showDiscoveryCards = !isAuthenticated && activeCards.length > 0;
   const renderCuratedShortcutBox = () => (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.35)] xl:sticky xl:top-24">
+    <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-5 xl:sticky xl:top-24">
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Special Categories</p>
-        <h3 className="mt-1 text-lg font-semibold text-slate-900">Quick Job Picks</h3>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Special Categories</p>
+        <h3 className="mt-1 text-lg font-semibold text-white">Quick Job Picks</h3>
         <p className="mt-2 text-sm leading-6 text-slate-500">
           Jump into curated searches for niche and senior-level roles.
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {curatedLandingSections.map((section) => {
           const Icon = iconMap[section.icon] || Briefcase;
           return (
-            <div key={section.key} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <div key={section.key} className="rounded-[20px] border border-white/[0.06] bg-white/[0.03] p-4">
               <button
                 type="button"
                 onClick={() => handleCuratedSectionSelect(section)}
                 className="flex w-full items-start gap-3 text-left"
               >
-                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/[0.06] border border-white/10 text-slate-400">
                   <Icon className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">{section.title}</p>
+                  <p className="font-semibold text-slate-200">{section.title}</p>
                   <p className="mt-1 text-sm leading-5 text-slate-500">{section.description}</p>
                 </div>
               </button>
@@ -656,7 +803,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     key={term}
                     type="button"
                     onClick={() => handleCuratedSectionSelect(section, term)}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-teal-200 hover:text-teal-700 hover:bg-teal-50"
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-400 transition hover:border-teal-500/40 hover:text-teal-300 hover:bg-teal-500/10"
                   >
                     {term}
                   </button>
@@ -671,44 +818,69 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   return (
     <>
-      <main className={isLandingMode ? "pt-16 bg-white" : "pt-16 bg-white"}>
+      <main className="pt-16 bg-[#0a0f1e] min-h-screen">
 
         {/* ── Hero Section (landing only) ── */}
         {isLandingMode && (
-          <section className="bg-white px-4 pt-14 pb-10">
-            <div className="mx-auto max-w-3xl text-center">
-              <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">
-                <Sparkles className="h-3.5 w-3.5" />
-                AI-Powered Job Search
-              </p>
-              <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 md:text-6xl leading-tight">
-                Find your{" "}
-                <span className="text-teal-600">dream job</span>{" "}
-                now
-              </h1>
-              <p className="mt-5 text-lg text-slate-500 max-w-xl mx-auto leading-relaxed">
-                Search thousands of roles, explore curated categories, and sign up to unlock AI-powered tools.
-              </p>
+          <section className="relative overflow-hidden bg-[#0a0f1e] px-4 pt-20 pb-16">
+            {/* Atmospheric glows */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-teal-600/15 blur-[120px]" />
+              <div className="absolute top-1/3 -left-20 h-[300px] w-[300px] rounded-full bg-violet-700/15 blur-[100px]" />
+              <div className="absolute top-1/3 -right-20 h-[300px] w-[300px] rounded-full bg-rose-600/10 blur-[100px]" />
+              <div
+                className="absolute inset-0 opacity-[0.025]"
+                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
+              />
+            </div>
+
+            <div className="relative mx-auto max-w-3xl text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300 backdrop-blur-sm">
+                  <Sparkles className="h-3.5 w-3.5 text-teal-400" />
+                  AI-Powered Job Search
+                </p>
+                <h1 className="text-5xl font-extrabold tracking-tight text-white md:text-7xl leading-tight">
+                  Find your{" "}
+                  <span className="relative inline-block">
+                    <span className="bg-gradient-to-r from-teal-400 via-violet-400 to-rose-400 bg-clip-text text-transparent">
+                      dream job
+                    </span>
+                    <span className="absolute -bottom-1 left-0 right-0 h-px bg-gradient-to-r from-teal-400/50 via-violet-400/50 to-rose-400/50" />
+                  </span>{" "}
+                  now
+                </h1>
+                <p className="mt-6 text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
+                  Search thousands of roles, explore curated categories, and sign up to unlock AI-powered tools.
+                </p>
+              </motion.div>
             </div>
 
             {/* Search Bar */}
-            <form
+            <motion.form
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
               onSubmit={(e) => { e.preventDefault(); handlePrimarySearch(); }}
-              className="mx-auto mt-8 max-w-2xl flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2"
+              className="relative mx-auto mt-10 max-w-2xl flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur-md p-2 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)]"
             >
               <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Job title, skill, or keyword…"
-                  className="w-full rounded-xl bg-slate-50 py-3 pl-10 pr-9 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-teal-400 focus:bg-white transition-all"
+                  className="w-full rounded-xl bg-white/[0.05] py-3 pl-10 pr-9 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-200 text-slate-400"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-slate-500"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -716,14 +888,19 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
               </div>
               <Button
                 type="submit"
-                className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold px-7 py-3 h-auto shrink-0"
+                className="rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-7 py-3 h-auto shrink-0 shadow-lg shadow-teal-500/25"
               >
                 {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
               </Button>
-            </form>
+            </motion.form>
 
             {/* Quick-filter tags & Magic Search */}
-            <div className="mx-auto mt-5 max-w-2xl flex flex-wrap justify-center gap-2 items-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mx-auto mt-5 max-w-2xl flex flex-wrap justify-center gap-2 items-center"
+            >
               {isAuthenticated && activeResume?.targetJobRole && (
                 <Button
                   variant="hero"
@@ -732,7 +909,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     setSearchQuery(activeResume.targetJobRole || "");
                     navigateToJobs(activeResume.targetJobRole || "", filters, true);
                   }}
-                  className="rounded-full bg-slate-900 border-slate-800 text-white hover:bg-slate-800 px-4 py-1.5 h-auto text-xs gap-2"
+                  className="rounded-full bg-white/10 border-white/15 text-white hover:bg-white/15 px-4 py-1.5 h-auto text-xs gap-2"
                 >
                   <Wand2 className="h-3 w-3 text-teal-400" />
                   Match My Profile: {activeResume.targetJobRole}
@@ -743,23 +920,27 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   key={tag}
                   type="button"
                   onClick={() => navigateToJobs(tag, { ...filters, title: tag })}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50 transition-colors"
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-400 hover:border-teal-500/40 hover:text-teal-300 hover:bg-teal-500/10 transition-all"
                 >
                   {tag}
                 </button>
               ))}
-            </div>
+            </motion.div>
           </section>
         )}
 
         {/* ── Browse Categories (landing only) ── */}
         {isLandingMode && showDiscoveryCards && (
-          <section className="bg-[#0f0e0e] px-6 py-20">
-            <div className="mx-auto max-w-6xl">
+          <section className="relative overflow-hidden bg-[#0a0f1e] border-t border-white/[0.06] px-6 py-20">
+            {/* Subtle glow */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[200px] w-[600px] rounded-full bg-teal-500/8 blur-[80px]" />
+            </div>
+            <div className="relative mx-auto max-w-6xl">
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
                 <div>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-4">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-4 backdrop-blur-sm">
                     Categories
                   </span>
                   <h2 className="text-2xl font-black text-white tracking-tight">Browse by category</h2>
@@ -784,26 +965,26 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       type="button"
                       onClick={() => card.label && handleBrowseCardSelect(card)}
                       disabled={isLoading}
-                      className="group flex flex-col items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6 text-center hover:border-orange-500/30 hover:bg-orange-500/5 transition-all duration-300"
+                      className="group flex flex-col items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-6 text-center hover:border-teal-500/40 hover:bg-teal-500/[0.06] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-8px_rgba(20,184,166,0.2)]"
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 group-hover:border-orange-500/30 group-hover:bg-orange-500/10 transition-all duration-300">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 group-hover:border-teal-500/40 group-hover:bg-teal-500/15 transition-all duration-300">
                         {isLoading && !card.icon ? (
                           <div className="h-5 w-5 rounded-full bg-white/10 animate-pulse" />
                         ) : (
-                          <Icon className="h-5 w-5 text-slate-400 group-hover:text-orange-400 transition-colors duration-300" />
+                          <Icon className="h-5 w-5 text-slate-400 group-hover:text-teal-400 transition-colors duration-300" />
                         )}
                       </div>
 
                       <div className="w-full">
                         {isLoading && !card.label ? (
-                          <div className="h-4 w-16 bg-white/5 rounded-full mx-auto animate-pulse mb-1.5" />
+                          <div className="h-4 w-16 bg-white/10 rounded-full mx-auto animate-pulse mb-1.5" />
                         ) : (
-                          <p className="text-sm font-bold text-white group-hover:text-orange-300 transition-colors leading-tight">{card.label}</p>
+                          <p className="text-sm font-bold text-slate-200 group-hover:text-teal-300 transition-colors leading-tight">{card.label}</p>
                         )}
                         {isLoading ? (
-                          <div className="h-3 w-10 bg-white/5 rounded-full mx-auto mt-1.5 animate-pulse" />
+                          <div className="h-3 w-10 bg-white/10 rounded-full mx-auto mt-1.5 animate-pulse" />
                         ) : (
-                          <p className="text-[10px] text-slate-600 font-semibold mt-1 uppercase tracking-wider">
+                          <p className="text-[10px] text-slate-600 font-semibold mt-1 uppercase tracking-wider group-hover:text-teal-500/80 transition-colors">
                             {card.count ?? 0} roles
                           </p>
                         )}
@@ -880,7 +1061,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         pill: "border-rose-500/25 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:border-rose-400/40",
                         jobHover: "hover:bg-rose-500/8 hover:border-rose-500/20",
                         avatarBg: "bg-rose-500/20 text-rose-300",
-                        matchBg: "bg-rose-500/15 text-rose-300 border-rose-500/20",
                         viewBtn: "from-rose-500/20 to-rose-600/10 border-rose-500/20 hover:border-rose-400/40 text-rose-300 hover:text-rose-200",
                         colSpan: "xl:col-span-5",
                       },
@@ -894,7 +1074,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         pill: "border-amber-500/25 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:border-amber-400/40",
                         jobHover: "hover:bg-amber-500/8 hover:border-amber-500/20",
                         avatarBg: "bg-amber-500/20 text-amber-300",
-                        matchBg: "bg-amber-500/15 text-amber-300 border-amber-500/20",
                         viewBtn: "from-amber-500/20 to-amber-600/10 border-amber-500/20 hover:border-amber-400/40 text-amber-300 hover:text-amber-200",
                         colSpan: "xl:col-span-7",
                       },
@@ -908,7 +1087,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         pill: "border-violet-500/25 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 hover:border-violet-400/40",
                         jobHover: "hover:bg-violet-500/8 hover:border-violet-500/20",
                         avatarBg: "bg-violet-500/20 text-violet-300",
-                        matchBg: "bg-violet-500/15 text-violet-300 border-violet-500/20",
                         viewBtn: "from-violet-500/20 to-violet-600/10 border-violet-500/20 hover:border-violet-400/40 text-violet-300 hover:text-violet-200",
                         colSpan: "xl:col-span-4",
                       },
@@ -922,7 +1100,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         pill: "border-sky-500/25 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 hover:border-sky-400/40",
                         jobHover: "hover:bg-sky-500/8 hover:border-sky-500/20",
                         avatarBg: "bg-sky-500/20 text-sky-300",
-                        matchBg: "bg-sky-500/15 text-sky-300 border-sky-500/20",
                         viewBtn: "from-sky-500/20 to-sky-600/10 border-sky-500/20 hover:border-sky-400/40 text-sky-300 hover:text-sky-200",
                         colSpan: "xl:col-span-4",
                       },
@@ -936,7 +1113,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         pill: "border-emerald-500/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400/40",
                         jobHover: "hover:bg-emerald-500/8 hover:border-emerald-500/20",
                         avatarBg: "bg-emerald-500/20 text-emerald-300",
-                        matchBg: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
                         viewBtn: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/20 hover:border-emerald-400/40 text-emerald-300 hover:text-emerald-200",
                         colSpan: "xl:col-span-4",
                       },
@@ -1109,20 +1285,41 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
 
         {!isLandingMode && (
-          <section className="px-2 pt-32 pb-20 sm:px-4 lg:px-6">
-            <div className="mx-auto max-w-[1550px]">
-              <div className="max-w-3xl mx-auto text-center mb-16">
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-600 mb-4">Discovery Engine</p>
-                <h2 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tight leading-tight">
-                  Explore jobs with <span className="text-teal-600">visible filters</span>
+          <section className="relative px-2 pt-28 pb-20 sm:px-4 lg:px-6 overflow-hidden">
+            {/* Rich graphic background */}
+            <div className="pointer-events-none absolute inset-0">
+              {/* Atmospheric color glows */}
+              <div className="absolute -top-40 left-1/4 h-[600px] w-[700px] rounded-full bg-violet-700/15 blur-[140px]" />
+              <div className="absolute top-1/3 -right-20 h-[400px] w-[500px] rounded-full bg-teal-500/10 blur-[120px]" />
+              <div className="absolute bottom-1/4 left-0 h-[350px] w-[400px] rounded-full bg-rose-600/8 blur-[100px]" />
+              <div className="absolute bottom-0 right-1/3 h-[250px] w-[350px] rounded-full bg-sky-600/8 blur-[100px]" />
+              {/* Dot pattern */}
+              <div
+                className="absolute inset-0 opacity-[0.03]"
+                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
+              />
+              {/* Subtle grid lines */}
+              <div
+                className="absolute inset-0 opacity-[0.015]"
+                style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "80px 80px" }}
+              />
+              {/* Top edge glow line */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-500/30 to-transparent" />
+            </div>
+            <div className="relative mx-auto max-w-[1550px]">
+              <div className="max-w-3xl mx-auto text-center mb-14">
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-400 mb-4">Discovery Engine</p>
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+                  Explore jobs with{" "}
+                  <span className="bg-gradient-to-r from-teal-400 to-violet-400 bg-clip-text text-transparent">visible filters</span>
                 </h2>
-                <div className="mt-6 h-1 w-20 bg-slate-900 mx-auto rounded-full" />
+                <div className="mt-6 h-px w-20 bg-gradient-to-r from-teal-500/50 to-violet-500/50 mx-auto rounded-full" />
               </div>
 
-              <div className="mb-8 flex items-center justify-between gap-3 lg:hidden">
-                <Button type="button" variant="outline" className="w-full gap-2 rounded-2xl bg-white h-12 font-bold" onClick={() => setShowMobileFilters((prev) => !prev)}>
-                   <SlidersHorizontal className="h-4 w-4" />
-                   {showMobileFilters ? "Hide Filters" : "Show Filters"}
+              <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
+                <Button type="button" variant="outline" className="w-full gap-2 rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 h-12 font-bold" onClick={() => setShowMobileFilters((prev) => !prev)}>
+                  <SlidersHorizontal className="h-4 w-4" />
+                  {showMobileFilters ? "Hide Filters" : "Show Filters"}
                 </Button>
               </div>
 
@@ -1131,76 +1328,154 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
               <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_280px]">
                 <aside className="hidden lg:block">{renderFilters()}</aside>
                 <div className="space-y-5">
-                  <div className="flex flex-col gap-3 rounded-[28px] border border-slate-200 bg-white px-5 py-4 shadow-[0_30px_80px_-60px_rgba(15,23,42,0.35)] sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
-                      {isRefreshing ? <><Loader2 className="h-4 w-4 animate-spin" />Loading jobs...</> : <><span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-900">{jobs.length}</span><span>{totalResults > jobs.length ? `showing ${jobs.length} of ${totalResults} jobs` : `${jobs.length} jobs found`}</span></>}
+                  {/* Personalized banner */}
+                  <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md px-5 py-4 space-y-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3 text-sm text-slate-400">
+                        {isRefreshing ? <><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Loading jobs...</> : <><span className="rounded-full bg-white/10 border border-white/10 px-3 py-1 font-semibold text-white">{displayJobs.length}</span><span>{totalResults > jobs.length ? `showing ${displayJobs.length} of ${totalResults} jobs` : `${displayJobs.length} jobs found`}</span></>}
+                      </div>
+                      {!isAuthenticated && <div className="rounded-full border border-teal-500/25 bg-teal-500/10 px-4 py-2 text-sm font-medium text-teal-400">Sign in to unlock full job details & apply.</div>}
                     </div>
-                    {!isAuthenticated && <div className="rounded-full border border-teal-100 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700">Sign in to unlock full job details & apply.</div>}
+                    {isAuthenticated && targetRole && searchQuery === targetRole && (
+                      <div className="flex items-center justify-between rounded-2xl border border-violet-500/25 bg-violet-500/10 px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <Sparkles className="h-4 w-4 text-violet-400 shrink-0" />
+                          <p className="text-sm text-violet-200 font-semibold">
+                            Showing jobs for your target role: <span className="text-violet-300 font-bold">{targetRole}</span>
+                          </p>
+                        </div>
+                        <button
+                          onClick={resetFilters}
+                          className="text-[10px] text-violet-400 hover:text-violet-200 transition-colors font-semibold uppercase tracking-wider shrink-0 ml-3"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Queue bar — always visible above results */}
+                  <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => setAppliedJobIds(prev => new Set(prev).add(jobId))} />
 
                   {isRefreshing && jobs.length === 0 ? (
                     <div className="space-y-6">
                       {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="rounded-[30px] border border-slate-100 bg-white p-8 shadow-sm animate-pulse">
+                        <div key={i} className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-8 animate-pulse">
                           <div className="flex gap-6">
-                            <div className="h-14 w-14 rounded-2xl bg-slate-50" />
+                            <div className="h-14 w-14 rounded-2xl bg-white/[0.04]" />
                             <div className="flex-1 space-y-4">
-                              <div className="h-4 w-1/3 bg-slate-50 rounded" />
-                              <div className="h-3 w-1/4 bg-slate-50 rounded" />
+                              <div className="h-4 w-1/3 bg-white/[0.04] rounded" />
+                              <div className="h-3 w-1/4 bg-white/[0.04] rounded" />
                               <div className="flex gap-2">
-                                <div className="h-6 w-20 rounded-full bg-slate-50" />
-                                <div className="h-6 w-24 rounded-full bg-slate-50" />
+                                <div className="h-6 w-20 rounded-full bg-white/[0.04]" />
+                                <div className="h-6 w-24 rounded-full bg-white/[0.04]" />
                               </div>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
-                  ) : jobs.length > 0 ? (
-                    <div className="space-y-10">
-                      {/* Employer Jobs Section */}
-                      {jobs.filter(j => j.source === 'employer').length > 0 && (
-                        <div className="space-y-5">
-                          <div className="flex items-center justify-between px-2">
+                  ) : displayJobs.length > 0 ? (
+                    <div className="space-y-16">
+                      {/* Section Header for the entire feed */}
+                      <div className="pb-3 border-b border-white/[0.08] mb-8">
+                        <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
+                          <LayoutDashboard className="h-5 w-5 text-teal-400" />
+                          Discovery Feed
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-400 uppercase tracking-widest ml-auto">
+                            {displayJobs.length} Results
+                          </span>
+                        </h2>
+                      </div>
+
+                      {/* 1. New Auto-Apply Opportunities Section — ALWAYS TOP */}
+                      {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between px-4 bg-teal-500/[0.06] py-3 rounded-2xl border border-teal-500/20">
                             <div className="flex items-center gap-2">
-                              <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
-                              <h3 className="text-sm font-bold uppercase tracking-[0.15em] text-slate-900">Our Verified Jobs <span className="mx-2 text-slate-300">|</span> <span className="text-blue-600">Posted by Employers</span></h3>
+                              <Zap className="h-4 w-4 text-teal-400 fill-teal-400" />
+                              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-teal-300">
+                                Fresh Matches <span className="mx-2 text-white/20">|</span> <span className="text-teal-400">Quick Apply Ready</span>
+                              </h3>
                             </div>
-                            <span className="text-xs font-medium text-slate-400">{jobs.filter(j => j.source === 'employer').length} Jobs</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-black uppercase text-slate-500">
+                                {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length} new
+                              </span>
+                              {isAuthenticated && displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                                <button
+                                  onClick={handleBulkAutoApply}
+                                  disabled={bulkApplying}
+                                  className="flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white text-[10px] font-black px-4 py-1.5 transition-all shadow-sm"
+                                >
+                                  <Zap className="h-2.5 w-2.5 fill-white" />
+                                  {bulkApplying ? "Checking…" : `Apply All`}
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          <div className="space-y-5">
-                            {jobs.filter(j => j.source === 'employer').map((job, index) => renderJobCard(job, index))}
+                          <div className="space-y-6">
+                            {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
                           </div>
                         </div>
                       )}
 
-                      {/* Global/Scraped Jobs Section */}
-                      {jobs.filter(j => j.source !== 'employer').length > 0 && (
-                        <div className="space-y-5">
-                          <div className="flex items-center justify-between px-2">
-                            <div className="flex items-center gap-2">
-                              <Globe2 className="h-4 w-4 text-slate-400" />
-                              <h3 className="text-sm font-bold uppercase tracking-[0.15em] text-slate-900">Global Discovery <span className="mx-2 text-slate-300">|</span> <span className="text-slate-500">External Sources</span></h3>
+                      {/* 2. Other/External Jobs Section */}
+                      {!showAutoApplyOnly && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between px-4 bg-white/[0.03] py-3 rounded-2xl border border-white/[0.08]">
+                            <div className="flex items-center gap-3">
+                              <Globe2 className="h-4 w-4 text-slate-500" />
+                              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-300">
+                                Global Discovery <span className="mx-2 text-white/10">|</span> <span className="text-slate-500">External Sources</span>
+                              </h3>
                             </div>
-                            <span className="text-xs font-medium text-slate-400">{jobs.filter(j => j.source !== 'employer').length} Search Results</span>
+                            <span className="text-[10px] font-black uppercase text-slate-500">
+                              {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length} Jobs
+                            </span>
                           </div>
-                          <div className="space-y-5">
-                            {jobs.filter(j => j.source !== 'employer').map((job, index) => renderJobCard(job, index))}
+                          <div className="space-y-6">
+                            {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 3. Applied Jobs Section — ALWAYS BOTTOM */}
+                      {displayJobs.filter(j => appliedJobIds.has(String(j.id))).length > 0 && (
+                        <div className="space-y-6 mt-12 py-12 border-t border-white/[0.06] relative">
+                          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0a0f1e] px-6 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-teal-400" />
+                            <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">My Applications</span>
+                          </div>
+
+                          <div className="flex items-center justify-between px-2 mb-4">
+                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 italic">History Archive</h3>
+                            <span className="text-[10px] font-black uppercase text-slate-600">{displayJobs.filter(j => appliedJobIds.has(String(j.id))).length} Completed</span>
+                          </div>
+                          <div className="grid grid-cols-1 gap-6 opacity-60 filter grayscale-[0.4]">
+                            {displayJobs.filter(j => appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
                           </div>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="rounded-[30px] border border-slate-200 bg-white px-6 py-16 text-center shadow-[0_30px_80px_-65px_rgba(15,23,42,0.35)]">
-                      <Briefcase className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                      <h3 className="text-xl font-semibold text-slate-900">No jobs found</h3>
-                      <p className="mt-2 text-sm text-slate-500">Try broadening your search or clearing some filters.</p>
-                      <Button variant="outline" className="mt-6 rounded-full" onClick={resetFilters}><X className="mr-2 h-4 w-4" />Show All Jobs</Button>
+                    <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md px-6 py-16 text-center">
+                      <Briefcase className="mx-auto mb-4 h-12 w-12 text-slate-600" />
+                      <h3 className="text-xl font-semibold text-white">No jobs found</h3>
+                      <p className="mt-2 text-sm text-slate-500">
+                        {showAutoApplyOnly ? "No quick-apply jobs match your search. Try disabling the Quick Apply filter." : "Try broadening your search or clearing some filters."}
+                      </p>
+                      {showAutoApplyOnly && (
+                        <Button variant="outline" className="mt-4 rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" onClick={toggleAutoApplyOnly}>
+                          <Zap className="mr-2 h-4 w-4" />Show All Jobs
+                        </Button>
+                      )}
+                      <Button variant="outline" className="mt-3 rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" onClick={resetFilters}><X className="mr-2 h-4 w-4" />Reset All Filters</Button>
                     </div>
                   )}
 
                   <div ref={observerTarget} className="flex w-full justify-center py-8">
-                    {hasNextPage ? <div className="flex flex-col items-center gap-3"><div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin text-teal-600" />Loading more opportunities...</div><button onClick={() => fetchJobs(searchQuery, filters, page + 1, true)} className="text-xs font-medium text-teal-600 underline underline-offset-2">Click here if it doesn't load automatically</button></div> : jobs.length > 0 ? <div className="text-sm italic text-slate-500">You&apos;ve reached the end of the current results.</div> : null}
+                    {hasNextPage ? <div className="flex flex-col items-center gap-3"><div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Loading more opportunities...</div><button onClick={() => fetchJobs(searchQuery, filters, page + 1, true)} className="text-xs font-medium text-teal-400 underline underline-offset-2">Click here if it doesn't load automatically</button></div> : displayJobs.length > 0 ? <div className="text-sm italic text-slate-600">You&apos;ve reached the end of the current results.</div> : null}
                   </div>
                 </div>
                 <aside className="hidden xl:block">
@@ -1222,7 +1497,18 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         source: autoApplyJob.source,
         quick_apply_enabled: autoApplyJob.quick_apply_enabled,
         quick_apply_questions: autoApplyJob.quick_apply_questions,
-      } : null} open={autoApplyOpen} onClose={() => { setAutoApplyOpen(false); setAutoApplyJob(null); }} />
+      } : null} 
+      open={autoApplyOpen} 
+      onClose={() => { 
+        setAutoApplyOpen(false); 
+        setAutoApplyJob(null); 
+        loadAppliedHistory(); // Check for new applications
+      }} 
+      onSuccess={(jobId) => {
+        setAppliedJobIds(prev => new Set(prev).add(String(jobId)));
+        setQueueKey(prev => prev + 1); // Refresh queue bar
+      }}
+      />
     </>
   );
 }

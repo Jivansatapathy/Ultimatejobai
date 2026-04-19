@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ResumeProvider } from "@/hooks/useResume";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./context/AuthContext";
 import { EmployerAuthProvider } from "./context/EmployerAuthContext";
@@ -15,6 +15,10 @@ import FeatureRoute from "./components/auth/FeatureRoute";
 import { ActivityAuditObserver } from "./components/activity/ActivityAuditObserver";
 import { EmployerProtectedRoute } from "./components/employer/EmployerProtectedRoute";
 import { EmployerPublicRoute } from "./components/employer/EmployerPublicRoute";
+import GettingStartedPopup from "./components/GettingStartedPopup";
+import ChecklistSidebar from "./components/ChecklistSidebar";
+import ChecklistToggle from "./components/ChecklistToggle";
+import NotificationSetupModal from "./components/NotificationSetupModal";
 
 // High-Performance Route-based Code Splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -35,6 +39,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ResumeBuilder = lazy(() => import("./components/resume/ResumeBuilder"));
 const EmployerPanel = lazy(() => import("./pages/EmployerPanel"));
 const EmployerAuth = lazy(() => import("./pages/EmployerAuth"));
+const Settings = lazy(() => import("./pages/Settings"));
 const EmployerOverview = lazy(() => import("./pages/employer/EmployerOverview"));
 const EmployerJobs = lazy(() => import("./pages/employer/EmployerJobs"));
 const EmployerLinkedIn = lazy(() => import("./pages/employer/EmployerLinkedIn"));
@@ -69,9 +74,44 @@ const PageLoader = () => (
   </div>
 );
 
+function AppChecklist() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [appCount, setAppCount] = useState(0);
+  const [interviewDone, setInterviewDone] = useState(false);
+
+  useEffect(() => {
+    // Fire daily reminder if conditions are met
+    import("./services/notificationService").then(({ notificationService }) => {
+      notificationService.checkAndFireDailyReminder();
+    });
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    import("./services/autoApplyService").then(({ autoApplyService }) =>
+      autoApplyService.getHistory()
+        .then((data: any) => setAppCount(data?.applications?.length ?? 0))
+        .catch(() => {})
+    );
+    import("./services/activityService").then(({ activityService }) =>
+      activityService.getUserHistory()
+        .then((logs: any[]) => setInterviewDone(logs.some(l => l.activity_type === "INTERVIEW")))
+        .catch(() => {})
+    );
+  }, []);
+
+  return (
+    <>
+      <ChecklistToggle onClick={() => setSidebarOpen(true)} appCount={appCount} interviewDone={interviewDone} />
+      <ChecklistSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    </>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -79,8 +119,11 @@ const App = () => (
           <EmployerAuthProvider>
             <SubscriptionProvider>
               <ResumeProvider>
-                <BrowserRouter>
+                  <BrowserRouter>
                   <ActivityAuditObserver />
+                  <GettingStartedPopup />
+                  <NotificationSetupModal />
+                  <AppChecklist />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                   <Route path="/" element={<CandidateRoute><Index /></CandidateRoute>} />
@@ -177,6 +220,13 @@ const App = () => (
                         >
                           <InterviewPanel />
                         </FeatureRoute>
+                      </ProtectedRoute>
+                    </CandidateRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <CandidateRoute>
+                      <ProtectedRoute>
+                        <Settings />
                       </ProtectedRoute>
                     </CandidateRoute>
                   } />

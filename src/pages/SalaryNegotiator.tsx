@@ -206,13 +206,13 @@ export default function SalaryNegotiator() {
 
     // ── PICK SCENARIO ──────────────────────────────────────────────────────────
     if (stage === "pick") return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white">
+        <div className="min-h-screen bg-[#0a0f1e] text-white">
             <div className="max-w-4xl mx-auto px-6 py-12">
                 <button onClick={() => navigate("/ai-mentor")} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-10 transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back
                 </button>
 
-                <div className="mb-10">
+                <div className="mb-10" data-tour="salary-header">
                     <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-5">
                         <DollarSign className="h-3 w-3" /> Salary Negotiator
                     </div>
@@ -220,7 +220,7 @@ export default function SalaryNegotiator() {
                     <p className="text-slate-400 max-w-xl">Pick a scenario and negotiate live against an AI employer. Get scored on confidence, strategy, and outcome.</p>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-4" data-tour="salary-scenarios">
                     {SCENARIOS.map((sc, i) => (
                         <motion.button
                             key={sc.id}
@@ -262,7 +262,7 @@ export default function SalaryNegotiator() {
 
     // ── BRIEF ──────────────────────────────────────────────────────────────────
     if (stage === "brief" && scenario) return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white">
+        <div className="min-h-screen bg-[#0a0f1e] text-white">
             <div className="max-w-2xl mx-auto px-6 py-12">
                 <button onClick={() => setStage("pick")} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-10 transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Choose scenario
@@ -322,7 +322,7 @@ export default function SalaryNegotiator() {
 
     // ── CHAT ───────────────────────────────────────────────────────────────────
     if (stage === "chat" && scenario) return (
-        <div className="h-screen flex flex-col bg-[#0a0a0f] text-white">
+        <div className="h-screen flex flex-col bg-[#0a0f1e] text-white">
             {/* Header */}
             <header className="shrink-0 border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -428,7 +428,7 @@ export default function SalaryNegotiator() {
 
     // ── RESULT ─────────────────────────────────────────────────────────────────
     if (stage === "result" && scenario && score) return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white">
+        <div className="min-h-screen bg-[#0a0f1e] text-white">
             <div className="max-w-2xl mx-auto px-6 py-12">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                     <div className="text-center mb-10">

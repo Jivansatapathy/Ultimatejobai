@@ -37,10 +37,11 @@ export const parseResumeFromFile = async (file: File): Promise<Partial<Resume>> 
     formData.append("file", file);
     try {
         const response = await api.post("/api/resumes/parse/", formData, {
-            headers: { "Content-Type": "multipart/form-data" }
+            headers: { "Content-Type": null },
+            transformRequest: [(data: any) => data],
         });
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error("parseResumeFromFile failed:", error);
         throw error;
     }
@@ -134,4 +135,14 @@ export const getCareerAdvice = async (offerText: string, resumeContent: string):
         console.error("getCareerAdvice: Failed:", error);
         return "Failed to fetch career advice.";
     }
+};
+
+export const aiService = {
+    analyzeResumeATS,
+    parseResumeFromFile,
+    analyzeResume,
+    suggestSummary,
+    suggestTargetRole,
+    performGapAnalysis,
+    getCareerAdvice
 };

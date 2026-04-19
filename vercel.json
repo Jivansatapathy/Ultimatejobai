@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://jobai-production-7672.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/did/:path*",
+      "destination": "https://jobai-production-7672.up.railway.app/did/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

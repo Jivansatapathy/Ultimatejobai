@@ -17,44 +17,76 @@ const FeatureRoute: React.FC<FeatureRouteProps> = ({ children, featureKey, title
 
   if (loadingSummary) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0f1e]">
+        <div className="h-10 w-10 animate-spin rounded-full border-t-2 border-teal-500" />
       </div>
     );
   }
 
-  if (hasFeature(featureKey)) {
+  const planName = summary?.plan?.name || "Standard Protocol";
+  const planSlug = summary?.plan?.slug || "";
+  const normalizedName = planName.toLowerCase();
+  const normalizedSlug = planSlug.toLowerCase();
+  
+  // Robust check for premium tiers
+  const isPremiumPlan = 
+    normalizedName.includes("pro") || 
+    normalizedName.includes("premium") || 
+    normalizedName.includes("executive") ||
+    normalizedName.includes("accelerator") ||
+    normalizedSlug.includes("pro") ||
+    normalizedSlug.includes("premium") ||
+    normalizedSlug.includes("executive");
+
+  if (hasFeature(featureKey) || isPremiumPlan) {
     return <>{children}</>;
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef4ff_22%,#ffffff_100%)] px-4">
-      <div className="w-full max-w-2xl rounded-[32px] border border-slate-200 bg-white p-8 text-center shadow-[0_36px_120px_-70px_rgba(15,23,42,0.45)]">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
-          <Lock className="h-6 w-6 text-blue-700" />
+    <div className="flex min-h-screen items-center justify-center bg-[#0a0f1e] px-4">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl shadow-2xl">
+        <div className="bg-gradient-to-r from-teal-500/10 to-blue-500/10 p-8 text-center border-b border-white/5">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/20 border border-teal-500/30 mb-4">
+            <Lock className="h-6 w-6 text-teal-400" />
+          </div>
+          <h2 className="text-xl font-black text-white font-outfit uppercase tracking-tight mb-2">
+            Protocol Adjustment Required
+          </h2>
+          <p className="text-sm text-slate-400 font-medium leading-relaxed px-4">
+            {description}
+          </p>
         </div>
-        <h1 className="mt-5 text-3xl font-bold text-slate-950">{title}</h1>
-        <p className="mt-3 text-slate-600">{description}</p>
 
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <div>
-              <p className="text-sm font-semibold text-slate-950">Current plan</p>
-              <p className="text-sm text-slate-600">
-                {summary?.plan ? `${summary.plan.name} (${summary.plan.price_display || "Included"})` : "No active plan"}
-              </p>
+        <div className="p-6 space-y-4">
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-teal-500" />
+              <div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none mb-1">Current Tier</p>
+                <p className="text-sm font-black text-white font-outfit uppercase tracking-wide">
+                  {planName}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400 uppercase font-bold">
+                Limited
+              </span>
             </div>
           </div>
-        </div>
 
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link to="/plans">
-            <Button variant="hero">Compare Plans</Button>
-          </Link>
-          <Link to="/jobs">
-            <Button variant="outline">Continue Browsing Jobs</Button>
-          </Link>
+          <div className="flex gap-3 pt-2">
+            <Link to="/plans" className="flex-1">
+              <Button className="w-full font-black uppercase text-[11px] h-11 bg-teal-600 hover:bg-teal-500 text-white rounded-lg shadow-lg shadow-teal-900/20">
+                Upgrade Access
+              </Button>
+            </Link>
+            <Link to="/jobs">
+              <Button variant="outline" className="px-6 font-black uppercase text-[11px] h-11 border-white/10 text-slate-300 rounded-lg hover:bg-white/5">
+                Dismiss
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

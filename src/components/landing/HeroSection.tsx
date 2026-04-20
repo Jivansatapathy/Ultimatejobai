@@ -31,7 +31,7 @@ export const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32 bg-white">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32 bg-background">
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}

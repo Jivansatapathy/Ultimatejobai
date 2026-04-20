@@ -270,9 +270,11 @@ export default function CareerInsights() {
 
       <div className="min-h-screen bg-[#0a0f1e] text-white selection:bg-teal-500/30 relative overflow-hidden">
         {/* Atmospheric glows */}
-        <div className="pointer-events-none absolute top-0 left-1/3 w-[500px] h-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
-        <div className="pointer-events-none absolute bottom-1/3 right-0 w-[400px] h-[400px] rounded-full bg-teal-500/10 blur-[120px]" />
+        <div className="pointer-events-none absolute top-0 left-1/3 w-[800px] h-[500px] rounded-full bg-violet-600/10 blur-[140px]" />
+        <div className="pointer-events-none absolute bottom-1/3 right-0 w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[140px]" />
+        <div className="pointer-events-none absolute top-1/2 left-0 w-[500px] h-[500px] rounded-full bg-blue-500/5 blur-[150px]" />
         <Navbar />
+
 
         <main className="pt-24 pb-12 px-4 md:px-6 relative z-10">
           <div className="container mx-auto max-w-7xl">
@@ -284,12 +286,13 @@ export default function CareerInsights() {
                 animate={{ opacity: 1, y: 0 }}
                 className="min-h-[70vh] flex flex-col items-center justify-center py-16"
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-6">
-                  <Sparkles className="h-3.5 w-3.5" /> AI Mentor
+                <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.25em] text-teal-400 mb-8 border-teal-500/20">
+                  <Sparkles className="h-3.5 w-3.5" /> AI Strategist
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-center mb-4 text-white">
-                  What do you want to work on?
+                <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-center mb-6 text-white uppercase italic">
+                  Career Intelligence
                 </h1>
+
                 <p className="text-slate-400 text-center max-w-md mb-14 leading-relaxed">
                   Pick a section to get started. You can switch between them anytime from the top tabs.
                 </p>
@@ -331,17 +334,18 @@ export default function CareerInsights() {
                         setShowLanding(false);
                         setSearchParams((p) => { const n = new URLSearchParams(p); n.set("tab", tab); return n; });
                       }}
-                      className={`group flex flex-col items-start text-left rounded-2xl border bg-white/[0.03] p-6 transition-all duration-200 ${accent}`}
+                      className={`group flex flex-col items-start text-left rounded-[28px] border bg-white/[0.03] p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] ${accent}`}
                     >
-                      <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl border ${iconCls}`}>
-                        <Icon className="h-5 w-5" />
+                      <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-[20px] border ${iconCls} transition-transform group-hover:scale-110 duration-500`}>
+                        <Icon className="h-6 w-6" />
                       </div>
-                      <h3 className="text-base font-black text-white mb-1">{label}</h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">{sub}</p>
-                      <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-slate-400 group-hover:text-white transition-colors">
-                        Open <ArrowRight className="h-3.5 w-3.5" />
+                      <h3 className="text-lg font-black text-white mb-2 uppercase tracking-tight tracking-widest">{label}</h3>
+                      <p className="text-sm font-medium text-slate-400 leading-relaxed mb-6">{sub}</p>
+                      <div className="mt-auto flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 group-hover:text-teal-400 transition-colors">
+                        Launch Section <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </div>
                     </motion.button>
+
                   ))}
                 </div>
               </motion.div>
@@ -360,33 +364,35 @@ export default function CareerInsights() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center md:text-left"
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-4">
-                  <Sparkles className="h-4 w-4 text-accent" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-accent">AI-Powered Strategy</span>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 mb-6">
+                  <Sparkles className="h-4 w-4 text-teal-400" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-400">AI-Powered Strategy</span>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-violet-400 to-rose-400">
-                  Unlock Your Next Career Move
+                <h1 className="text-4xl md:text-7xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-white to-slate-400 tracking-tighter uppercase italic">
+                  Career Velocity
                 </h1>
-                <p className="text-xl text-slate-400 max-w-2xl">
-                  Get personalized insights, bridge your skill gaps, and optimize your path to leadership roles with our AI career strategist.
+                <p className="text-xl font-medium text-slate-400 max-w-2xl leading-relaxed">
+                  Engineered to bridge elite skill gaps and optimize your path to leadership with high-precision AI diagnostics.
                 </p>
+
               </motion.div>
             </div>
 
             <div className="grid lg:grid-cols-5 gap-8">
               {/* Sidebar Stats */}
               <div className="lg:col-span-2 space-y-6">
-                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
-                      <Target className="h-4 w-4 text-teal-400" />
-                      Market Readiness
+                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md rounded-[28px] p-2 overflow-hidden hover:border-white/[0.15] transition-all">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-slate-500">
+                      <Target className="h-4 w-4 text-teal-500" />
+                      Readiness Engine
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold mb-4 text-white">
-                      {Math.round(Math.max(score, userScore?.overall_score || 0))}%
+                    <div className="text-5xl font-black mb-6 text-white tracking-tighter">
+                      {Math.round(Math.max(score, userScore?.overall_score || 0))}<span className="text-2xl text-teal-500">%</span>
                     </div>
+
                     <Progress value={Math.max(score, userScore?.overall_score || 0)} className="h-2 bg-white/[0.06] [&>div]:bg-teal-500" />
                     <p className="text-xs text-slate-400 mt-4">
                       {Math.max(score, userScore?.overall_score || 0) > 80 ? "Match is strong for target roles." : "Improve your resume to increase match score."}
@@ -404,13 +410,14 @@ export default function CareerInsights() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
-                      <Zap className="h-4 w-4 text-teal-400" />
-                      Focus Areas
+                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md rounded-[28px] p-2 overflow-hidden hover:border-white/[0.15] transition-all">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-slate-500">
+                      <Zap className="h-4 w-4 text-teal-500" />
+                      Strategic Focus
                     </CardTitle>
                   </CardHeader>
+
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">Resume Score</span>
@@ -447,17 +454,21 @@ export default function CareerInsights() {
                   </CardContent>
                 </Card>
 
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg shadow-accent/20">
-                  <h3 className="font-bold text-lg mb-2">Practice for Mastery</h3>
-                  <p className="text-sm opacity-90 mb-6">
-                    Ready to test your knowledge? Schedule a mock interview today.
+                <div className="p-8 rounded-[28px] bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-500/20 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                    <Zap className="h-24 w-24" />
+                  </div>
+                  <h3 className="font-black text-xl mb-3 uppercase tracking-tight">Mastery Lab</h3>
+                  <p className="text-sm font-medium opacity-90 mb-8 leading-relaxed">
+                    Pressure-test your career strategy with real-time adaptive AI simulations.
                   </p>
                   <Link to="/interview">
-                    <Button className="w-full bg-white text-accent hover:bg-white/90 font-bold">
-                      Start Mock Session
+                    <Button className="w-full bg-white text-teal-600 hover:bg-white/90 font-black uppercase tracking-widest text-[11px] h-12 rounded-xl border-none">
+                      Launch Simulation
                     </Button>
                   </Link>
                 </div>
+
               </div>
 
               {/* Main Content Areas */}

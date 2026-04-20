@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { sanitizeString, sanitizeEmail } from "@/lib/sanitization";
 import { acceptEmployerInvite, completeEmployerLinkedInAuth, getEmployerInvitePreview, initiateEmployerLinkedInAuth, registerEmployerAccount } from "@/services/employerService";
 import { auth } from "@/lib/firebase";
 
@@ -89,8 +90,8 @@ export default function EmployerAuth() {
   const [verificationEmailSent, setVerificationEmailSent] = useState(false);
   const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
   const [form, setForm] = useState({
-    email: mode === "login" && isLocalhost ? "admin@jobai.local" : "",
-    password: mode === "login" && isLocalhost ? "AdminJobAI2026!" : "",
+    email: mode === "login" && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_EMAIL || "") : "",
+    password: mode === "login" && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_PASSWORD || "") : "",
     displayName: "",
     companyName: "",
   });
@@ -100,12 +101,40 @@ export default function EmployerAuth() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [invitePreview, setInvitePreview] = useState<{ email: string; full_name: string; role: string; company_name: string; status: string } | null>(null);
 
+  const checkRateLimit = () => {
+    const attemptsStr = localStorage.getItem("employer_login_attempts");
+    const now = Date.now();
+    const timeframe = 15 * 60 * 1000; // 15 minutes
+
+    if (!attemptsStr) return { allowed: true };
+
+    let attempts: number[] = JSON.parse(attemptsStr);
+    attempts = attempts.filter((timestamp) => now - timestamp < timeframe);
+    localStorage.setItem("employer_login_attempts", JSON.stringify(attempts));
+
+    if (attempts.length >= 5) {
+      const oldest = attempts[0];
+      const waitTime = Math.ceil((timeframe - (now - oldest)) / 60000);
+      return { allowed: false, waitTime };
+    }
+
+    return { allowed: true };
+  };
+
+  const recordAttempt = () => {
+    const attemptsStr = localStorage.getItem("employer_login_attempts");
+    const now = Date.now();
+    const attempts: number[] = attemptsStr ? JSON.parse(attemptsStr) : [];
+    attempts.push(now);
+    localStorage.setItem("employer_login_attempts", JSON.stringify(attempts));
+  };
+
   const nextPath = useMemo(() => location.state?.from?.pathname || "/employer", [location.state]);
   const inviteToken = useMemo(() => new URLSearchParams(location.search).get("invite") || "", [location.search]);
 
-  const normalizedEmail = form.email.trim().toLowerCase();
-  const normalizedDisplayName = form.displayName.trim();
-  const normalizedCompanyName = form.companyName.trim();
+  const normalizedEmail = sanitizeEmail(form.email);
+  const normalizedDisplayName = sanitizeString(form.displayName, 100);
+  const normalizedCompanyName = sanitizeString(form.companyName, 100);
 
   // Handle LinkedIn OAuth callback
   useEffect(() => {
@@ -279,6 +308,16 @@ export default function EmployerAuth() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (mode === "login") {
+      const { allowed, waitTime } = checkRateLimit();
+      if (!allowed) {
+        toast.error(`Too many login attempts. Please wait ${waitTime} minutes.`);
+        return;
+      }
+      recordAttempt();
+    }
+
     setLoading(true);
 
     try {

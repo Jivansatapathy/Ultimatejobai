@@ -12,7 +12,7 @@ const benefits = [
 
 export const CTASection = () => {
   return (
-    <section className="relative overflow-hidden bg-white py-28 px-6">
+    <section className="relative overflow-hidden bg-[#0a0f1e] py-28 px-6">
       {/* Subtle top border */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, X } from "lucide-react";
 import { useResume } from "@/hooks/useResume";
+import { useAuth } from "@/context/AuthContext";
 
 const MANUAL_KEY = "gs_manual_checks";
 const HIDDEN_KEY = "gs_toggle_hidden";
@@ -29,11 +30,14 @@ interface ChecklistToggleProps {
 
 export default function ChecklistToggle({ onClick, appCount, interviewDone }: ChecklistToggleProps) {
     const { resumes } = useResume();
+    const { isAuthenticated } = useAuth();
     const [hidden, setHidden] = useState(() => !!localStorage.getItem(HIDDEN_KEY));
 
     const completed = getCompletedCount(resumes, appCount, interviewDone);
     const remaining = TOTAL - completed;
     const pct = Math.round((completed / TOTAL) * 100);
+
+    if (!isAuthenticated) return null;
 
     const handleClose = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -71,7 +75,7 @@ export default function ChecklistToggle({ onClick, appCount, interviewDone }: Ch
 
                         {/* Text — clickable area */}
                         <button onClick={onClick} className="text-left">
-                            <p className="text-sm font-black leading-tight tracking-tight">
+                            <p className="text-sm font-black leading-tight tracking-tight bg-gradient-to-r from-violet-300 to-sky-300 bg-clip-text text-transparent">
                                 {completed === TOTAL ? "🎉 You're career-ready!" : "Boost Your Career"}
                             </p>
                             <div className="flex items-center gap-2 mt-0.5">

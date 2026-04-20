@@ -78,7 +78,11 @@ export default function AIMentor() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.08),_transparent_24%),radial-gradient(circle_at_right,_rgba(14,165,233,0.08),_transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eefbf5_20%,#ffffff_100%)]">
+    <div className="min-h-screen bg-[#0a0f1e] relative overflow-hidden text-white">
+      {/* Atmospheric glows */}
+      <div className="pointer-events-none absolute top-0 left-1/4 w-[800px] h-[500px] rounded-full bg-violet-600/10 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-1/4 right-0 w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[140px]" />
+
       <Navbar />
 
       <main className="px-4 pb-16 pt-24">
@@ -86,21 +90,22 @@ export default function AIMentor() {
           <motion.section
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[36px] border border-white/70 bg-white/80 px-6 py-10 shadow-[0_40px_120px_-70px_rgba(15,23,42,0.45)] backdrop-blur-xl md:px-10"
+            className="rounded-[36px] border border-white/[0.08] bg-white/[0.03] px-6 py-12 backdrop-blur-xl md:px-10 hover:border-white/15 transition-all"
           >
             <div className="max-w-3xl">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-500/20 bg-teal-500/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.25em] text-teal-400">
                 <Sparkles className="h-3.5 w-3.5" />
-                AI Mentor
+                Strategic Module
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">
-                One place for guidance, practice, and career strategy
+              <h1 className="text-4xl font-black tracking-tighter text-white md:text-6xl uppercase italic">
+                AI Career Strategist
               </h1>
-              <p className="mt-4 max-w-2xl text-lg text-slate-600">
-                Use AI Mentor to review resume gaps, schedule interviews, explore job fairs, and practice higher-value coaching scenarios like career advice and salary negotiations.
+              <p className="mt-6 max-w-2xl text-lg font-medium text-slate-400 leading-relaxed">
+                Your command center for guidance, professional practice, and high-velocity career strategy.
               </p>
             </div>
           </motion.section>
+
 
           <section className="mt-8 grid gap-6 lg:grid-cols-2">
             {mentorSections.map((section, index) => (
@@ -109,16 +114,16 @@ export default function AIMentor() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.06 }}
-                className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-60px_rgba(15,23,42,0.4)]"
+                className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] p-8 backdrop-blur-sm hover:border-teal-500/30 transition-all hover:-translate-y-1 group"
               >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50">
-                    <section.icon className="h-6 w-6 text-emerald-700" />
+                <div className="flex items-start gap-5">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] bg-white/[0.06] border border-white/10 group-hover:bg-teal-500/10 group-hover:border-teal-500/20 transition-all">
+                    <section.icon className="h-7 w-7 text-slate-400 group-hover:text-teal-400" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-2xl font-semibold text-slate-950">{section.title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{section.description}</p>
-                    <Link to={section.href} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 transition hover:text-emerald-800">
+                    <h2 className="text-2xl font-black text-white tracking-tight uppercase">{section.title}</h2>
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-slate-400">{section.description}</p>
+                    <Link to={section.href} className="mt-6 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-teal-400 transition-colors">
                       {section.cta}
                       <ChevronRight className="h-4 w-4" />
                     </Link>
@@ -126,18 +131,20 @@ export default function AIMentor() {
                 </div>
               </motion.div>
             ))}
+
           </section>
 
-          <section className="mt-8 rounded-[32px] border border-slate-200 bg-slate-950 px-6 py-8 text-white shadow-[0_32px_100px_-65px_rgba(15,23,42,0.75)] md:px-8">
+          <section className="mt-8 rounded-[32px] border border-teal-500/20 bg-gradient-to-br from-white/[0.05] to-teal-500/5 px-6 py-12 md:px-10">
             <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-300">AI Interview Tracks</p>
-              <h2 className="mt-3 text-3xl font-semibold">Career coaching and negotiation practice</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                Start focused interview experiences for strategic conversations, not just standard mock interview rounds.
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400">Simulation Tracks</p>
+              <h2 className="mt-4 text-3xl font-black text-white tracking-tight uppercase italic">Mock Scenarios</h2>
+              <p className="mt-4 text-base font-medium text-slate-400 leading-relaxed">
+                Launch high-fidelity practice sessions optimized for strategic professional conversations.
               </p>
             </div>
 
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            <div className="mt-10 grid gap-6 lg:grid-cols-3">
+
               {mockInterviewActions.map((action, index) => (
                 <motion.div
                   key={action.title}
@@ -146,13 +153,13 @@ export default function AIMentor() {
                   transition={{ delay: 0.18 + index * 0.06 }}
                   className="rounded-[24px] border border-white/10 bg-white/5 p-5"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-                    <action.icon className="h-5 w-5 text-emerald-300" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] border border-white/10 group-hover:bg-teal-500/10 transition-all">
+                    <action.icon className="h-5 w-5 text-slate-400 group-hover:text-teal-400" />
                   </div>
-                  <h3 className="mt-4 text-xl font-semibold">{action.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">{action.description}</p>
+                  <h3 className="mt-6 text-xl font-black text-white uppercase tracking-tight">{action.title}</h3>
+                  <p className="mt-3 text-sm font-medium leading-relaxed text-slate-400">{action.description}</p>
                   <Button
-                    className="mt-5 w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                    className="mt-8 w-full bg-teal-500 text-white hover:bg-teal-400 font-black uppercase tracking-widest text-[11px] h-12 rounded-xl border-none shadow-lg shadow-teal-500/20"
                     onClick={() => navigate("/interview", { state: { interviewType: action.interviewType, mode: action.mode } })}
                   >
                     {action.cta}
@@ -162,27 +169,33 @@ export default function AIMentor() {
             </div>
           </section>
 
+
           <section className="mt-8 grid gap-6 md:grid-cols-2">
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_-60px_rgba(15,23,42,0.4)]">
-              <div className="flex items-center gap-3">
-                <Lightbulb className="h-5 w-5 text-amber-500" />
-                <h3 className="text-xl font-semibold text-slate-950">What moved here</h3>
+            <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] p-8 backdrop-blur-sm">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <Lightbulb className="h-5 w-5 text-amber-500" />
+                </div>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">Consolidation</h3>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Resume gap analysis, interview planning, AI insights, job fairs, career advice practice, and salary negotiation practice are now grouped under AI Mentor for a cleaner experience.
+              <p className="mt-5 text-sm font-medium leading-relaxed text-slate-400">
+                Gap analysis, interview planning, AI insights, and job fairs are now unified under the Strategic hub for a seamless high-velocity experience.
               </p>
             </div>
 
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_-60px_rgba(15,23,42,0.4)]">
-              <div className="flex items-center gap-3">
-                <BarChart3 className="h-5 w-5 text-sky-600" />
-                <h3 className="text-xl font-semibold text-slate-950">How it works</h3>
+            <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] p-8 backdrop-blur-sm">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20">
+                  <BarChart3 className="h-5 w-5 text-sky-400" />
+                </div>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">Mechanics</h3>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                AI Mentor acts as the hub. The deeper tools still use your existing career insights and interview systems, so you get the new organization without losing current functionality.
+              <p className="mt-5 text-sm font-medium leading-relaxed text-slate-400">
+                The hub leverages your existing resume diagnostics and interview data to provide cross-functional insights without losing any context.
               </p>
             </div>
           </section>
+
         </div>
       </main>
     </div>

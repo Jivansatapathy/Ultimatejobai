@@ -206,18 +206,22 @@ export default function SalaryNegotiator() {
 
     // ── PICK SCENARIO ──────────────────────────────────────────────────────────
     if (stage === "pick") return (
-        <div className="min-h-screen bg-[#0a0f1e] text-white">
-            <div className="max-w-4xl mx-auto px-6 py-12">
-                <button onClick={() => navigate("/ai-mentor")} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-10 transition-colors">
-                    <ArrowLeft className="h-4 w-4" /> Back
+        <div className="min-h-screen bg-[#0a0f1e] text-white relative overflow-hidden">
+            {/* Atmospheric glows */}
+            <div className="pointer-events-none absolute top-0 left-1/4 w-[800px] h-[500px] rounded-full bg-orange-600/5 blur-[140px]" />
+            <div className="pointer-events-none absolute bottom-1/4 right-0 w-[600px] h-[600px] rounded-full bg-orange-500/5 blur-[140px]" />
+            
+            <div className="max-w-4xl mx-auto px-6 py-24 relative z-10">
+                <button onClick={() => navigate("/ai-mentor")} className="flex items-center gap-2 text-slate-500 hover:text-white text-[11px] font-black uppercase tracking-widest mb-12 transition-all">
+                    <ArrowLeft className="h-4 w-4" /> Back to Matrix
                 </button>
 
-                <div className="mb-10" data-tour="salary-header">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-5">
-                        <DollarSign className="h-3 w-3" /> Salary Negotiator
+                <div className="mb-14" data-tour="salary-header">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.3em] text-orange-400 mb-6 shadow-lg shadow-orange-500/10">
+                        <DollarSign className="h-3 w-3" /> Negotiation Protocol
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight mb-3">Train your negotiation skills</h1>
-                    <p className="text-slate-400 max-w-xl">Pick a scenario and negotiate live against an AI employer. Get scored on confidence, strategy, and outcome.</p>
+                    <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic mb-4">Capital Leverage</h1>
+                    <p className="text-lg font-medium text-slate-400 max-w-2xl leading-relaxed">Multimodal simulation suite for high-stakes compensation engineering. Master the art of the counter-offer.</p>
                 </div>
 
                 <div className="grid gap-4" data-tour="salary-scenarios">

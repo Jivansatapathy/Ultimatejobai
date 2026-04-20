@@ -1,5 +1,5 @@
 const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY as string;
-const ELEVENLABS_VOICE_ID = (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string) || "JBFqnCBsd6RMkjVDRZzb";
+const ELEVENLABS_VOICE_ID = (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string);
 
 let currentAudio: HTMLAudioElement | null = null;
 let speakingChangeCallback: ((isSpeaking: boolean) => void) | null = null;

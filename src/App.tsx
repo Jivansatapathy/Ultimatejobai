@@ -25,7 +25,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Resume = lazy(() => import("./pages/Resume"));
 const Jobs = lazy(() => import("./pages/Jobs"));
-const Plans = lazy(() => import("./pages/Plans"));
+import Plans from "./pages/Plans";
 const Auth = lazy(() => import("./pages/Auth"));
 const Applications = lazy(() => import("./pages/Applications"));
 const CareerInsights = lazy(() => import("./pages/CareerInsights"));
@@ -51,6 +51,9 @@ const EmployerOfferLetters = lazy(() => import("./pages/employer/EmployerOfferLe
 const EmployerMessages = lazy(() => import("./pages/employer/EmployerMessages"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
 const PublicLinkedInJob = lazy(() => import("./pages/PublicLinkedInJob"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -251,6 +254,9 @@ const App = () => (
                       <Route path="settings" element={<EmployerSettings />} />
                     </Route>
                   </Route>
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/return-policy" element={<ReturnPolicy />} />
                   <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>

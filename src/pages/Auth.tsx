@@ -16,6 +16,7 @@ import {
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { sanitizeString, sanitizeEmail } from "@/lib/sanitization";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
@@ -37,29 +38,76 @@ export default function Auth() {
   
   const [formData, setFormData] = useState({
     name: "",
-    email: !isSignUp && isLocalhost ? "admin@jobai.local" : "",
-    password: !isSignUp && isLocalhost ? "AdminJobAI2026!" : "",
+    email: !isSignUp && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_EMAIL || "") : "",
+    password: !isSignUp && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_PASSWORD || "") : "",
   });
 
   useEffect(() => {
     setIsSignUp(searchParams.get("mode") === "signup");
   }, [searchParams]);
 
+  const checkRateLimit = () => {
+    const attemptsStr = localStorage.getItem("login_attempts");
+    const now = Date.now();
+    const timeframe = 15 * 60 * 1000; // 15 minutes
+
+    if (!attemptsStr) return { allowed: true };
+
+    let attempts: number[] = JSON.parse(attemptsStr);
+    // Filter out old attempts
+    attempts = attempts.filter((timestamp) => now - timestamp < timeframe);
+    localStorage.setItem("login_attempts", JSON.stringify(attempts));
+
+    if (attempts.length >= 5) {
+      const oldest = attempts[0];
+      const waitTime = Math.ceil((timeframe - (now - oldest)) / 60000);
+      return { allowed: false, waitTime };
+    }
+
+    return { allowed: true };
+  };
+
+  const recordAttempt = () => {
+    const attemptsStr = localStorage.getItem("login_attempts");
+    const now = Date.now();
+    const attempts: number[] = attemptsStr ? JSON.parse(attemptsStr) : [];
+    attempts.push(now);
+    localStorage.setItem("login_attempts", JSON.stringify(attempts));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isSignUp) {
+      const { allowed, waitTime } = checkRateLimit();
+      if (!allowed) {
+        toast.error(`Too many login attempts. Please wait ${waitTime} minutes.`);
+        return;
+      }
+      recordAttempt();
+    }
+
     setLoading(true);
+
+    const sanitizedEmail = sanitizeEmail(formData.email);
+    if (!sanitizedEmail) {
+      toast.error("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
 
     try {
       let firebaseUser;
       if (isSignUp) {
         // Sign Up with Firebase
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const sanitizedName = sanitizeString(formData.name, 100);
+        const userCredential = await createUserWithEmailAndPassword(auth, sanitizedEmail, formData.password);
         firebaseUser = userCredential.user;
-        await updateProfile(firebaseUser, { displayName: formData.name });
+        await updateProfile(firebaseUser, { displayName: sanitizedName });
         toast.success("Account created successfully!");
       } else {
         // Sign In with Firebase
-        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const userCredential = await signInWithEmailAndPassword(auth, sanitizedEmail, formData.password);
         firebaseUser = userCredential.user;
       }
 

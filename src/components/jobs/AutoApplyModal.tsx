@@ -312,103 +312,109 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative z-10 w-full max-w-lg bg-background border border-border rounded-2xl shadow-2xl overflow-hidden"
+          className="relative z-10 w-full max-w-lg bg-[#0a0f1e] border border-white/[0.08] rounded-[32px] shadow-[0_0_80px_rgba(0,0,0,0.6)] overflow-hidden"
         >
           {/* Header */}
-          <div className="relative bg-gradient-to-r from-accent/20 to-purple-500/20 px-6 pt-6 pb-4 border-b border-border">
+          <div className="relative bg-gradient-to-br from-teal-500/10 to-transparent px-8 pt-8 pb-6 border-b border-white/[0.06]">
             <button
               onClick={handleClose}
-              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-6 top-6 text-slate-500 hover:text-white transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-accent" />
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(20,184,166,0.15)]">
+                <Zap className="h-6 w-6 text-teal-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold">Auto Apply</h2>
-                <p className="text-xs text-muted-foreground truncate max-w-[300px]">
-                  {job.title} · {job.company}
-                </p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400 mb-1">Intelligence Protocol</p>
+                <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic leading-none">Auto Apply</h2>
               </div>
             </div>
+            
+            <p className="text-sm font-medium text-slate-400 truncate max-w-sm">
+               {job.title} <span className="opacity-40">·</span> {job.company}
+            </p>
 
             {/* Apply counter */}
             {credStatus && (
-              <div className="flex items-center gap-2 mt-3">
+              <div className="flex items-center gap-3 mt-6">
                 <div className="flex gap-1">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div
                       key={i}
-                      className={`h-1.5 w-5 rounded-full transition-colors ${
-                        i < appliesUsed ? "bg-accent" : "bg-border"
+                      className={`h-1.5 w-7 rounded-full transition-all duration-500 ${
+                        i < (10 - appliesLeft) ? "bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.4)]" : "bg-white/5 border border-white/10"
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {appliesLeft} / 10 applications left
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  {appliesLeft} <span className="opacity-50">/</span> 10 REMAINING
                 </span>
               </div>
             )}
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-8 max-h-[65vh] overflow-y-auto custom-scrollbar">
             {/* ── DISCLAIMER ── */}
             {step === "disclaimer" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 mb-5 flex gap-3">
-                  <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-semibold text-amber-300 mb-1">Important Disclaimer</p>
-                    <p className="text-muted-foreground">
-                      Sending an application email <strong>increases your chances</strong> but does{" "}
-                      <strong>not guarantee</strong> a response or interview. Job openings may be closed,
-                      filled, or the company may not respond to unsolicited emails.
+                <div className="rounded-[24px] bg-amber-500/5 border border-amber-500/20 p-5 mb-8 flex gap-4">
+                  <div className="mt-0.5 h-10 w-10 shrink-0 flex items-center justify-center rounded-xl bg-amber-500/10">
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-amber-500 mb-1">Reality Compliance</h4>
+                    <p className="text-sm font-medium text-amber-200/70 leading-relaxed italic">
+                      Sending applications via AI increases throughput but does not guarantee responses. Protocol success depends on market demand and resume quality.
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-5 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-accent" />
-                    <span>{isEmployerManagedJob ? "Your application will be submitted directly to the employer portal." : "An AI-generated cover letter will be sent on your behalf"}</span>
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-4 group">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 group-hover:bg-teal-500/10 group-hover:text-teal-400 transition-colors">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Communication Strategy</p>
+                      <p className="text-sm font-bold text-slate-300">{isEmployerManagedJob ? "Direct system portal submission" : "AI-crafted cover letter transmission"}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-accent" />
-                    <span>{isEmployerManagedJob ? "Your resume and profile details will be shared with the employer." : "Your email credentials are encrypted and stored securely"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-accent" />
-                    <span>You can send up to <strong>10 applications</strong> per account</span>
+                  <div className="flex items-center gap-4 group">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 group-hover:bg-teal-500/10 group-hover:text-teal-400 transition-colors">
+                      <Shield className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Secure Handling</p>
+                      <p className="text-sm font-bold text-slate-300">{isEmployerManagedJob ? "Encrypted profile & resume sharing" : "AES-256 encrypted credential relay"}</p>
+                    </div>
                   </div>
                 </div>
 
                 {appliesLeft === 0 ? (
-                  <div className="text-center p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400">
-                    You've used all 10 auto-apply slots. Contact support to reset.
+                  <div className="text-center p-6 rounded-[24px] bg-red-500/5 border border-red-500/20">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-red-500">Resource Depletion</p>
+                    <p className="text-sm font-medium text-red-300/70 mt-1">All 10 slots used. System reset required.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <Button 
-                      variant="hero" 
-                      className="w-full h-12 rounded-2xl gap-2" 
-                      disabled={generatingPreview}
-                      onClick={() => {
-                        if (isEmployerManagedJob || (credStatus?.has_credentials || credStatus?.gmail_connected)) {
-                          handleGeneratePreview();
-                        } else {
-                          setStep("setup");
-                        }
-                      }}
-                    >
-                      {generatingPreview ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                      {generatingPreview ? "Analyzing Job & Resume..." : "I Understand - Continue"}
-                    </Button>
-                  </div>
+                  <Button 
+                    className="w-full h-14 rounded-2xl bg-teal-500 hover:bg-teal-400 font-black uppercase tracking-[0.2em] text-[11px] text-white shadow-xl shadow-teal-500/20 border-none transition-all hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-3"
+                    disabled={generatingPreview}
+                    onClick={() => {
+                      if (isEmployerManagedJob || (credStatus?.has_credentials || credStatus?.gmail_connected)) {
+                        handleGeneratePreview();
+                      } else {
+                        setStep("setup");
+                      }
+                    }}
+                  >
+                    {generatingPreview ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    {generatingPreview ? "Synthesizing Match..." : "Initialize Protocol"}
+                  </Button>
                 )}
               </motion.div>
             )}
@@ -416,67 +422,54 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
             {/* ── SETUP EMAIL ── */}
             {step === "setup" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Choose how you'd like to send emails. Your credentials are encrypted.
-                </p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-6 px-1">Choose Relay Method</p>
 
                 {/* Auth Method Selector */}
-                <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="grid grid-cols-2 gap-4 mb-8">
                   <button
                     onClick={() => setAuthMethod("app_password")}
-                    className={`p-4 rounded-xl border text-left transition-all ${
+                    className={`p-6 rounded-[24px] border text-left transition-all group ${
                       authMethod === "app_password"
-                        ? "border-accent bg-accent/10"
-                        : "border-border hover:border-accent/50"
+                        ? "border-teal-500 bg-teal-500/10 shadow-[0_0_30px_rgba(20,184,166,0.1)]"
+                        : "border-white/5 bg-white/[0.03] hover:border-white/10"
                     }`}
                   >
-                    <Key className="h-5 w-5 mb-2 text-accent" />
-                    <p className="font-medium text-sm">App Password</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Gmail 2FA app password
-                    </p>
+                    <Key className={`h-6 w-6 mb-3 transition-colors ${authMethod === "app_password" ? "text-teal-400" : "text-slate-500 group-hover:text-slate-300"}`} />
+                    <p className="text-sm font-black text-white uppercase tracking-tight">App Password</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">SMTP Secure</p>
                   </button>
 
                   <button
                     onClick={() => setAuthMethod("gmail_oauth")}
-                    className={`p-4 rounded-xl border text-left transition-all ${
+                    className={`p-6 rounded-[24px] border text-left transition-all group ${
                       authMethod === "gmail_oauth"
-                        ? "border-accent bg-accent/10"
-                        : "border-border hover:border-accent/50"
+                        ? "border-blue-500 bg-blue-500/10 shadow-[0_0_30px_rgba(59,130,246,0.1)]"
+                        : "border-white/5 bg-white/[0.03] hover:border-white/10"
                     }`}
                   >
-                    <Chrome className="h-5 w-5 mb-2 text-blue-400" />
-                    <p className="font-medium text-sm">Sign in with Google</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      OAuth — most secure
-                    </p>
+                    <Chrome className={`h-6 w-6 mb-3 transition-colors ${authMethod === "gmail_oauth" ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"}`} />
+                    <p className="text-sm font-black text-white uppercase tracking-tight">Google OAuth</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">One-Tap Auth</p>
                   </button>
                 </div>
 
                 {/* App Password Form */}
                 {authMethod === "app_password" && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Gmail Address</label>
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+                    <div className="space-y-2 px-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Relay Address</label>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@gmail.com"
-                        className="w-full px-3 py-2.5 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
+                        className="w-full h-14 px-5 bg-white/[0.03] border border-white/10 rounded-2xl text-sm font-black text-white placeholder:text-slate-700 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
                       />
                     </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
-                        App Password
-                        <a
-                          href="https://support.google.com/accounts/answer/185833"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-accent underline ml-1"
-                        >
-                          How to get one?
-                        </a>
+                    <div className="space-y-2 px-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center justify-between">
+                        App Secret
+                        <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noreferrer" className="text-teal-400 hover:underline normal-case tracking-normal">Setup Guide</a>
                       </label>
                       <div className="relative">
                         <input
@@ -484,12 +477,12 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
                           value={appPassword}
                           onChange={(e) => setAppPassword(e.target.value)}
                           placeholder="xxxx xxxx xxxx xxxx"
-                          className="w-full px-3 py-2.5 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 pr-10"
+                          className="w-full h-14 px-5 bg-white/[0.03] border border-white/10 rounded-2xl text-sm font-black text-white placeholder:text-slate-700 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all pr-12"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -497,43 +490,34 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
                     </div>
                     <Button
                       variant="hero"
-                      className="w-full gap-2"
+                      className="w-full h-14 rounded-2xl bg-teal-500 hover:bg-teal-400 text-white font-black uppercase tracking-[0.2em] text-[11px] gap-2 mt-4"
                       onClick={handleSaveCredential}
                       disabled={loading}
                     >
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
-                      Save & Continue
+                      Finalize Setup
                     </Button>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Gmail OAuth */}
                 {authMethod === "gmail_oauth" && (
-                  <div className="space-y-3">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                     <Button
                       variant="outline"
-                      className="w-full gap-2 border-blue-500/50 hover:border-blue-500 hover:bg-blue-500/10"
+                      className="w-full h-16 rounded-[24px] border-white/10 bg-white/[0.05] hover:bg-white/10 text-white font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 transition-all"
                       onClick={handleGmailOAuth}
                     >
-                      <Chrome className="h-4 w-4 text-blue-400" />
-                      Sign in with Google
+                      <Chrome className="h-5 w-5 text-blue-400" />
+                      Authenticate via Google
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full gap-2 text-sm"
-                      onClick={async () => { await loadStatus(); if (credStatus?.has_credential) setStep("confirm"); }}
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      Already signed in? Refresh
-                    </Button>
-                  </div>
+                  </motion.div>
                 )}
 
-                <div className="flex items-start gap-2 mt-4 p-3 rounded-lg bg-secondary/50">
-                  <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-muted-foreground">
-                    Your credentials are AES-256 encrypted and only used to send emails on your behalf.
-                    We never store plain-text passwords.
+                <div className="flex items-start gap-4 mt-8 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                  <Info className="h-5 w-5 text-slate-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] font-medium text-slate-500 leading-relaxed italic">
+                    Encryption layer: AES-256. Credentials are never stored as plain-text and are only used for protocol execution.
                   </p>
                 </div>
               </motion.div>
@@ -541,14 +525,14 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
 
              {/* ── PREVIEW ── */}
             {step === "preview" && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-8 w-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
-                    <FileText className="h-4 w-4" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="h-12 w-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shadow-[0_0_20px_rgba(20,184,166,0.1)]">
+                    <FileText className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 leading-none">Draft Cover Letter</h4>
-                    <p className="text-[10px] text-slate-500 mt-1">AI-generated based on your resume and this job.</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-teal-400 mb-0.5">AI Correspondence</p>
+                    <h4 className="text-xl font-black text-white tracking-tight uppercase">Custom Cover Letter</h4>
                   </div>
                 </div>
                 
@@ -556,20 +540,20 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
                   <textarea
                     value={previewLetter}
                     onChange={(e) => setPreviewLetter(e.target.value)}
-                    className="w-full h-64 p-4 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-white outline-none transition-all resize-none leading-relaxed"
-                    placeholder="AI generating cover letter..."
+                    className="w-full h-72 p-6 text-sm font-medium text-slate-300 bg-white/[0.03] border border-white/10 rounded-[28px] focus:ring-8 focus:ring-teal-500/5 focus:border-teal-500 focus:bg-black/20 outline-none transition-all resize-none leading-relaxed custom-scrollbar"
+                    placeholder="Synthesizing communique..."
                   />
-                  <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <span className="text-[10px] bg-slate-900 text-white px-2 py-1 rounded-md font-bold">Editable</span>
+                  <div className="absolute bottom-4 right-4 bg-teal-500 text-white text-[10px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest shadow-lg shadow-teal-500/20">
+                     Editable Draft
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setStep("disclaimer")}>
-                    Back
+                <div className="flex items-center gap-4">
+                  <Button variant="outline" className="flex-1 h-14 rounded-2xl border-white/10 bg-white/[0.05] text-[11px] font-black uppercase tracking-widest text-slate-400" onClick={() => setStep("disclaimer")}>
+                    Discard
                   </Button>
-                  <Button variant="hero" className="flex-1 rounded-xl gap-2" onClick={() => setStep("confirm")}>
-                    Confirm & Send <ChevronRight className="h-4 w-4" />
+                  <Button variant="hero" className="flex-1 h-14 rounded-2xl bg-teal-500 hover:bg-teal-400 text-white text-[11px] font-black uppercase tracking-widest gap-2" onClick={() => setStep("confirm")}>
+                    Final Review <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </motion.div>
@@ -578,127 +562,86 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
             {/* ── CONFIRM ── */}
             {step === "confirm" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="rounded-xl bg-accent/10 border border-accent/30 p-4 mb-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="h-4 w-4 text-accent" />
-                    <span className="text-sm font-medium">{isEmployerManagedJob ? "Ready to Apply in Portal" : "Ready to Apply"}</span>
+                <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.02] p-8 mb-8">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/20 border border-teal-500/30">
+                       <CheckCircle2 className="h-5 w-5 text-teal-400" />
+                    </div>
+                    <p className="text-lg font-black text-white uppercase tracking-tight">{isEmployerManagedJob ? "Portal Submission" : "Transmission Active"}</p>
                   </div>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    {isEmployerManagedJob ? (
-                      <>
-                        <p>Applying to: <strong className="text-foreground">{job.company}</strong></p>
-                        <p>Position: <strong className="text-foreground">{job.title}</strong></p>
-                        {resumes.length > 0 ? (
-                          <label className="block pt-2">
-                            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select Resume</span>
-                            <select
-                              value={selectedResumeId}
-                              onChange={(event) => setSelectedResumeId(event.target.value)}
-                              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                            >
-                              {resumes.map((resume) => (
-                                <option key={resume.id} value={resume.id}>
-                                  {getResumeLabel(resume)}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        ) : (
-                          <p className="text-amber-300">Upload a resume before applying to employer-posted jobs.</p>
-                        )}
-                        <div className="space-y-2 pt-2">
-                          <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Upload a new resume</span>
-                          <input
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={(event) => setResumeUploadFile(event.target.files?.[0] || null)}
-                            className="block w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground"
-                          />
-                          <Button variant="outline" className="w-full" onClick={handleResumeUpload} disabled={!resumeUploadFile || uploadingResume}>
-                            {uploadingResume ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                            Upload resume
+
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Entity</p>
+                        <p className="text-sm font-black text-white uppercase truncate">{job.company}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Function</p>
+                        <p className="text-sm font-black text-white uppercase truncate">{job.title}</p>
+                      </div>
+                    </div>
+
+                    {!isEmployerManagedJob && (
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Source Relay</p>
+                        <p className="text-sm font-black text-teal-400 uppercase">{credStatus?.email}</p>
+                      </div>
+                    )}
+                    
+                    <div className="pt-2 border-t border-white/[0.06]">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Asset Allocation</p>
+                      {resumes.length > 0 ? (
+                        <div className="space-y-3">
+                          <select
+                            value={selectedResumeId}
+                            onChange={(event) => setSelectedResumeId(event.target.value)}
+                            className="w-full h-14 rounded-2xl border border-white/10 bg-white/[0.03] px-5 text-sm font-black text-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 appearance-none cursor-pointer uppercase tracking-tight"
+                          >
+                            {resumes.map((resume) => (
+                              <option key={resume.id} value={resume.id} className="bg-[#0a0f1e]">
+                                {getResumeLabel(resume).toUpperCase()}
+                              </option>
+                            ))}
+                          </select>
+                          
+                          <div className="flex items-center gap-3 px-1 mt-4">
+                            <label className="flex-1 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-slate-400 cursor-pointer transition-colors border border-dashed border-white/20 rounded-xl py-3 px-4 text-center">
+                               New Asset +
+                               <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => setResumeUploadFile(e.target.files?.[0] || null)} />
+                            </label>
+                            {resumeUploadFile && (
+                              <Button variant="hero" className="h-10 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 text-[10px] font-black uppercase" onClick={handleResumeUpload} disabled={uploadingResume}>
+                                {uploadingResume ? "..." : "Push"}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-center">
+                          <p className="text-[11px] font-black text-amber-500 uppercase tracking-widest mb-3">No Assets Detected</p>
+                          <Button className="w-full h-11 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl" onClick={() => { window.location.href = "/resume"; }}>
+                            Initialize Asset Builder
                           </Button>
                         </div>
-                        {usesEmployerQuickApplyForm && employerQuestions.length ? (
-                          <div className="space-y-3 pt-3">
-                            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Employer requested details</span>
-                            {employerQuestions.map((question) => (
-                              <label key={question} className="block">
-                                <span className="mb-1 block text-sm font-medium text-foreground">{question}</span>
-                                <textarea
-                                  value={applicationAnswers[question] || ""}
-                                  onChange={(event) =>
-                                    setApplicationAnswers((current) => ({ ...current, [question]: event.target.value }))
-                                  }
-                                  rows={3}
-                                  className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                                  placeholder="Write your answer here"
-                                />
-                              </label>
-                            ))}
-                          </div>
-                        ) : null}
-                        {usesEmployerQuickApplyForm && !employerQuestions.length ? (
-                          <p className="pt-2 text-xs text-muted-foreground">This employer is using resume-only quick apply for this job.</p>
-                        ) : null}
-                        <p>Your application will appear in the employer applicant list.</p>
-                      </>
-                    ) : (
-                      <>
-                        <p>Sending from: <strong className="text-foreground">{credStatus?.email}</strong></p>
-                        <p>Applying to: <strong className="text-foreground">{job.company}</strong></p>
-                        <p>Position: <strong className="text-foreground">{job.title}</strong></p>
-                        
-                        {resumes.length > 0 ? (
-                          <label className="block pt-3">
-                            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Attach Resume</span>
-                            <select
-                              value={selectedResumeId}
-                              onChange={(event) => setSelectedResumeId(event.target.value)}
-                              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                            >
-                              {resumes.map((resume) => (
-                                <option key={resume.id} value={resume.id}>
-                                  {getResumeLabel(resume)}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        ) : (
-                          <div className="pt-3">
-                            <p className="text-amber-300 text-xs mb-2">You need a resume to attach to your application.</p>
-                            <Button variant="outline" size="sm" className="w-full" onClick={() => { window.location.href = "/resume"; }}>
-                              Go to Resume Builder
-                            </Button>
-                          </div>
-                        )}
-                        <p className="pt-3">AI will generate a personalized cover letter and attach your selected resume.</p>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   {!isEmployerManagedJob ? (
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setStep("setup")}
-                    >
-                      Change Email
+                    <Button variant="outline" className="flex-1 h-14 rounded-2xl border-white/10 bg-white/[0.05] text-[11px] font-black uppercase tracking-widest text-slate-400" onClick={() => setStep("setup")}>
+                      Modify Relay
                     </Button>
                   ) : null}
                   <Button
-                    variant="hero"
-                    className="flex-1 gap-2"
+                    className="flex-1 h-14 rounded-2xl bg-teal-500 hover:bg-teal-400 text-white font-black uppercase tracking-[0.2em] text-[11px] gap-3 shadow-xl shadow-teal-500/20"
                     onClick={handleApply}
-                    disabled={
-                      !selectedResumeId ||
-                      (usesEmployerQuickApplyForm && employerQuestions.some((question) => !(applicationAnswers[question] || "").trim()))
-                    }
+                    disabled={!selectedResumeId}
                   >
                     <Send className="h-4 w-4" />
-                    {isEmployerManagedJob ? "Apply Now" : "Send Application"}
+                    Execute Protocol
                   </Button>
                 </div>
               </motion.div>
@@ -709,73 +652,68 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-col items-center py-8 gap-4"
+                className="flex flex-col items-center py-12 gap-6"
               >
                 <div className="relative">
-                  <div className="h-16 w-16 rounded-full border-2 border-accent/30 animate-pulse" />
+                  <div className="h-24 w-24 rounded-full border-2 border-teal-500/20 animate-ping absolute inset-0" />
+                  <div className="h-24 w-24 rounded-full border-4 border-t-teal-500 border-white/5 animate-spin relative z-10" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 text-accent animate-spin" />
+                    <Zap className="h-8 w-8 text-teal-400 animate-pulse" />
                   </div>
                 </div>
-                <p className="font-medium">Sending your application...</p>
-                <p className="text-sm text-muted-foreground text-center">
-                  {isEmployerManagedJob ? "Submitting your application to the employer portal." : "AI is crafting a personalized cover letter and sending it on your behalf."}
-                </p>
+                <div className="text-center">
+                  <p className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-500 mb-2">Transmitting</p>
+                  <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Protocol Underway</h3>
+                  <p className="text-sm font-medium text-slate-500 mt-4 max-w-xs leading-relaxed">
+                    {isEmployerManagedJob ? "Syncing data with employer nodes." : "AI correspondence is being relayed via encrypted secure channels."}
+                  </p>
+                </div>
               </motion.div>
             )}
 
             {/* ── SUCCESS ── */}
             {step === "success" && result && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="flex flex-col items-center py-4 gap-3 mb-4">
-                  <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <CheckCircle2 className="h-8 w-8 text-green-400" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
+                <div className="flex flex-col items-center py-8 gap-6">
+                  <div className="w-20 h-20 rounded-3xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center shadow-[0_0_50px_rgba(20,184,166,0.2)]">
+                    <CheckCircle2 className="h-10 w-10 text-teal-400" />
                   </div>
-                  <h3 className="font-bold text-lg">{isEmployerManagedJob ? "Applied Successfully" : "Application Sent!"}</h3>
-                  <p className="text-sm text-muted-foreground text-center">{result.message}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {result.applies_remaining} applications remaining
-                  </p>
+                  <div>
+                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">{isEmployerManagedJob ? "Applied Successfully" : "Relay Confirmed"}</h3>
+                    <p className="text-sm font-medium text-slate-400">{result.message}</p>
+                  </div>
                 </div>
 
-                {result.cover_letter && !isEmployerManagedJob && (
-                  <details className="mb-4">
-                    <summary className="text-sm text-accent cursor-pointer mb-2">View cover letter sent</summary>
-                    <div className="p-3 rounded-lg bg-secondary text-xs text-muted-foreground whitespace-pre-wrap max-h-48 overflow-y-auto">
-                      <p className="font-medium text-foreground mb-1">Subject: {result.subject}</p>
-                      {result.cover_letter}
-                    </div>
-                  </details>
-                )}
+                <div className="mt-4 p-6 rounded-[28px] border border-white/5 bg-white/[0.02] mb-8">
+                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-1">Remaining Resources</p>
+                   <p className="text-2xl font-black text-white uppercase">{result.applies_remaining} / 10</p>
+                </div>
 
-                <Button variant="hero" className="w-full" onClick={handleClose}>
-                  Done
+                <Button className="w-full h-14 rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-[11px]" onClick={handleClose}>
+                  Acknowledge
                 </Button>
               </motion.div>
             )}
 
             {/* ── ERROR ── */}
             {step === "error" && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="flex flex-col items-center py-4 gap-3 mb-4">
-                  <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
-                    <X className="h-8 w-8 text-red-400" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
+                <div className="flex flex-col items-center py-8 gap-6">
+                  <div className="w-20 h-20 rounded-3xl bg-red-500/20 border border-red-500/30 flex items-center justify-center shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+                    <X className="h-10 w-10 text-red-500" />
                   </div>
-                  <h3 className="font-bold text-lg">{errorCode === "missing_resume" ? "Resume Required" : "Send Failed"}</h3>
-                  <p className="text-sm text-muted-foreground text-center">{error}</p>
+                  <div>
+                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">{errorCode === "missing_resume" ? "Asset Failure" : "Transmission Fault"}</h3>
+                    <p className="text-sm font-medium text-slate-400 leading-relaxed italic">{error}</p>
+                  </div>
                 </div>
-                <div className="flex gap-3">
-                  {errorCode === "missing_resume" ? (
-                    <Button variant="outline" className="flex-1" onClick={() => { window.location.href = "/resume"; }}>
-                      Upload Resume
-                    </Button>
-                  ) : (
-                    <Button variant="outline" className="flex-1" onClick={() => setStep("confirm")}>
-                      Try Again
-                    </Button>
-                  )}
-                  <Button variant="ghost" className="flex-1" onClick={handleClose}>
-                    Close
+                
+                <div className="flex gap-4 mb-8">
+                  <Button variant="outline" className="flex-1 h-14 rounded-2xl border-white/10 text-slate-400 font-black uppercase tracking-widest text-[10px]" onClick={handleClose}>
+                    Abort
+                  </Button>
+                  <Button className="flex-1 h-14 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-[10px]" onClick={() => setStep("confirm")}>
+                    Retry Protocol
                   </Button>
                 </div>
               </motion.div>

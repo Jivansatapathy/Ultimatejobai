@@ -26,7 +26,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [summary, setSummary] = useState<SubscriptionSummary | null>(null);
   const [loadingPlans, setLoadingPlans] = useState(true);
-  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [loadingSummary, setLoadingSummary] = useState(Boolean(isAuthenticated));
 
   const refreshPlans = async () => {
     setLoadingPlans(true);

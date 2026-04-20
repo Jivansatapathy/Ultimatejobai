@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { careerService } from "@/services/careerService";
 import { 
     Sparkles, 
     Target, 
@@ -56,11 +57,23 @@ export function AtsOptimizationModal({
     const [score, setScore] = useState(activeResume?.score || 0);
 
     useEffect(() => {
+        const syncWithProfile = async () => {
+            try {
+                const profile = await careerService.getProfile();
+                if (profile?.target_roles?.length > 0 && !targetRole) {
+                    setTargetRole(profile.target_roles[0]);
+                }
+            } catch (err) {
+                console.error("Failed to sync profile with ATS modal:", err);
+            }
+        };
+
         if (activeResume && open) {
             setTargetRole(activeResume.targetJobRole || "");
             setUserLocation(activeResume.personalDetails?.location || "");
             setJobDescription(activeResume.targetJobDescription || "");
             setScore(activeResume.score || 0);
+            syncWithProfile();
         }
     }, [activeResume, open]);
 
@@ -74,6 +87,12 @@ export function AtsOptimizationModal({
         setIsAnalyzing(true);
         setAnalysis(null);
         try {
+            // Update global profile as well
+            await careerService.updateProfile({ 
+                target_roles: [targetRole.trim()],
+                preferred_locations: [userLocation.trim()]
+            });
+
             // Update local state first so analysis uses it
             updateActiveResume((prev) => ({ 
                 ...prev, 
@@ -259,6 +278,9 @@ export function AtsOptimizationModal({
         // Update local state and immediately trigger a hard save
         updateActiveResume(() => finalResume);
         saveResume(finalResume);
+
+        // Final sync with global profile
+        careerService.updateProfile({ target_roles: [targetRole.trim()] }).catch(console.error);
         
         toast.success("Elite Resume Saved Successfully!");
         if (onSuccess) onSuccess();

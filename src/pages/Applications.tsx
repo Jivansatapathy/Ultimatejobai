@@ -106,108 +106,113 @@ export default function Applications() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0f1e] relative overflow-hidden text-white">
       {/* Atmospheric glows */}
-      <div className="pointer-events-none absolute top-0 left-1/4 w-[500px] h-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-1/4 right-0 w-[400px] h-[300px] rounded-full bg-teal-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute top-0 left-1/4 w-[800px] h-[500px] rounded-full bg-violet-600/10 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-1/4 right-0 w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[140px]" />
+      <div className="pointer-events-none absolute top-1/2 left-0 w-[500px] h-[500px] rounded-full bg-blue-500/5 blur-[150px]" />
       <Navbar />
+
 
       <main className="pt-24 pb-12 px-4 relative z-10">
         <div className="container mx-auto max-w-7xl space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-4 rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-6"
+            className="flex flex-col gap-6 rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-8 hover:border-white/[0.15] transition-all"
           >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-400">Application Center</p>
-                <h1 className="mt-2 text-3xl font-bold text-white">Track every job you’ve applied to</h1>
-                <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                  Follow delivery status, employer ATS progress, and the exact resume used for each application.
+                <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-2">Portfolio Control</p>
+                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic">Application Central</h1>
+                <p className="mt-4 max-w-2xl text-base font-medium text-slate-400 leading-relaxed">
+                  Real-time synchronization with employer ATS pipelines and multimodal interview tracking.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-4">
                 <Link to="/jobs">
-                  <Button className="gap-2">
+                  <Button className="gap-2 h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[11px] bg-teal-500 hover:bg-teal-400 border-none shadow-lg shadow-teal-500/20">
                     <Briefcase className="h-4 w-4" />
-                    Browse Jobs
+                    Browse Talent
                   </Button>
                 </Link>
                 <Link to="/resume">
-                  <Button variant="outline" className="gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    Update Resume
+                  <Button variant="outline" className="gap-2 h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[11px] border-white/10 bg-white/[0.05] hover:bg-white/10 transition-all">
+                    <Sparkles className="h-4 w-4 text-teal-400" />
+                    Update Profile
                   </Button>
                 </Link>
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Total Applications</p>
-                <p className="mt-3 text-3xl font-bold text-white">{applications.length}</p>
-                <p className="mt-2 text-sm text-slate-400">All recorded sends and employer portal submissions.</p>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-6 hover:border-teal-500/30 transition-all group">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">Manifested</p>
+                <p className="text-4xl font-black text-white tracking-tighter">{applications.length}</p>
+                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">Total institutional record sends and portal submissions.</p>
               </div>
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Employer Managed</p>
-                <p className="mt-3 text-3xl font-bold text-white">{employerManagedCount}</p>
-                <p className="mt-2 text-sm text-slate-400">Applications that continue inside an employer ATS pipeline.</p>
+              <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-6 hover:border-teal-500/30 transition-all group">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">Managed</p>
+                <p className="text-4xl font-black text-white tracking-tighter">{employerManagedCount}</p>
+                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">Live applications synchronized with active employer ATS environments.</p>
               </div>
-              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Active Pipeline</p>
-                <p className="mt-3 text-3xl font-bold text-white">{activePipelineCount}</p>
-                <p className="mt-2 text-sm text-slate-400">Still moving through screening, shortlist, interview, or offer stages.</p>
+              <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-6 hover:border-teal-500/30 transition-all group">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">In-Flight</p>
+                <p className="text-4xl font-black text-white tracking-tighter">{activePipelineCount}</p>
+                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">High-velocity movement through screening and interview stages.</p>
               </div>
             </div>
+
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-6"
+            className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-8"
           >
-            <div className="flex flex-col gap-3 lg:flex-row">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <div className="flex flex-col gap-4 lg:flex-row">
+              <div className="relative flex-1 group">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 group-focus-within:text-teal-400 transition-colors" />
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search by job title, company, or resume name"
-                  className="pl-9 bg-white/[0.05] border-white/10 text-slate-100 placeholder:text-slate-500 focus:ring-teal-500/40 focus:bg-white/10"
+                  placeholder="Filter by title, organization, or profile used..."
+                  className="pl-12 h-14 bg-white/[0.05] border-white/10 text-white placeholder:text-slate-500 focus:ring-teal-500/20 focus:bg-white/10 rounded-2xl font-bold outline-none ring-0 border-white/10"
                 />
               </div>
 
               <Select value={deliveryFilter} onValueChange={setDeliveryFilter}>
-                <SelectTrigger className="w-full lg:w-[220px] bg-white/[0.05] border-white/10 text-slate-300">
+                <SelectTrigger className="w-full lg:w-[240px] h-14 bg-white/[0.05] border-white/10 text-slate-300 rounded-2xl px-6 font-bold">
                   <SelectValue placeholder="Delivery method" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All methods</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="employer_portal">Employer portal</SelectItem>
+                <SelectContent className="bg-[#0a0f1e] border-white/10 text-white rounded-2xl overflow-hidden p-1">
+                  <SelectItem value="all" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">All methods</SelectItem>
+                  <SelectItem value="email" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Email</SelectItem>
+                  <SelectItem value="employer_portal" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Employer portal</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={pipelineFilter} onValueChange={setPipelineFilter}>
-                <SelectTrigger className="w-full lg:w-[220px] bg-white/[0.05] border-white/10 text-slate-300">
+                <SelectTrigger className="w-full lg:w-[240px] h-14 bg-white/[0.05] border-white/10 text-slate-300 rounded-2xl px-6 font-bold">
                   <SelectValue placeholder="Pipeline stage" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All ATS stages</SelectItem>
-                  <SelectItem value="none">No ATS yet</SelectItem>
-                  <SelectItem value="applied">Applied</SelectItem>
-                  <SelectItem value="screening">Screening</SelectItem>
-                  <SelectItem value="shortlisted">Shortlisted</SelectItem>
-                  <SelectItem value="interview">Interview</SelectItem>
-                  <SelectItem value="offer">Offer</SelectItem>
-                  <SelectItem value="hired">Hired</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectContent className="bg-[#0a0f1e] border-white/10 text-white rounded-2xl overflow-hidden p-1">
+                  <SelectItem value="all" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">All ATS stages</SelectItem>
+                  <SelectItem value="none" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">No ATS yet</SelectItem>
+                  <SelectItem value="applied" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Applied</SelectItem>
+                  <SelectItem value="screening" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Screening</SelectItem>
+                  <SelectItem value="shortlisted" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Shortlisted</SelectItem>
+                  <SelectItem value="interview" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Interview</SelectItem>
+                  <SelectItem value="offer" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Offer</SelectItem>
+                  <SelectItem value="hired" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Hired</SelectItem>
+                  <SelectItem value="rejected" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </motion.div>
+
 
           <div className="space-y-4">
             {loading ? (
@@ -229,72 +234,59 @@ export default function Applications() {
                   transition={{ delay: Math.min(index * 0.04, 0.2) }}
                   className={`rounded-[24px] border transition-all ${isExpanded ? "border-teal-500/30 bg-white/[0.05]" : "border-white/[0.08] bg-white/[0.03] hover:border-white/[0.14]"}`}
                 >
-                  <div 
-                    className="p-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between cursor-pointer"
-                    onClick={() => setExpandedId(isExpanded ? null : application.id)}
-                  >
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-lg font-semibold text-white">{application.job_title}</h2>
-                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${statusTone[application.status] || statusTone.queued}`}>
-                            {formatStatus(application.status)}
+                    <div 
+                      className="p-6 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between cursor-pointer"
+                      onClick={() => setExpandedId(isExpanded ? null : application.id)}
+                    >
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h2 className="text-xl font-black text-white tracking-tight uppercase">{application.job_title}</h2>
+                            <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] border ${statusTone[application.status] || statusTone.queued} transition-all`}>
+                              {formatStatus(application.status)}
+                            </span>
+                            {application.pipeline_status ? (
+                              <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] border ${statusTone[application.pipeline_status] || statusTone.applied} transition-all`}>
+                                ATS: {formatStatus(application.pipeline_status)}
+                              </span>
+                            ) : null}
+                            {!isExpanded && hasNotifications && (
+                              <span className="flex items-center gap-2 rounded-full bg-teal-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 border border-teal-500/20">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75"></span>
+                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-400"></span>
+                                </span>
+                                New Intelligence
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-2 text-base font-bold text-slate-500 tracking-tight">{application.company}</p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          <span className="rounded-full bg-white/[0.05] border border-white/10 px-4 py-1.5 hover:border-white/20 transition-all">
+                            {application.delivery_method === "employer_portal" ? "Institutional Portal" : "Direct Delivery"}
                           </span>
-                          {application.pipeline_status ? (
-                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${statusTone[application.pipeline_status] || statusTone.applied}`}>
-                              ATS {formatStatus(application.pipeline_status)}
+                          <span className="rounded-full bg-white/[0.05] border border-white/10 px-4 py-1.5 hover:border-white/20 transition-all uppercase">
+                            SR: {formatStatus(application.job_source || "unknown")}
+                          </span>
+                          {typeof application.match_score === "number" ? (
+                            <span className="rounded-full bg-teal-500/10 border border-teal-500/20 px-4 py-1.5 text-teal-400 hover:bg-teal-500/20 transition-all">
+                              Match: {application.match_score}%
                             </span>
                           ) : null}
-                          {!isExpanded && hasNotifications && (
-                            <span className="flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
-                              <span className="relative flex h-1.5 w-1.5">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75"></span>
-                                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent"></span>
-                              </span>
-                              Updates
-                            </span>
-                          )}
                         </div>
-                        <p className="mt-1 text-sm text-slate-400">{application.company}</p>
                       </div>
 
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-400">
-                        <span className="rounded-full bg-white/[0.05] border border-white/10 px-3 py-1">
-                          {application.delivery_method === "employer_portal" ? "Employer portal" : "Email delivery"}
-                        </span>
-                        <span className="rounded-full bg-white/[0.05] border border-white/10 px-3 py-1">
-                          Source: {formatStatus(application.job_source || "unknown")}
-                        </span>
-                        {typeof application.match_score === "number" ? (
-                          <span className="rounded-full bg-teal-500/10 border border-teal-500/20 px-3 py-1 text-teal-400">
-                            Match score {application.match_score}%
-                          </span>
-                        ) : null}
-                        {application.recommendation ? (
-                          <span className="rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-violet-400">
-                            Suggested action: {formatStatus(application.recommendation)}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 text-sm text-slate-400 lg:min-w-[260px]">
-                      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3">
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Application Date</p>
-                        <p className="mt-1 font-medium text-white">
-                          {application.created_at ? new Date(application.created_at).toLocaleString() : "Recently"}
-                        </p>
-                      </div>
-                      {application.pipeline_stage_changed_at ? (
-                        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3">
-                          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Latest ATS Update</p>
-                          <p className="mt-1 font-medium text-white">
-                            {new Date(application.pipeline_stage_changed_at).toLocaleString()}
+                      <div className="grid gap-3 text-sm text-slate-400 lg:min-w-[280px]">
+                        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 hover:border-white/[0.15] transition-all">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Send Date</p>
+                          <p className="font-black text-white tracking-tight">
+                            {application.created_at ? new Date(application.created_at).toLocaleString() : "Sync Pending"}
                           </p>
                         </div>
-                      ) : null}
+                      </div>
                     </div>
-                  </div>
 
                   {isExpanded && (
                     <div className="border-t border-white/[0.06] bg-white/[0.02] p-5">

@@ -3,6 +3,7 @@ import { Resume, PersonalDetails, Experience, Education, Project, Certification,
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { sanitizeString, sanitizeContent, sanitizeEmail, sanitizeUrl, MAX_SMALL_TEXT, MAX_LARGE_TEXT } from '@/lib/sanitization';
 
 interface ResumeContextType {
     resumes: Resume[];
@@ -265,11 +266,19 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }, [activeResume]);
 
     const updatePersonalDetails = (details: PersonalDetails) => {
-        updateActiveResume((prev) => ({ ...prev, personalDetails: details }));
+        const sanitizedDetails: PersonalDetails = {
+            fullName: sanitizeString(details.fullName),
+            email: sanitizeEmail(details.email),
+            phone: sanitizeString(details.phone, 50),
+            location: sanitizeString(details.location),
+            linkedinUrl: sanitizeUrl(details.linkedinUrl || ""),
+            portfolioUrl: sanitizeUrl(details.portfolioUrl || ""),
+        };
+        updateActiveResume((prev) => ({ ...prev, personalDetails: sanitizedDetails }));
     };
 
     const updateSummary = (summary: string) => {
-        updateActiveResume((prev) => ({ ...prev, summary }));
+        updateActiveResume((prev) => ({ ...prev, summary: sanitizeContent(summary) }));
     };
 
     const addExperience = (experience: Omit<Experience, 'id'>) => {
@@ -282,7 +291,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     const updateExperience = (id: string, experience: Partial<Experience>) => {
         updateActiveResume((prev) => ({
             ...prev,
-            experience: prev.experience.map((exp) => (exp.id === id ? { ...exp, ...experience } : exp)),
+            experience: prev.experience.map((exp) => (exp.id === id ? { 
+                ...exp, 
+                ...experience,
+                role: experience.role !== undefined ? sanitizeString(experience.role) : exp.role,
+                company: experience.company !== undefined ? sanitizeString(experience.company) : exp.company,
+                duration: experience.duration !== undefined ? sanitizeString(experience.duration, 100) : exp.duration,
+                description: experience.description !== undefined ? experience.description.map(d => sanitizeContent(d, 500)) : exp.description
+            } : exp)),
         }));
     };
 
@@ -315,11 +331,11 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     };
 
     const updateSkills = (skills: string[]) => {
-        updateActiveResume((prev) => ({ ...prev, skills }));
+        updateActiveResume((prev) => ({ ...prev, skills: skills.map(s => sanitizeString(s, 50)) }));
     };
 
     const updateSoftSkills = (skills: string[]) => {
-        updateActiveResume((prev) => ({ ...prev, softSkills: skills }));
+        updateActiveResume((prev) => ({ ...prev, softSkills: skills.map(s => sanitizeString(s, 50)) }));
     };
 
     const addProject = (project: Omit<Project, 'id'>) => {

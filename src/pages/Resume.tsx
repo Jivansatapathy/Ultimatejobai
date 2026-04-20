@@ -113,8 +113,8 @@ export default function Resume() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold mb-2 text-white" data-tour="resume-header">Resume Intelligence</h1>
-            <p className="text-slate-400">Create, optimize, and manage ATS-ready resumes locally</p>
+            <h1 className="text-4xl font-black mb-2 text-white font-outfit" data-tour="resume-header">Resume Intelligence</h1>
+            <p className="text-slate-400 font-medium tracking-wide">Create, optimize, and manage ATS-ready resumes locally</p>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-6">
@@ -129,25 +129,25 @@ export default function Resume() {
               >
                 <div className="flex flex-wrap gap-2 mb-6" data-tour="resume-tabs">
                   <Button
-                    variant={activeTab === "build" ? "default" : "ghost"}
+                    variant={activeTab === "build" ? "default" : "secondary"}
                     onClick={() => setActiveTab("build")}
-                    className="gap-2"
+                    className={`gap-2 transition-all ${activeTab === "build" ? "bg-teal-500 hover:bg-teal-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"}`}
                   >
                     <Plus className="h-4 w-4" />
                     Build New
                   </Button>
                   <Button
-                    variant={activeTab === "upload" ? "default" : "ghost"}
+                    variant={activeTab === "upload" ? "default" : "secondary"}
                     onClick={() => setActiveTab("upload")}
-                    className="gap-2"
+                    className={`gap-2 transition-all ${activeTab === "upload" ? "bg-teal-500 hover:bg-teal-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"}`}
                   >
                     <Upload className="h-4 w-4" />
                     Upload & Optimize
                   </Button>
                   <Button
-                    variant={activeTab === "gap-analysis" ? "default" : "ghost"}
+                    variant={activeTab === "gap-analysis" ? "default" : "secondary"}
                     onClick={() => setActiveTab("gap-analysis")}
-                    className="gap-2"
+                    className={`gap-2 transition-all ${activeTab === "gap-analysis" ? "bg-teal-500 hover:bg-teal-600 text-white" : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"}`}
                   >
                     <History className="h-4 w-4" />
                     Gap Analysis
@@ -156,12 +156,12 @@ export default function Resume() {
 
                 {activeTab === "build" ? (
                   <div className="space-y-4">
-                    <div className="p-8 border-2 border-dashed border-teal-500/30 rounded-xl text-center hover:border-teal-500/60 hover:bg-teal-500/5 transition-colors">
+                    <div className="p-8 border-2 border-dashed border-teal-500/30 rounded-xl text-center hover:border-teal-500/60 hover:bg-teal-500/5 transition-all duration-500 neon-border bg-gradient-to-br from-teal-500/5 to-transparent">
                       <div className="inline-flex p-4 rounded-full bg-teal-500/10 border border-teal-500/20 mb-4">
                         <Sparkles className="h-8 w-8 text-teal-400" />
                       </div>
-                      <h3 className="text-lg font-semibold mb-2 text-white">Smart Resume Builder</h3>
-                      <p className="text-sm text-slate-400 mb-4">
+                      <h3 className="text-2xl font-black mb-2 text-white font-outfit">Smart Resume Builder</h3>
+                      <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto leading-relaxed">
                         Answer a few questions and let AI create an ATS-optimized resume tailored to your target role.
                       </p>
                       <Button variant="hero" className="gap-2" onClick={() => {

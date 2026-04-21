@@ -64,6 +64,27 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
           await Promise.all([loadStatus(), loadResumes()]);
           setLoading(false);
         } else {
+          // Check if persistent OAuth is already set up
+          if (credStatus?.gmail_connected) {
+            setStep("confirm");
+          } else {
+            setStep("disclaimer");
+          }
+        }
+          // Check if persistent OAuth is already set up
+          if (credStatus?.gmail_connected) {
+            setStep("confirm");
+          } else {
+          // Check if persistent OAuth is already set up
+          if (credStatus?.gmail_connected) {
+            setStep("confirm");
+          } else {
+            setStep("disclaimer");
+          }
+        }
+            setStep("disclaimer");
+          }
+        }
           setLoading(true);
           setCredStatus(null);
           await loadResumes();
@@ -72,11 +93,18 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
         
         // Auto-advance if redirected back from Google
         const urlParams = new URLSearchParams(window.location.search);
-        if (!isEmployerManagedJob && urlParams.get("gmail_connected") === "1") {
+        if (!isEmployerManagedJob && (urlParams.get("gmail_connected") === "1" || urlParams.get("gmail_persistent_connected") === "1")) {
           setStep("confirm");
           // Clean up URL without reload
           window.history.replaceState({}, document.title, window.location.pathname);
         } else {
+          // Check if persistent OAuth is already set up
+          if (credStatus?.gmail_connected) {
+            setStep("confirm");
+          } else {
+            setStep("disclaimer");
+          }
+        }
           setStep("disclaimer");
         }
       };
@@ -408,6 +436,13 @@ export function AutoApplyModal({ job, open, onClose, onSuccess, initialSelectedR
                       if (isEmployerManagedJob || (credStatus?.has_credentials || credStatus?.gmail_connected)) {
                         handleGeneratePreview();
                       } else {
+          // Check if persistent OAuth is already set up
+          if (credStatus?.gmail_connected) {
+            setStep("confirm");
+          } else {
+            setStep("disclaimer");
+          }
+        }
                         setStep("setup");
                       }
                     }}

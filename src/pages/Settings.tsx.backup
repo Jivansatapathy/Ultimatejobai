@@ -80,50 +80,6 @@ export default function Settings() {
     const errorCode = urlParams.get("gmail_error");
     if (errorCode) {
       let errorMessage = "Failed to connect Gmail account.";
-      if (errorCode === "access_denied") {
-        errorMessage = "Gmail connection was cancelled. Please try again.";
-      } else if (errorCode === "invalid_request") {
-        errorMessage = "Invalid OAuth request. Please try again.";
-      } else if (errorCode === "unauthorized_client") {
-        errorMessage = "Unauthorized OAuth client. Please contact support.";
-      }
-      toast.error(errorMessage);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
-
-  // Handle OAuth callback parameters
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-
-    // Handle persistent OAuth setup success
-    if (urlParams.get("gmail_persistent_connected") === "1") {
-      toast.success("Gmail connected successfully! You can now send applications without re-authentication.");
-      setHasCredential(true);
-      // Clean up URL without reload
-      window.history.replaceState({}, document.title, window.location.pathname);
-      // Reload status to get updated credentials
-      autoApplyService.getStatus().then(status => {
-        setHasCredential(!!(status?.has_credentials || status?.gmail_connected));
-        if (status?.email) setEmail(status.email);
-      }).catch(console.error);
-    }
-
-    // Handle regular OAuth success
-    if (urlParams.get("gmail_connected") === "1") {
-      toast.success("Gmail connected successfully!");
-      setHasCredential(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      autoApplyService.getStatus().then(status => {
-        setHasCredential(!!(status?.has_credentials || status?.gmail_connected));
-        if (status?.email) setEmail(status.email);
-      }).catch(console.error);
-    }
-
-    // Handle OAuth errors
-    const errorCode = urlParams.get("gmail_error");
-    if (errorCode) {
-      let errorMessage = "Failed to connect Gmail account.";
         errorMessage = "Unauthorized OAuth client. Please contact support.";
       }
       toast.error(errorMessage);
@@ -212,45 +168,7 @@ export default function Settings() {
     }
   };
 
-  };
-
   const handleGmailOAuth = async () => {
-  const handlePersistentGmailOAuth = async () => {
-    try {
-      const res = await fetch("/api/apply/gmail/persistent-setup/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      if (!res.ok) throw new Error("Failed to initiate persistent OAuth");
-      const data = await res.json();
-      window.location.href = data.auth_url;
-    } catch (e: any) {
-      toast.error("Failed to initiate persistent Gmail OAuth");
-    }
-  };
-
-  const handleDisconnectGmailOAuth = async () => {
-    try {
-      await fetch("/api/apply/gmail/disconnect/", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      setHasCredential(false);
-      toast.success("Gmail OAuth disconnected successfully.");
-      // Reload status to update UI
-      autoApplyService.getStatus().then(status => {
-        setHasCredential(!!(status?.has_credentials || status?.gmail_connected));
-        if (status?.email) setEmail(status.email);
-      }).catch(console.error);
-    } catch (e: any) {
-      toast.error("Failed to disconnect Gmail OAuth");
-    }
-  };
     try {
       const authUrl = await autoApplyService.getGmailAuthUrl();
       window.location.href = authUrl;
@@ -343,11 +261,11 @@ export default function Settings() {
                   <div className="flex items-center gap-3 mb-6">
                     <div className="h-10 w-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
                       <Mail className="h-5 w-5" />
-                    
+                    </div>
                     <div>
                       <h3 className="font-bold text-white leading-none">Auto-Apply Configuration</h3>
                       <p className="text-xs text-slate-400 mt-1">Choose how you want to send automated applications.</p>
-                    
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -358,8 +276,8 @@ export default function Settings() {
                           <Chrome className="h-4 w-4 text-blue-400" />
                           <span className="text-sm font-bold text-white">Sign in with Google</span>
                           <span className="text-[10px] font-bold bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase">Recommended</span>
-                        
-                      
+                        </div>
+                      </div>
                       <p className="text-xs text-slate-400 mb-4">Connect your Gmail securely via Google. No passwords required.</p>
                       <Button
                         variant="outline"
@@ -369,50 +287,12 @@ export default function Settings() {
                         <Chrome className="h-4 w-4 mr-2" />
                         {hasCredential ? "Reconnect Google Account" : "Connect Google Account"}
                       </Button>
-                    
+                    </div>
 
                     <div className="relative py-2 text-center">
                       <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/[0.06]"></div></div>
                       <span className="relative bg-[#0d1225] px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Or Use App Password</span>
-                    {/* Method 1.5: Persistent OAuth Setup */}
-                    <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-emerald-400" />
-                          <span className="text-sm font-bold text-white">Persistent Gmail Setup</span>
-                          <span className="text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded uppercase">One-Time</span>
-                        
-                        {hasCredential && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleDisconnectGmailOAuth}
-                            className="h-7 px-2 text-xs rounded-lg bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
-                          >
-                            Disconnect
-                          </Button>
-                        )}
-                      
-                      <p className="text-xs text-slate-400 mb-4">
-                        Set up Gmail OAuth once and use it for all future applications. No more re-authentication needed.
-                      </p>
-                      {!hasCredential ? (
-                        <Button
-                          variant="outline"
-                          onClick={handlePersistentGmailOAuth}
-                          className="w-full h-11 rounded-xl bg-white/[0.03] border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/10"
-                        >
-                          <Shield className="h-4 w-4 mr-2" />
-                          Setup Persistent Gmail OAuth
-                        </Button>
-                      ) : (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[11px] font-bold text-emerald-400">
-                          <Shield className="h-3.5 w-3.5" />
-                          Persistent Gmail OAuth Active
-                        
-                      )}
-                    
-                    
+                    </div>
 
                     {/* Method 2: App Password */}
                     <div className="space-y-4">
@@ -425,7 +305,7 @@ export default function Settings() {
                           className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3.5 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 focus:bg-white/10 transition-all"
                           placeholder="yourname@gmail.com"
                         />
-                      
+                      </div>
 
                       <div className="space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">Google App Password</label>
@@ -445,21 +325,21 @@ export default function Settings() {
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
-                        
+                        </div>
                         <div className="mt-2 flex items-start gap-2 bg-white/[0.03] border border-white/[0.08] p-3 rounded-xl">
                           <Info className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
                           <p className="text-[11px] leading-relaxed text-slate-400">
                             Use a 16-character App Password from Google, not your main password.
                             Spaces will be automatically removed for security.
                           </p>
-                        
-                      
+                        </div>
+                      </div>
 
                       {hasCredential && (
                         <div className="flex items-center gap-2 mt-4 px-3 py-2 bg-teal-500/10 border border-teal-500/20 rounded-lg text-[11px] font-bold text-teal-400">
                           <ShieldCheck className="h-3.5 w-3.5" />
                           Credentials currently encrypted & active
-                        
+                        </div>
                       )}
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
@@ -479,8 +359,8 @@ export default function Settings() {
                         >
                           {isTesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 mr-2" /> Test Config</>}
                         </Button>
-                      
-                    
+                      </div>
+                    </div>
                   </div>
                 </section>
               )}
@@ -491,11 +371,11 @@ export default function Settings() {
                   <div className="flex items-center gap-3 mb-6">
                     <div className="h-10 w-10 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-white">
                       <User className="h-5 w-5" />
-                    
+                    </div>
                     <div>
                       <h3 className="font-bold text-white leading-none">Career Profile</h3>
                       <p className="text-xs text-slate-400 mt-1">Your AI matching preferences.</p>
-                    
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -515,7 +395,7 @@ export default function Settings() {
                           <SelectItem value="Exec">Executive</SelectItem>
                         </SelectContent>
                       </Select>
-                    
+                    </div>
 
                     <div className="space-y-2">
                       <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">Preferred Location</label>
@@ -526,7 +406,7 @@ export default function Settings() {
                         value={profile.preferred_locations.join(", ")}
                         onChange={(e) => setProfile({ ...profile, preferred_locations: e.target.value.split(",").map(s => s.trim()) })}
                       />
-                    
+                    </div>
 
                     <div className="md:col-span-2 space-y-2">
                       <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">Target Job Role</label>
@@ -537,7 +417,7 @@ export default function Settings() {
                         value={profile.target_roles.join(", ")}
                         onChange={(e) => setProfile({ ...profile, target_roles: e.target.value.split(",").map(s => s.trim()) })}
                       />
-                    
+                    </div>
 
                     <div className="md:col-span-2 space-y-2">
                       <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">Top Skills (comma separated)</label>
@@ -548,7 +428,7 @@ export default function Settings() {
                         value={profile.skills.join(", ")}
                         onChange={(e) => setProfile({ ...profile, skills: e.target.value.split(",").map(s => s.trim()) })}
                       />
-                    
+                    </div>
                   </div>
 
                   <Button
@@ -567,11 +447,11 @@ export default function Settings() {
                   <div className="flex items-center gap-3 mb-6">
                     <div className="h-10 w-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
                       <ShieldCheck className="h-5 w-5" />
-                    
+                    </div>
                     <div>
                       <h3 className="font-bold text-white leading-none">Security Dashboard</h3>
                       <p className="text-xs text-slate-400 mt-1">Manage your account protection protocols.</p>
-                    
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -581,7 +461,7 @@ export default function Settings() {
                       <Button variant="outline" className="w-full h-11 rounded-xl border-white/10 text-slate-300 font-bold hover:bg-white/5 cursor-not-allowed opacity-50">
                         Setup MFA (Coming Soon)
                       </Button>
-                    
+                    </div>
 
                     <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
                       <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-tight">Active Sessions</h4>
@@ -589,7 +469,7 @@ export default function Settings() {
                       <Button variant="outline" className="w-full h-11 rounded-xl border-white/10 text-slate-300 font-bold hover:bg-white/5 cursor-not-allowed opacity-50">
                         View Active Sessions
                       </Button>
-                    
+                    </div>
                   </div>
                 </section>
               )}

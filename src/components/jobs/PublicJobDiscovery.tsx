@@ -40,8 +40,13 @@ import {
   fetchJobLocationOptions,
   Job,
   JobSearchFilters,
+  ApifySearchStatus,
+  createApifySearch,
   searchJobs,
   fetchAllCountries,
+  fetchApifySearchStatus,
+  mapApifyResultToJob,
+  subscribeApifySearch,
 } from "@/services/jobService";
 import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 import { AutoApplyQueueBar } from "@/components/jobs/AutoApplyQueueBar";
@@ -73,6 +78,52 @@ const fallbackBrowseCards: DiscoveryCard[] = [
 ];
 
 const normalizeValue = (value?: string) => (value || "").trim().toLowerCase();
+
+const parseJobDate = (dateStr: string) => {
+  const now = new Date();
+  const num = parseInt(dateStr.match(/\d+/)?.[0] || "0");
+  if (dateStr.includes("hour")) return new Date(now.getTime() - num * 60 * 60 * 1000);
+  if (dateStr.includes("day")) return new Date(now.getTime() - num * 24 * 60 * 60 * 1000);
+  if (dateStr.includes("week")) return new Date(now.getTime() - num * 7 * 24 * 60 * 60 * 1000);
+  if (dateStr.includes("month")) return new Date(now.getTime() - num * 30 * 24 * 60 * 60 * 1000);
+  return now;
+};
+
+const sortJobList = (jobList: Job[], criteria: string) => {
+  const list = [...jobList];
+  if (criteria === "Most Recent") return list.sort((a, b) => parseJobDate(b.posted).getTime() - parseJobDate(a.posted).getTime());
+  if (criteria === "Highest Salary") {
+    const getSalaryValue = (s?: string) => (s?.match(/\d+/g) ? parseInt(s.match(/\d+/g)!.slice(-1)[0]) : 0);
+    return list.sort((a, b) => getSalaryValue(b.salary) - getSalaryValue(a.salary));
+  }
+  return list.sort((a, b) => b.match - a.match);
+};
+
+const getRequestErrorMessage = (error: unknown) => {
+  if (error && typeof error === "object") {
+    const maybeAxiosError = error as { response?: { data?: { message?: string } }; message?: string };
+    return maybeAxiosError.response?.data?.message || maybeAxiosError.message || "Unknown error";
+  }
+  return "Unknown error";
+};
+
+const splitKeywordAndLocation = (query: string) => {
+  const trimmed = query.trim().replace(/\s+/g, " ");
+  const match = trimmed.match(/^(.+?)\s+in\s+(.+)$/i);
+
+  if (!match) {
+    return { keyword: trimmed, location: "" };
+  }
+
+  const keyword = match[1].trim();
+  const location = match[2].trim();
+
+  if (!keyword || !location) {
+    return { keyword: trimmed, location: "" };
+  }
+
+  return { keyword, location };
+};
 
 const findOptionCount = (
   options: Array<{ value: string; label: string; count: number }>,
@@ -212,8 +263,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [bulkApplying, setBulkApplying] = useState(false);
   const [queueKey, setQueueKey] = useState(0);
+  const [apifyStatus, setApifyStatus] = useState<ApifySearchStatus>("idle");
+  const [apifyResultCount, setApifyResultCount] = useState(0);
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
+  const apifyPollTimerRef = useRef<number | null>(null);
+  const activeApifyDocIdRef = useRef<string | null>(null);
+  const apifySearchSeqRef = useRef(0);
 
   const loadAppliedHistory = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -230,26 +287,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   useEffect(() => {
     loadAppliedHistory();
   }, [loadAppliedHistory]);
-
-  const parseDate = (dateStr: string) => {
-    const now = new Date();
-    const num = parseInt(dateStr.match(/\d+/)?.[0] || "0");
-    if (dateStr.includes("hour")) return new Date(now.getTime() - num * 60 * 60 * 1000);
-    if (dateStr.includes("day")) return new Date(now.getTime() - num * 24 * 60 * 60 * 1000);
-    if (dateStr.includes("week")) return new Date(now.getTime() - num * 7 * 24 * 60 * 60 * 1000);
-    if (dateStr.includes("month")) return new Date(now.getTime() - num * 30 * 24 * 60 * 60 * 1000);
-    return now;
-  };
-
-  const sortJobs = (jobList: Job[], criteria: string) => {
-    const list = [...jobList];
-    if (criteria === "Most Recent") return list.sort((a, b) => parseDate(b.posted).getTime() - parseDate(a.posted).getTime());
-    if (criteria === "Highest Salary") {
-      const getSalaryValue = (s?: string) => (s?.match(/\d+/g) ? parseInt(s.match(/\d+/g)!.slice(-1)[0]) : 0);
-      return list.sort((a, b) => getSalaryValue(b.salary) - getSalaryValue(a.salary));
-    }
-    return list.sort((a, b) => b.match - a.match);
-  };
 
   const isFiltered = searchQuery.trim() !== "" || Object.values(filters).some(v => v !== "");
 
@@ -280,46 +317,139 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
+  const stopApifySubscription = () => {
+    apifyUnsubscribeRef.current?.();
+    apifyUnsubscribeRef.current = null;
+    activeApifyDocIdRef.current = null;
+    if (apifyPollTimerRef.current) {
+      window.clearInterval(apifyPollTimerRef.current);
+      apifyPollTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopApifySubscription();
+      apifySearchSeqRef.current += 1;
+    };
+  }, []);
+
+  const buildApifyRequest = (query: string, currentFilters: JobSearchFilters, p: number) => {
+    const keyword = (currentFilters.title || query || currentFilters.department || "").trim();
+    if (keyword.length < 2) return null;
+
+    const locationValue = (
+      currentFilters.city ||
+      currentFilters.location ||
+      currentFilters.country ||
+      (currentFilters.workplace_type?.toLowerCase() === "remote" ? "Remote" : "United States")
+    ).trim();
+
+    return {
+      keywords: [keyword],
+      locations: [locationValue || "United States"],
+      is_remote: currentFilters.workplace_type?.toLowerCase() === "remote",
+      page: p,
+      page_size: Number(currentFilters.page_size || 10),
+    };
+  };
+
+  const startApifySearch = useCallback(async (query: string, currentFilters: JobSearchFilters, p: number) => {
+    const payload = buildApifyRequest(query, currentFilters, p);
+    const seq = apifySearchSeqRef.current + 1;
+    apifySearchSeqRef.current = seq;
+    stopApifySubscription();
+    setApifyResultCount(0);
+    setJobs([]);
+    setTotalResults(0);
+    setHasNextPage(false);
+
+    if (!payload) {
+      setApifyStatus("idle");
+      return;
+    }
+
+    setApifyStatus("pending");
+
+    try {
+      const search = await createApifySearch(payload);
+      if (apifySearchSeqRef.current !== seq) return;
+
+      activeApifyDocIdRef.current = search.firestore_doc_id;
+      setApifyStatus(search.status || "pending");
+
+      const applyApifySnapshot = (snapshot: Awaited<ReturnType<typeof fetchApifySearchStatus>>) => {
+        if (apifySearchSeqRef.current !== seq) return;
+        if (activeApifyDocIdRef.current !== search.firestore_doc_id) return;
+        const results = Array.isArray(snapshot.results) ? snapshot.results : [];
+        setApifyStatus(snapshot.status);
+        setApifyResultCount(snapshot.results_count || results.length);
+        setTotalResults(snapshot.total_results || snapshot.results_count || results.length);
+
+        const apifyJobs = results.map(mapApifyResultToJob);
+        setJobs(sortJobList(apifyJobs, sortBy));
+
+        if (snapshot.status === "completed" || snapshot.status === "failed") {
+          if (apifyPollTimerRef.current) {
+            window.clearInterval(apifyPollTimerRef.current);
+            apifyPollTimerRef.current = null;
+          }
+        }
+
+        if (snapshot.status === "failed" && snapshot.error_message) {
+          toast.error(`Apify search failed: ${snapshot.error_message}`);
+        }
+      };
+
+      apifyUnsubscribeRef.current = subscribeApifySearch(
+        search.firestore_doc_id,
+        applyApifySnapshot,
+        (error) => {
+          console.warn("Apify Firestore subscription failed; using status endpoint fallback", error);
+        },
+      );
+
+      const pollStatus = async () => {
+        try {
+          const snapshot = await fetchApifySearchStatus(search.firestore_doc_id);
+          applyApifySnapshot(snapshot);
+        } catch (error) {
+          console.warn("Apify status polling failed", error);
+        }
+      };
+
+      void pollStatus();
+      apifyPollTimerRef.current = window.setInterval(pollStatus, 3000);
+    } catch (error) {
+      if (apifySearchSeqRef.current !== seq) return;
+      setApifyStatus("failed");
+      console.error("Apify search creation failed", error);
+    }
+  }, [sortBy]);
+
   const fetchJobs = useCallback(async (query: string = "", currentFilters: JobSearchFilters = filters, p: number = 1, append: boolean = false) => {
     if (isLandingMode) return;
 
-    if (append) setIsLoadingMore(true);
-    else {
-      setIsRefreshing(true);
-      setIsLoadingFilterOptions(true);
+    if (append || p > 1) {
+      setIsLoadingMore(false);
+      setHasNextPage(false);
+      return;
     }
 
+    setIsRefreshing(true);
+    setIsLoadingFilterOptions(false);
+
     try {
-      const jobsPromise = searchJobs(query, p, { ...currentFilters, page_size: 10 });
-      const optionsPromise = append ? Promise.resolve(null) : fetchJobFilterOptions(query, currentFilters);
-      const [{ jobs: newJobs, hasNext, totalResults: total }, filterOptions] = await Promise.all([jobsPromise, optionsPromise]);
-
-      if (append) {
-        if (newJobs.length > 0) {
-          setJobs((prev) => [...prev, ...newJobs]);
-          setPage(p);
-        }
-      } else {
-        setJobs(sortJobs(newJobs, sortBy));
-        setPage(1);
-        if (filterOptions) {
-          setDepartmentOptions(filterOptions.departments);
-          setEmploymentOptions(filterOptions.employmentTypes);
-          setWorkplaceOptions(filterOptions.workplaceTypes);
-          setBrowseCards(filterOptions.defaultFilters);
-        }
-      }
-
-      setHasNextPage(hasNext);
-      setTotalResults(total || (append ? jobs.length + newJobs.length : newJobs.length));
-    } catch (error: any) {
-      toast.error("Failed to fetch jobs: " + (error.response?.data?.message || error.message));
+      setPage(1);
+      await startApifySearch(query, currentFilters, 1);
+    } catch (error: unknown) {
+      toast.error("Failed to start Apify search: " + getRequestErrorMessage(error));
     } finally {
       setIsRefreshing(false);
       setIsLoadingMore(false);
       setIsLoadingFilterOptions(false);
     }
-  }, [filters, isLandingMode, jobs.length, sortBy]);
+  }, [filters, isLandingMode, startApifySearch]);
 
   const resetFilters = () => {
     const cleared = {
@@ -396,6 +526,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const autoApplyJobs = toShow.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id)));
   const regularJobs = toShow.filter(j => !j.hasEmail);
   const displayJobs = showAutoApplyOnly ? autoApplyJobs : [...toShow];
+  const isApifySearching = apifyStatus === "pending" || apifyStatus === "processing";
 
   useEffect(() => {
     let mounted = true;
@@ -520,7 +651,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
     const isPrimary = params.get("primary_search") === "true";
     if (!isLandingMode) {
-      fetchJobs(params.get("search") || "", { ...initial, primary_search: isPrimary ? "true" : "false" } as any, 1, false);
+      fetchJobs(params.get("search") || "", { ...initial, primary_search: isPrimary ? "true" : "false" }, 1, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLandingMode, location.search]);
@@ -541,12 +672,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const handlePrimarySearch = () => {
     // Top bar is for Discovery. We allow fallback if a query is present.
-    const isPrimary = searchQuery.trim().length > 0;
-    navigateToJobs(searchQuery, filters, isPrimary);
+    const parsed = splitKeywordAndLocation(searchQuery);
+    const nextFilters = parsed.location ? { ...filters, location: parsed.location } : filters;
+    const isPrimary = parsed.keyword.length > 0;
+
+    setSearchQuery(parsed.keyword);
+    if (parsed.location) setFilters(nextFilters);
+    navigateToJobs(parsed.keyword, nextFilters, isPrimary);
   };
 
   const handleSidebarFilterSubmit = () => {
-    navigateToJobs(searchQuery, filters, false);
+    const parsed = splitKeywordAndLocation(searchQuery);
+    const nextFilters = parsed.location ? { ...filters, location: parsed.location } : filters;
+
+    setSearchQuery(parsed.keyword);
+    if (parsed.location) setFilters(nextFilters);
+    navigateToJobs(parsed.keyword, nextFilters, false);
   };
 
   const handleBrowseCardSelect = (card: DiscoveryCard) => {
@@ -1332,9 +1473,17 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md px-5 py-4 space-y-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3 text-sm text-slate-400">
-                        {isRefreshing ? <><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Loading jobs...</> : <><span className="rounded-full bg-white/10 border border-white/10 px-3 py-1 font-semibold text-white">{displayJobs.length}</span><span>{totalResults > jobs.length ? `showing ${displayJobs.length} of ${totalResults} jobs` : `${displayJobs.length} jobs found`}</span></>}
+                        {isRefreshing || isApifySearching ? <><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Searching live jobs...</> : <><span className="rounded-full bg-white/10 border border-white/10 px-3 py-1 font-semibold text-white">{displayJobs.length}</span><span>{totalResults > jobs.length ? `showing ${displayJobs.length} of ${totalResults} jobs` : `${displayJobs.length} jobs found`}</span></>}
                       </div>
-                      {!isAuthenticated && <div className="rounded-full border border-teal-500/25 bg-teal-500/10 px-4 py-2 text-sm font-medium text-teal-400">Sign in to unlock full job details & apply.</div>}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {apifyStatus !== "idle" && apifyStatus !== "failed" && (
+                          <div className="flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300">
+                            {apifyStatus !== "completed" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            {apifyStatus === "completed" ? `${apifyResultCount} live Apify jobs added` : "Searching live sources"}
+                          </div>
+                        )}
+                        {!isAuthenticated && <div className="rounded-full border border-teal-500/25 bg-teal-500/10 px-4 py-2 text-sm font-medium text-teal-400">Sign in to unlock full job details & apply.</div>}
+                      </div>
                     </div>
                     {isAuthenticated && targetRole && searchQuery === targetRole && (
                       <div className="flex items-center justify-between rounded-2xl border border-violet-500/25 bg-violet-500/10 px-4 py-2.5">
@@ -1357,7 +1506,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   {/* Queue bar — always visible above results */}
                   <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => setAppliedJobIds(prev => new Set(prev).add(jobId))} />
 
-                  {isRefreshing && jobs.length === 0 ? (
+                  {(isRefreshing || isApifySearching) && jobs.length === 0 ? (
                     <div className="space-y-6">
                       {[1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-8 animate-pulse">

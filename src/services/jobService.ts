@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { doc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import api from './api';
 
 export interface LeverJobDetails {
@@ -86,6 +88,32 @@ export interface JobSearchResponse {
     totalResults: number;
 }
 
+export type ApifySearchStatus = 'idle' | 'pending' | 'processing' | 'completed' | 'failed';
+
+export interface ApifySearchRequest {
+    keywords: string[];
+    locations: string[];
+    sources?: string[];
+    is_remote?: boolean;
+    page?: number;
+    page_size?: number;
+}
+
+export interface ApifySearchCreateResponse {
+    firestore_doc_id: string;
+    search_job_id: string;
+    status: ApifySearchStatus;
+    message?: string;
+}
+
+export interface ApifySearchSnapshot {
+    status: ApifySearchStatus;
+    total_results: number;
+    results_count: number;
+    results: unknown[];
+    error_message?: string;
+}
+
 export interface JobLocationOptions {
     countries: string[];
     regions: string[];
@@ -131,6 +159,7 @@ export interface JobSearchFilters {
     country?: string;
     city?: string;
     page_size?: number;
+    primary_search?: string;
 }
 
 const FILTER_OPTIONS_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -172,6 +201,125 @@ const flatten = (val: unknown): string => {
         return String(record.label || record.name || record.text || record.value || JSON.stringify(val));
     }
     return String(val);
+};
+
+const firstText = (record: Record<string, unknown>, keys: string[]): string => {
+    for (const key of keys) {
+        const value = flatten(record[key]);
+        if (value) return value;
+    }
+    return '';
+};
+
+const nestedText = (value: unknown, keys: string[]): string => {
+    if (!value || typeof value !== 'object') return '';
+    const record = value as Record<string, unknown>;
+    return firstText(record, keys);
+};
+
+const formatApifyLocation = (value: unknown): string => {
+    if (Array.isArray(value)) {
+        const locations = value
+            .map((item) => {
+                if (!item || typeof item !== 'object') return flatten(item);
+                const record = item as Record<string, unknown>;
+                return firstText(record, ['location']) || [firstText(record, ['city']), firstText(record, ['state']), firstText(record, ['country'])].filter(Boolean).join(', ');
+            })
+            .filter(Boolean);
+        return locations.join(' • ');
+    }
+
+    return flatten(value);
+};
+
+const formatApifyCompensation = (value: unknown): string => {
+    if (!value || typeof value !== 'object') return flatten(value);
+    const record = value as Record<string, unknown>;
+    const rawText = firstText(record, ['raw_text', 'rawText']);
+    if (rawText) return rawText;
+
+    const min = Number(record.min || 0);
+    const max = Number(record.max || 0);
+    const currency = firstText(record, ['currency']) || 'USD';
+    if (min && max) return `${currency} ${min.toLocaleString()} - ${max.toLocaleString()}`;
+    if (min) return `${currency} ${min.toLocaleString()}+`;
+    return '';
+};
+
+const formatPostedDate = (value: string) => {
+    if (!value) return 'Recently';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
+};
+
+export const mapApifyResultToJob = (raw: unknown, index: number): Job => {
+    const record = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    const company = nestedText(record.company, ['name', 'label', 'text', 'value']) || firstText(record, ['company_name', 'organization', 'employer', 'companyName']);
+    const postedDate = firstText(record, ['posted_date', 'postedDate', 'postedAt', 'posted_at', 'date_posted', 'datePosted', 'publishedAt']);
+    const source = firstText(record, ['source', 'platform', 'job_board']) || nestedText(record.locations, ['source']) || 'apify';
+    const url = firstText(record, ['apply_url', 'applyUrl', 'url', 'job_url', 'jobUrl', 'listing_url', 'listingUrl', 'source_url', 'sourceUrl', 'link']);
+    const rawId = firstText(record, ['id', 'job_id', 'external_id', 'source_id']) || `${source}:${url || index}`;
+    const mockMatch = Math.floor(Math.random() * (95 - 72 + 1)) + 72;
+    const location = formatApifyLocation(record.locations) || firstText(record, ['location', 'city', 'country']);
+    const salary = formatApifyCompensation(record.compensation) || firstText(record, ['salary', 'salary_range']) || firstText(record, ['job_type', 'employment_type']);
+
+    return {
+        id: `apify:${rawId}`,
+        title: firstText(record, ['title', 'job_title', 'jobTitle', 'name', 'position']) || 'Untitled Role',
+        company: company || 'Unknown Company',
+        location: location || 'Remote',
+        salary: salary || 'Competitive',
+        posted: formatPostedDate(postedDate),
+        match: Number(record.match_score || record.match) || mockMatch,
+        tags: [
+            firstText(record, ['job_type', 'employment_type']),
+            firstText(record, ['workplace_type', 'workplaceType']),
+            source,
+        ].filter(Boolean),
+        saved: false,
+        description: firstText(record, ['description', 'summary', 'job_description']),
+        url: url || '#',
+        apply_url: url || '#',
+        hasEmail: false,
+        platform: source,
+        source: 'apify',
+    };
+};
+
+export const createApifySearch = async (
+    payload: ApifySearchRequest,
+): Promise<ApifySearchCreateResponse> => {
+    const response = await api.post<ApifySearchCreateResponse>('/api/job-ingestion/apify-search/', payload);
+    return response.data;
+};
+
+export const fetchApifySearchStatus = async (
+    firestoreDocId: string,
+): Promise<ApifySearchSnapshot> => {
+    const response = await api.get<ApifySearchSnapshot>(`/api/job-ingestion/apify-search/${firestoreDocId}/`);
+    return response.data;
+};
+
+export const subscribeApifySearch = (
+    firestoreDocId: string,
+    callback: (snapshot: ApifySearchSnapshot) => void,
+    onError?: (error: Error) => void,
+): Unsubscribe => {
+    return onSnapshot(
+        doc(db, 'apify_searches', firestoreDocId),
+        (snapshot) => {
+            const data = snapshot.exists() ? snapshot.data() : {};
+            const results = Array.isArray(data.results) ? data.results : [];
+            callback({
+                status: (data.status as ApifySearchStatus) || 'pending',
+                total_results: Number(data.total_results || results.length || 0),
+                results_count: Number(data.results_count || results.length || 0),
+                results,
+                error_message: typeof data.error_message === 'string' ? data.error_message : undefined,
+            });
+        },
+        onError,
+    );
 };
 
 export const searchJobs = async (

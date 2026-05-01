@@ -7,11 +7,36 @@ import { Button } from "@/components/ui/button";
 import { planUiConfig, plans as fallbackPlans } from "@/data/plans";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
+import type { SubscriptionPlan, SubscriptionPlanFeature } from "@/services/subscriptionService";
 import { PlanComparisonTable } from "./PlanComparisonTable";
 
 interface PlansSectionProps {
   compact?: boolean;
 }
+
+const formatPlanPrice = (plan: Partial<SubscriptionPlan> & { price?: string }) => {
+  const priceData = plan.price_data;
+  if (priceData?.amount !== null && priceData?.amount !== undefined) {
+    const currency = (priceData.currency || "usd").toUpperCase();
+    const symbol = currency === "USD" ? "$" : `${currency} `;
+    const amount = Number.isInteger(priceData.amount) ? priceData.amount.toFixed(0) : priceData.amount.toFixed(2);
+    const interval = priceData.interval === "month" ? "/mo" : priceData.interval ? `/${priceData.interval}` : "";
+    return `${symbol}${amount}${interval}`;
+  }
+
+  return plan.price_display || plan.price || "";
+};
+
+const formatFeatureText = (feature: SubscriptionPlanFeature) => {
+  const label = feature.feature_label || feature.feature_key.replace(/_/g, " ");
+  if (!feature.limit_display || feature.limit_display === "Unlimited") return label;
+  return `${label}: ${feature.limit_display}`;
+};
+
+const getEnabledFeatureText = (plan: Partial<SubscriptionPlan>) => {
+  if (!("features" in plan) || !Array.isArray(plan.features)) return [];
+  return plan.features.filter((feature) => feature.is_enabled).map(formatFeatureText);
+};
 
 export function PlansSection({ compact = false }: PlansSectionProps) {
   const { isAuthenticated } = useAuth();
@@ -20,45 +45,13 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
   const [searchParams] = useSearchParams();
   const isSelectionFlow = searchParams.get("select") === "1";
   const isWelcomeFlow = searchParams.get("welcome") === "1";
-
-  const displayPlans = (plans.length > 0 ? plans : fallbackPlans).map((plan) => {
-    const ui = planUiConfig[plan.slug];
-    if (!ui) {
-      return {
-        ...plan,
-        price: "price_display" in plan ? plan.price_display : "",
-        subtitle: plan.name,
-        accent: "from-slate-900 to-slate-700",
-        cta: "Choose Plan",
-        icon: Sparkles,
-        metrics: [],
-        highlights: [],
-        limits: [],
-      };
-    }
-
-    const featureHighlights = "features" in plan
-      ? plan.features
-          .filter((feature) => feature.is_enabled)
-          .slice(0, 4)
-          .map((feature) => feature.feature_key.replace(/_/g, " "))
-      : ui.highlights;
-
-    const dynamicLimits = "features" in plan
-      ? plan.features
-          .filter((feature) => feature.is_enabled && feature.monthly_limit !== null)
-          .map((feature) => `${feature.feature_key.replace(/_/g, " ")}: ${feature.monthly_limit}/month`)
-      : ui.limits;
-
-    return {
-      ...ui,
-      name: plan.name,
-      price: "price_display" in plan ? plan.price_display : ui.price,
-      description: "description" in plan && plan.description ? plan.description : ui.description,
-      highlights: featureHighlights.length > 0 ? featureHighlights : ui.highlights,
-      limits: dynamicLimits.length > 0 ? dynamicLimits : ui.limits,
-    };
-  });
+  const executiveApiPlan = plans.find((plan) => plan.slug === "executive" || plan.slug === "enterprise");
+  const executivePrice = executiveApiPlan ? formatPlanPrice(executiveApiPlan) : planUiConfig.executive.price;
+  const executivePlanSlug = executiveApiPlan?.slug || "executive";
+  const planSource = plans.length > 0 ? plans : fallbackPlans;
+  const primaryPlans = planSource
+    .filter((plan) => !["explorer", "enterprise", "executive"].includes(plan.slug))
+    .slice(0, 3);
 
   const handlePlanAction = async (planSlug: string) => {
     if (!isAuthenticated) {
@@ -102,13 +95,14 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
 
         {/* Main Tiers */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
-          {(plans.length > 0 ? plans : fallbackPlans)
-            .filter(p => p.slug !== "explorer")
-            .slice(0, 3)
+          {primaryPlans
             .map((plan, index) => {
               const ui = planUiConfig[plan.slug] || planUiConfig.free;
               const isPopular = plan.slug === "starter" || plan.slug === "premium" || index === 1;
               const PlanIcon = ui?.icon || Sparkles;
+              const displayPrice = formatPlanPrice(plan);
+              const featureHighlights = getEnabledFeatureText(plan);
+              const visibleFeatures = featureHighlights.length ? featureHighlights.slice(0, 5) : (ui?.highlights || []).slice(0, 5);
 
               return (
                 <motion.div
@@ -135,7 +129,7 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
                       <PlanIcon className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-base font-black text-white tracking-tight">{ui?.name || plan.name}</h3>
+                      <h3 className="text-base font-black text-white tracking-tight">{plan.name || ui?.name}</h3>
                       <p className={`text-[10px] font-bold uppercase tracking-widest ${isPopular ? "text-orange-400" : "text-slate-500"}`}>{ui?.subtitle || ""}</p>
                     </div>
                   </div>
@@ -143,19 +137,19 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
                   {/* Price */}
                   <div className="mb-6 pb-6 border-b border-white/[0.06]">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-white tracking-tight">{plan.price_display || plan.price}</span>
-                      {(!plan.price_display || !plan.price_display.includes('/mo')) && plan.price !== "Rs 0" && plan.price !== "Free" && (
+                      <span className="text-3xl font-black text-white tracking-tight">{displayPrice}</span>
+                      {displayPrice && !displayPrice.includes('/mo') && displayPrice !== "Rs 0" && displayPrice !== "Free" && (
                         <span className="text-xs font-medium text-slate-500">/month</span>
                       )}
                     </div>
                     <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-                      {ui?.description || plan.description || ""}
+                      {"description" in plan && plan.description ? plan.description : ui?.description || ""}
                     </p>
                   </div>
 
                   {/* Features */}
                   <div className="space-y-3 mb-7 flex-1">
-                    {(ui?.highlights || []).slice(0, 5).map((item) => (
+                    {visibleFeatures.map((item) => (
                       <div key={item} className="flex items-start gap-3">
                         <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${isPopular ? "bg-orange-500/20 text-orange-400" : "bg-white/5 text-slate-400"}`}>
                           <CheckCircle2 className="h-2.5 w-2.5" />
@@ -199,12 +193,14 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
                 <Crown className="h-3 w-3 text-orange-400" />
                 White Glove Service
               </span>
-              <h3 className="text-2xl font-black text-white tracking-tight mb-3">Executive Roadmap</h3>
+              <h3 className="text-2xl font-black text-white tracking-tight mb-3">
+                {executiveApiPlan?.name || "Executive Roadmap"}
+              </h3>
               <p className="text-slate-400 text-sm leading-relaxed mb-6 max-w-md">
-                Personalized career strategy with 1-on-1 human coaching, unlimited interview simulations, and white-glove personal branding.
+                {executiveApiPlan?.description || "Personalized career strategy with 1-on-1 human coaching, unlimited interview simulations, and white-glove personal branding."}
               </p>
               <div className="flex flex-wrap gap-2">
-                {["Human Coaching", "Priority Intake", "Concierge"].map(tag => (
+                {(executiveApiPlan ? getEnabledFeatureText(executiveApiPlan).slice(0, 3) : ["Human Coaching", "Priority Intake", "Concierge"]).map(tag => (
                   <span key={tag} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tag}</span>
                 ))}
               </div>
@@ -213,11 +209,11 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
             <div className="w-full lg:w-72 rounded-xl border border-white/10 bg-white/5 p-7 text-center">
               <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">Starting at</p>
               <div className="flex justify-center items-baseline gap-1 mb-6">
-                <span className="text-3xl font-black text-white tracking-tight">{planUiConfig.executive.price}</span>
-                <span className="text-xs font-medium text-slate-500">/mo</span>
+                <span className="text-3xl font-black text-white tracking-tight">{executivePrice}</span>
+                {!executivePrice.includes("/mo") && <span className="text-xs font-medium text-slate-500">/mo</span>}
               </div>
               <Button
-                onClick={() => handlePlanAction("executive")}
+                onClick={() => handlePlanAction(executivePlanSlug)}
                 className="w-full h-11 rounded-xl bg-orange-500 hover:bg-orange-400 text-white font-bold text-sm transition-all shadow-lg shadow-orange-500/20"
               >
                 Contact Strategy Team
@@ -233,7 +229,7 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-orange-400 mb-4">Full Breakdown</p>
               <h3 className="text-3xl font-black text-white tracking-tight">Compare all features</h3>
             </div>
-            <PlanComparisonTable />
+            <PlanComparisonTable plans={plans} />
           </div>
         )}
 

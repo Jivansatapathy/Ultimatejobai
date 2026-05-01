@@ -10,13 +10,13 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       "/api": {
-        target: "https://jobai-production-7672.up.railway.app",
+        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "/api"),
       },
       // D-ID streaming proxy
       "/did": {
-        target: "https://jobai-production-7672.up.railway.app",
+        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
         changeOrigin: true,
       },
     },

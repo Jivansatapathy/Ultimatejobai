@@ -2,8 +2,11 @@ import api from "./api";
 
 export interface SubscriptionPlanFeature {
   feature_key: string;
+  feature_label?: string;
   is_enabled: boolean;
   monthly_limit: number | null;
+  daily_limit?: number | null;
+  limit_display?: string;
   notes: string;
 }
 
@@ -12,6 +15,11 @@ export interface SubscriptionPlan {
   name: string;
   slug: string;
   price_display: string;
+  price_data?: {
+    amount: number | null;
+    currency: string;
+    interval: string | null;
+  } | null;
   description: string;
   is_active: boolean;
   is_default: boolean;

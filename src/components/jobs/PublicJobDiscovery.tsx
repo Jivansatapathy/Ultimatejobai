@@ -430,26 +430,51 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const fetchJobs = useCallback(async (query: string = "", currentFilters: JobSearchFilters = filters, p: number = 1, append: boolean = false) => {
     if (isLandingMode) return;
 
-    if (append || p > 1) {
-      setIsLoadingMore(false);
-      setHasNextPage(false);
+    const isPrimaryApifySearch = currentFilters.primary_search === "true";
+
+    if (isPrimaryApifySearch && !append && p === 1) {
+      setIsRefreshing(true);
+      setIsLoadingFilterOptions(false);
+
+      try {
+        await startApifySearch(query, currentFilters, 1);
+      } catch (error: unknown) {
+        toast.error("Failed to start Apify search: " + getRequestErrorMessage(error));
+      } finally {
+        setIsRefreshing(false);
+        setIsLoadingMore(false);
+        setIsLoadingFilterOptions(false);
+      }
       return;
     }
 
-    setIsRefreshing(true);
+    stopApifySubscription();
+    setApifyStatus("idle");
+    setApifyResultCount(0);
+
+    if (append || p > 1) {
+      setIsLoadingMore(true);
+    } else {
+      setIsRefreshing(true);
+    }
     setIsLoadingFilterOptions(false);
 
     try {
-      setPage(1);
-      await startApifySearch(query, currentFilters, 1);
+      const result = await searchJobs(query, p, currentFilters);
+      const nextJobs = sortJobList(result.jobs, sortBy);
+
+      setJobs((prev) => (append ? sortJobList([...prev, ...nextJobs], sortBy) : nextJobs));
+      setTotalResults(result.totalResults);
+      setHasNextPage(result.hasNext);
+      setPage(p);
     } catch (error: unknown) {
-      toast.error("Failed to start Apify search: " + getRequestErrorMessage(error));
+      toast.error("Failed to load jobs: " + getRequestErrorMessage(error));
     } finally {
       setIsRefreshing(false);
       setIsLoadingMore(false);
       setIsLoadingFilterOptions(false);
     }
-  }, [filters, isLandingMode, startApifySearch]);
+  }, [filters, isLandingMode, sortBy, startApifySearch]);
 
   const resetFilters = () => {
     const cleared = {
@@ -867,7 +892,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         </div>
 
         <div className="space-y-2">
-          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Location</label>
+          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Country</label>
           <select
             value={filters.country || ""}
             onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))}
@@ -877,10 +902,32 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
             <option value="" className="bg-[#0a0f1e]">{isLoadingLocations ? "Loading..." : "Everywhere"}</option>
             {(filterCountryOptions || []).map((country) => (
               <option key={`country-${country.value}`} value={country.value} className="bg-[#0a0f1e]">
-                {country.label}
+                {country.label} ({country.count})
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">City</label>
+          <select
+            value={filters.city || ""}
+            onChange={(e) => setFilters((p) => ({ ...p, city: e.target.value }))}
+            disabled={isLoadingFilterOptions || cityOptions.length === 0}
+            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <option value="" className="bg-[#0a0f1e]">
+              {isLoadingFilterOptions ? "Loading cities..." : filters.country ? "All Cities" : "All Cities Worldwide"}
+            </option>
+            {(cityOptions || []).map((city) => (
+              <option key={`city-${city.value}`} value={city.value} className="bg-[#0a0f1e]">
+                {city.label} ({city.count})
+              </option>
+            ))}
+          </select>
+          <p className="ml-1 text-[11px] font-semibold text-slate-600">
+            {filters.country ? `Showing cities with jobs in ${filters.country}.` : "Choose a country to narrow city counts."}
+          </p>
         </div>
 
         <Button
@@ -1014,7 +1061,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Job title, skill, or keyword…"
+                  placeholder="Python developer in USA"
                   className="w-full rounded-xl bg-white/[0.05] py-3 pl-10 pr-9 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
                 />
                 {searchQuery && (

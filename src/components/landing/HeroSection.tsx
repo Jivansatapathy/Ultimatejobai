@@ -2,29 +2,41 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Zap, Shield, TrendingUp, Search, Star, MapPin, Building2, Briefcase } from "lucide-react";
+import { ArrowRight, Sparkles, Zap, Shield, TrendingUp, Search, Star, Briefcase } from "lucide-react";
+
+const splitKeywordAndLocation = (query: string) => {
+  const trimmed = query.trim().replace(/\s+/g, " ");
+  const match = trimmed.match(/^(.+?)\s+in\s+(.+)$/i);
+
+  if (!match) {
+    return { keyword: trimmed, location: "" };
+  }
+
+  const keyword = match[1].trim();
+  const location = match[2].trim();
+
+  if (!keyword || !location) {
+    return { keyword: trimmed, location: "" };
+  }
+
+  return { keyword, location };
+};
 
 export const HeroSection = () => {
   const navigate = useNavigate();
-  const [heroFilters, setHeroFilters] = useState({
-    title: "",
-    city: "",
-    country: "",
-  });
+  const [heroSearch, setHeroSearch] = useState("");
 
-  const navigateToJobs = (overrides?: Partial<typeof heroFilters>) => {
-    const nextFilters = { ...heroFilters, ...overrides };
+  const navigateToJobs = (searchOverride?: string) => {
+    const nextSearch = searchOverride ?? heroSearch;
+    const parsed = splitKeywordAndLocation(nextSearch);
     const params = new URLSearchParams();
 
-    if (nextFilters.title.trim()) {
-      params.set("title", nextFilters.title.trim());
-      params.set("search", nextFilters.title.trim());
+    if (parsed.keyword) {
+      params.set("title", parsed.keyword);
+      params.set("search", parsed.keyword);
     }
-    if (nextFilters.city.trim()) {
-      params.set("city", nextFilters.city.trim());
-    }
-    if (nextFilters.country.trim()) {
-      params.set("country", nextFilters.country.trim());
+    if (parsed.location) {
+      params.set("location", parsed.location);
     }
 
     navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
@@ -113,30 +125,10 @@ export const HeroSection = () => {
                 <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Job position"
+                  placeholder="Python developer in USA"
                   className="w-full pl-10 pr-4 py-3 bg-transparent border-none focus:outline-none text-foreground placeholder:text-muted-foreground/50"
-                  value={heroFilters.title}
-                  onChange={(e) => setHeroFilters((prev) => ({ ...prev, title: e.target.value }))}
-                />
-              </div>
-              <div className="flex-1 relative md:border-l border-border/50">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="City"
-                  className="w-full pl-9 pr-4 py-3 bg-transparent border-none focus:outline-none text-sm text-foreground placeholder:text-muted-foreground/50"
-                  value={heroFilters.city}
-                  onChange={(e) => setHeroFilters((prev) => ({ ...prev, city: e.target.value }))}
-                />
-              </div>
-              <div className="flex-1 relative md:border-l border-border/50">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Country"
-                  className="w-full pl-9 pr-4 py-3 bg-transparent border-none focus:outline-none text-sm text-foreground placeholder:text-muted-foreground/50"
-                  value={heroFilters.country}
-                  onChange={(e) => setHeroFilters((prev) => ({ ...prev, country: e.target.value }))}
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
                 />
               </div>
               <Button 
@@ -211,7 +203,7 @@ export const HeroSection = () => {
                   ].map((role, i) => (
                     <button
                       key={i}
-                      onClick={() => navigateToJobs({ title: role })}
+                      onClick={() => navigateToJobs(role)}
                       className="px-6 py-3 text-left hover:bg-teal-50 transition-colors border-b border-teal-50 last:border-0 text-muted-foreground font-medium text-sm group"
                     >
                       <span className="group-hover:text-teal-700 transition-colors">{role}</span>

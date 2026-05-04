@@ -1107,6 +1107,51 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
               </Button>
             </motion.form>
 
+            {/* ── SerpAPI Toggle ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.22 }}
+              className="mx-auto mt-4 max-w-2xl"
+            >
+              <div className="flex items-center justify-between rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/[0.06] to-amber-500/[0.04] backdrop-blur-md px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-500/15 border border-orange-500/20">
+                    <Globe2 className="h-4 w-4 text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-orange-200">Google Jobs (SerpAPI)</p>
+                    <p className="text-[11px] text-slate-500">Search Google Jobs live & ingest results</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {serpApiLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-400" />}
+                  {serpApiCount > 0 && !serpApiLoading && (
+                    <span className="rounded-full bg-orange-500/15 border border-orange-500/25 px-2.5 py-0.5 text-[10px] font-black text-orange-300 uppercase tracking-wider">
+                      {serpApiCount} found
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={serpApiEnabled}
+                    onClick={() => setSerpApiEnabled(prev => !prev)}
+                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 ${
+                      serpApiEnabled
+                        ? 'border-orange-500/40 bg-orange-500'
+                        : 'border-white/10 bg-white/10'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${
+                        serpApiEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Quick-filter tags & Magic Search */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -1537,46 +1582,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
               </div>
 
               {showMobileFilters && <div className="mb-5 lg:hidden">{renderFilters()}</div>}
-
-              {/* ── SerpAPI Toggle (before search results) ── */}
-              <div className="mb-6 mx-auto w-full max-w-2xl">
-                <div className="flex items-center justify-between rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/[0.06] to-amber-500/[0.04] backdrop-blur-md px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 border border-orange-500/20">
-                      <Globe2 className="h-4.5 w-4.5 text-orange-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-orange-200">Google Jobs (SerpAPI)</p>
-                      <p className="text-[11px] text-slate-500">Search Google Jobs live & ingest results</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {serpApiLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-400" />}
-                    {serpApiCount > 0 && !serpApiLoading && (
-                      <span className="rounded-full bg-orange-500/15 border border-orange-500/25 px-2.5 py-0.5 text-[10px] font-black text-orange-300 uppercase tracking-wider">
-                        {serpApiCount} found
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={serpApiEnabled}
-                      onClick={() => setSerpApiEnabled(prev => !prev)}
-                      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 ${
-                        serpApiEnabled
-                          ? 'border-orange-500/40 bg-orange-500'
-                          : 'border-white/10 bg-white/10'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${
-                          serpApiEnabled ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
 
               <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_280px]">
                 <aside className="hidden lg:block">{renderFilters()}</aside>

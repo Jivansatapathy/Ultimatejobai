@@ -625,6 +625,7 @@ export const serpApiSearch = async (
         const mappedJobs = rawJobs.map(mapSerpApiResultToJob);
 
         console.log(`[SerpAPI] Result: ${mappedJobs.length} jobs in ${data.response_time_ms || '?'}ms (Cached: ${!!data.cached})`);
+        console.log(`[SerpAPI] Full Response:`, data);
         
         return {
             jobs: mappedJobs,

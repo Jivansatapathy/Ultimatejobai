@@ -613,7 +613,7 @@ export const serpApiSearch = async (
 ): Promise<{ jobs: Job[]; totalResults: number; raw: SerpApiSearchResult | null }> => {
     try {
         console.log(`[SerpAPI] Searching for: "${query}" location: "${location || 'auto'}"`);
-        const response = await api.get<SerpApiSearchResult>('/api/search/serpapi/jobs/', {
+        const response = await api.get<SerpApiSearchResult & { cached?: boolean; response_time_ms?: number }>('/api/search/serpapi/jobs/', {
             params: {
                 q: query,
                 location: location || undefined,
@@ -624,7 +624,8 @@ export const serpApiSearch = async (
         const rawJobs = Array.isArray(data.jobs_results) ? data.jobs_results : [];
         const mappedJobs = rawJobs.map(mapSerpApiResultToJob);
 
-        console.log(`[SerpAPI] Found ${mappedJobs.length} jobs`);
+        console.log(`[SerpAPI] Result: ${mappedJobs.length} jobs in ${data.response_time_ms || '?'}ms (Cached: ${!!data.cached})`);
+        
         return {
             jobs: mappedJobs,
             totalResults: mappedJobs.length,

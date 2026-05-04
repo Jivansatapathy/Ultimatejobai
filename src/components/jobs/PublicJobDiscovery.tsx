@@ -745,7 +745,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     };
     setSearchQuery(params.get("search") || "");
     setFilters(initial);
-    setSerpApiEnabled(params.get("serpapi") === "true");
+     const serpFromUrl = params.get("serpapi") === "true";
+    console.log(`[URL Sync] SerpAPI from URL: ${serpFromUrl}`);
+    setSerpApiEnabled(serpFromUrl);
 
     const isPrimary = params.get("primary_search") === "true";
     if (!isLandingMode) {
@@ -1185,14 +1187,17 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     aria-checked={serpApiEnabled}
                     onClick={() => {
                       const nextVal = !serpApiEnabled;
+                      console.log(`[SerpAPI Toggle] Swapping to: ${nextVal ? 'ON' : 'OFF'}`);
                       setSerpApiEnabled(nextVal);
-                      // If we're already on results page, update URL immediately
-                      if (!isLandingMode) {
-                        const params = new URLSearchParams(location.search);
-                        if (nextVal) params.set("serpapi", "true");
-                        else params.delete("serpapi");
-                        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-                      }
+                      
+                      const params = new URLSearchParams(location.search);
+                      if (nextVal) params.set("serpapi", "true");
+                      else params.delete("serpapi");
+                      
+                      const nextUrl = `${location.pathname}?${params.toString()}`;
+                      console.log(`[SerpAPI Toggle] Updating URL to: ${nextUrl}`);
+                      
+                      navigate(nextUrl, { replace: true });
                     }}
                     className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 ${
                       serpApiEnabled

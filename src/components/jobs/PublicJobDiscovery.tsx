@@ -47,6 +47,7 @@ import {
   fetchApifySearchStatus,
   mapApifyResultToJob,
   subscribeApifySearch,
+  serpApiSearch,
 } from "@/services/jobService";
 import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 import { AutoApplyQueueBar } from "@/components/jobs/AutoApplyQueueBar";
@@ -266,6 +267,12 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [apifyStatus, setApifyStatus] = useState<ApifySearchStatus>("idle");
   const [apifyResultCount, setApifyResultCount] = useState(0);
 
+  // ── SerpAPI Google Jobs toggle ──
+  const [serpApiEnabled, setSerpApiEnabled] = useState(false);
+  const [serpApiJobs, setSerpApiJobs] = useState<Job[]>([]);
+  const [serpApiLoading, setSerpApiLoading] = useState(false);
+  const [serpApiCount, setSerpApiCount] = useState(0);
+
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
   const apifyPollTimerRef = useRef<number | null>(null);
@@ -467,6 +474,24 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setTotalResults(result.totalResults);
       setHasNextPage(result.hasNext);
       setPage(p);
+
+      // ── SerpAPI side-search (non-blocking) ──
+      if (serpApiEnabled && query.trim().length >= 2 && !append) {
+        setSerpApiLoading(true);
+        setSerpApiJobs([]);
+        setSerpApiCount(0);
+        const parsed = splitKeywordAndLocation(query);
+        serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
+          .then((serpResult) => {
+            setSerpApiJobs(serpResult.jobs);
+            setSerpApiCount(serpResult.totalResults);
+          })
+          .catch(() => { toast.error("SerpAPI search failed."); })
+          .finally(() => setSerpApiLoading(false));
+      } else if (!serpApiEnabled) {
+        setSerpApiJobs([]);
+        setSerpApiCount(0);
+      }
     } catch (error: unknown) {
       toast.error("Failed to load jobs: " + getRequestErrorMessage(error));
     } finally {
@@ -474,7 +499,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setIsLoadingMore(false);
       setIsLoadingFilterOptions(false);
     }
-  }, [filters, isLandingMode, sortBy, startApifySearch]);
+  }, [filters, isLandingMode, sortBy, startApifySearch, serpApiEnabled]);
 
   const resetFilters = () => {
     const cleared = {
@@ -1532,6 +1557,44 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         {!isAuthenticated && <div className="rounded-full border border-teal-500/25 bg-teal-500/10 px-4 py-2 text-sm font-medium text-teal-400">Sign in to unlock full job details & apply.</div>}
                       </div>
                     </div>
+
+                    {/* ── SerpAPI Toggle ── */}
+                    <div className="flex items-center justify-between rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/[0.06] to-amber-500/[0.04] px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/15">
+                          <Globe2 className="h-4 w-4 text-orange-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-orange-200">Google Jobs (SerpAPI)</p>
+                          <p className="text-[11px] text-slate-500">Search Google Jobs live & ingest results</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {serpApiLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-400" />}
+                        {serpApiCount > 0 && !serpApiLoading && (
+                          <span className="rounded-full bg-orange-500/15 border border-orange-500/25 px-2.5 py-0.5 text-[10px] font-black text-orange-300 uppercase tracking-wider">
+                            {serpApiCount} found
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={serpApiEnabled}
+                          onClick={() => setSerpApiEnabled(prev => !prev)}
+                          className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 ${
+                            serpApiEnabled
+                              ? 'border-orange-500/40 bg-orange-500'
+                              : 'border-white/10 bg-white/10'
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${
+                              serpApiEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                     {isAuthenticated && targetRole && searchQuery === targetRole && (
                       <div className="flex items-center justify-between rounded-2xl border border-violet-500/25 bg-violet-500/10 px-4 py-2.5">
                         <div className="flex items-center gap-2.5">
@@ -1616,7 +1679,29 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         </div>
                       )}
 
-                      {/* 2. Other/External Jobs Section */}
+                      {/* 2. SerpAPI Google Jobs Section */}
+                      {serpApiEnabled && serpApiJobs.length > 0 && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between px-4 bg-gradient-to-r from-orange-500/[0.08] to-amber-500/[0.04] py-3 rounded-2xl border border-orange-500/20">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/15">
+                                <Globe2 className="h-4 w-4 text-orange-400" />
+                              </div>
+                              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-orange-200">
+                                Google Jobs <span className="mx-2 text-white/10">|</span> <span className="text-orange-400/70">SerpAPI Live</span>
+                              </h3>
+                            </div>
+                            <span className="text-[10px] font-black uppercase text-orange-400">
+                              {serpApiJobs.length} Results
+                            </span>
+                          </div>
+                          <div className="space-y-6">
+                            {serpApiJobs.map((job, index) => renderJobCard(job, index))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 3. Other/External Jobs Section */}
                       {!showAutoApplyOnly && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-white/[0.03] py-3 rounded-2xl border border-white/[0.08]">

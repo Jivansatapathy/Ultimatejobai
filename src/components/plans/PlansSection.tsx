@@ -15,6 +15,10 @@ interface PlansSectionProps {
 }
 
 const formatPlanPrice = (plan: Partial<SubscriptionPlan> & { price?: string }) => {
+  if (plan.price_display) {
+    return plan.price_display;
+  }
+
   const priceData = plan.price_data;
   if (priceData?.amount !== null && priceData?.amount !== undefined) {
     const currency = (priceData.currency || "usd").toUpperCase();
@@ -24,7 +28,7 @@ const formatPlanPrice = (plan: Partial<SubscriptionPlan> & { price?: string }) =
     return `${symbol}${amount}${interval}`;
   }
 
-  return plan.price_display || plan.price || "";
+  return plan.price || "";
 };
 
 const formatFeatureText = (feature: SubscriptionPlanFeature) => {
@@ -40,7 +44,7 @@ const getEnabledFeatureText = (plan: Partial<SubscriptionPlan>) => {
 
 export function PlansSection({ compact = false }: PlansSectionProps) {
   const { isAuthenticated } = useAuth();
-  const { plans, summary, loadingPlans, selectPlan } = useSubscription();
+  const { plans, summary, loadingPlans, selectPlan, initiateCheckout } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isSelectionFlow = searchParams.get("select") === "1";
@@ -58,14 +62,22 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
       return;
     }
 
+    const plan = plans.find((p) => p.slug === planSlug);
+    // Robust check for paid plans: either price_data indicates a price, or it's a known paid slug and not the free one
+    const isPaid = (plan?.price_data?.amount && plan.price_data.amount > 0) || (planSlug !== "free" && planSlug !== "explorer");
+
     try {
-      await selectPlan(planSlug);
-      toast.success("Plan updated successfully.");
-      if (isSelectionFlow) {
-        navigate("/resume");
+      if (isPaid) {
+        await initiateCheckout(planSlug);
+      } else {
+        await selectPlan(planSlug);
+        toast.success("Plan updated successfully.");
+        if (isSelectionFlow) {
+          navigate("/resume");
+        }
       }
     } catch (error: any) {
-      console.error("Failed to select plan:", error);
+      console.error("Failed to handle plan action:", error);
       toast.error(error?.response?.data?.error || "Failed to update plan.");
     }
   };

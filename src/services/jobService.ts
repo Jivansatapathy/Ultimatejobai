@@ -532,3 +532,110 @@ export const googleCSESearch = async (
         };
     }
 };
+
+// ── SerpAPI Google Jobs ─────────────────────────────────────────────────
+
+export interface SerpApiSearchResult {
+    status: string;
+    query: string;
+    location: string;
+    count: number;
+    jobs_results: SerpApiRawJob[];
+}
+
+export interface SerpApiRawJob {
+    title?: string;
+    company_name?: string;
+    location?: string;
+    via?: string;
+    description?: string;
+    extensions?: string[];
+    detected_extensions?: {
+        posted_at?: string;
+        schedule_type?: string;
+        salary?: string;
+        work_from_home?: boolean;
+    };
+    apply_options?: Array<{
+        title?: string;
+        link?: string;
+    }>;
+    apply_links?: Array<{
+        title?: string;
+        link?: string;
+    }>;
+    thumbnail?: string;
+    job_id?: string;
+}
+
+/**
+ * Map a raw SerpAPI job result into our standard Job interface.
+ */
+export const mapSerpApiResultToJob = (raw: SerpApiRawJob, index: number): Job => {
+    const detected = raw.detected_extensions || {};
+    const applyLinks = raw.apply_options || raw.apply_links || [];
+    const firstLink = applyLinks.length > 0 ? applyLinks[0].link || '#' : '#';
+    const salary = detected.salary || (raw.extensions || []).find(e => e.includes('$') || e.toLowerCase().includes('salary')) || '';
+    const posted = detected.posted_at || 'Recently';
+    const scheduleType = detected.schedule_type || (raw.extensions || []).find(e => e.toLowerCase().includes('time') || e.toLowerCase().includes('contract')) || '';
+    const mockMatch = Math.floor(Math.random() * (95 - 72 + 1)) + 72;
+
+    return {
+        id: `serp:${raw.job_id || `${(raw.title || '').slice(0, 30)}-${index}`}`,
+        title: raw.title || 'Untitled Role',
+        company: raw.company_name || 'Unknown Company',
+        location: raw.location || 'Remote',
+        salary: salary || scheduleType || 'Competitive',
+        posted,
+        match: mockMatch,
+        tags: [scheduleType, raw.via || ''].filter(Boolean),
+        saved: false,
+        description: raw.description || '',
+        url: firstLink,
+        apply_url: firstLink,
+        hasEmail: false,
+        platform: 'google_jobs',
+        source: 'serpapi',
+    };
+};
+
+/**
+ * Search Google Jobs via the SerpAPI backend endpoint.
+ * Returns raw results immediately; the backend ingests them into the DB
+ * in a background thread.
+ *
+ * @param query    - Search keywords (e.g. "software developer")
+ * @param location - Optional location (e.g. "Austin, Texas, United States")
+ */
+export const serpApiSearch = async (
+    query: string,
+    location?: string,
+): Promise<{ jobs: Job[]; totalResults: number; raw: SerpApiSearchResult | null }> => {
+    try {
+        console.log(`[SerpAPI] Searching for: "${query}" location: "${location || 'auto'}"`);
+        const response = await api.get<SerpApiSearchResult>('/api/search/serpapi/jobs/', {
+            params: {
+                q: query,
+                location: location || undefined,
+            },
+        });
+
+        const data = response.data;
+        const rawJobs = Array.isArray(data.jobs_results) ? data.jobs_results : [];
+        const mappedJobs = rawJobs.map(mapSerpApiResultToJob);
+
+        console.log(`[SerpAPI] Found ${mappedJobs.length} jobs`);
+        return {
+            jobs: mappedJobs,
+            totalResults: mappedJobs.length,
+            raw: data,
+        };
+    } catch (error: any) {
+        console.error('[SerpAPI] API Error:', error.response?.data || error.message);
+        return {
+            jobs: [],
+            totalResults: 0,
+            raw: null,
+        };
+    }
+};

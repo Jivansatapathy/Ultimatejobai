@@ -13,6 +13,7 @@ interface SubscriptionContextType {
   loadingPlans: boolean;
   loadingSummary: boolean;
   selectPlan: (planSlug: string) => Promise<SubscriptionSummary | null>;
+  initiateCheckout: (planSlug: string) => Promise<void>;
   refreshPlans: () => Promise<void>;
   refreshSummary: () => Promise<void>;
   hasFeature: (featureKey: string) => boolean;
@@ -70,6 +71,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return nextSummary;
   };
 
+  const initiateCheckout = async (planSlug: string) => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    try {
+      const { url } = await subscriptionService.createCheckoutSession(planSlug);
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Failed to initiate checkout:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (isEmployerRoute) {
       setLoadingPlans(false);
@@ -94,6 +111,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       loadingPlans,
       loadingSummary,
       selectPlan,
+      initiateCheckout,
       refreshPlans,
       refreshSummary,
       hasFeature: (featureKey: string) => Boolean(summary?.enabled_feature_keys?.includes(featureKey)),

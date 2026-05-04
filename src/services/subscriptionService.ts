@@ -61,4 +61,9 @@ export const subscriptionService = {
     const response = await api.post("/api/subscriptions/select-plan/", { plan_slug: planSlug });
     return response.data;
   },
+
+  async createCheckoutSession(planSlug: string): Promise<{ session_id: string; url: string }> {
+    const response = await api.post("/api/subscriptions/stripe/checkout/", { plan_slug: planSlug });
+    return response.data;
+  },
 };

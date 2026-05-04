@@ -43,10 +43,26 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor for handling 401 errors
+// Response interceptor for logging and handling 401 errors
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        const method = response.config.method?.toUpperCase() || 'GET';
+        const url = response.config.url;
+        console.groupCollapsed(`🚀 API ${method}: ${url}`);
+        console.log('Status:', response.status);
+        console.log('Data:', response.data);
+        console.groupEnd();
+        return response;
+    },
     (error) => {
+        const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
+        const url = error.config?.url || 'unknown';
+        console.group(`❌ API ERROR ${method}: ${url}`);
+        console.error('Status:', error.response?.status);
+        console.error('Message:', error.message);
+        console.error('Response Data:', error.response?.data);
+        console.groupEnd();
+
         if (error.response?.status === 401) {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');

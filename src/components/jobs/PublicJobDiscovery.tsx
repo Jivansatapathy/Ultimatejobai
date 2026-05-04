@@ -467,22 +467,29 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setSerpApiCount(0);
 
       const parsed = splitKeywordAndLocation(query);
-      serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
+      const serpPromise = serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
         .then((serpResult) => {
           setSerpApiJobs(serpResult.jobs);
           setSerpApiCount(serpResult.totalResults);
+          return serpResult;
         })
-        .catch(() => { toast.error("SerpAPI search failed."); })
+        .catch((err) => { 
+          toast.error("SerpAPI search failed."); 
+          throw err;
+        })
         .finally(() => {
           setSerpApiLoading(false);
+          // If this was the main thing we were waiting for, stop the big spinner
           setIsRefreshing(false);
         });
       
-      // Still load DB results in the background
+      // Load DB results in the background, but don't let it block the "refreshing" state
       searchJobs(query, p, currentFilters).then(result => {
         setJobs(sortJobList(result.jobs, sortBy));
         setTotalResults(result.totalResults);
         setHasNextPage(result.hasNext);
+      }).catch(err => {
+        console.error("DB background search failed:", err);
       });
       
       return;

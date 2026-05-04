@@ -452,6 +452,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         setIsLoadingMore(false);
         setIsLoadingFilterOptions(false);
       }
+
+      // Also fire SerpAPI if enabled (runs alongside Apify)
+      if (serpApiEnabled && query.trim().length >= 2) {
+        setSerpApiLoading(true);
+        setSerpApiJobs([]);
+        setSerpApiCount(0);
+        const parsed = splitKeywordAndLocation(query);
+        serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
+          .then((serpResult) => {
+            setSerpApiJobs(serpResult.jobs);
+            setSerpApiCount(serpResult.totalResults);
+          })
+          .catch(() => { toast.error("SerpAPI search failed."); })
+          .finally(() => setSerpApiLoading(false));
+      }
+
       return;
     }
 

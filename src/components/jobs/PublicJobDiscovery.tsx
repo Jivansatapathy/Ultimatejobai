@@ -439,7 +439,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
     const isPrimaryApifySearch = currentFilters.primary_search === "true";
 
-    if (isPrimaryApifySearch && !append && p === 1) {
+    if (isPrimaryApifySearch && !append && p === 1 && !serpApiEnabled) {
       setIsRefreshing(true);
       setIsLoadingFilterOptions(false);
 
@@ -452,22 +452,39 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         setIsLoadingMore(false);
         setIsLoadingFilterOptions(false);
       }
+      return;
+    }
 
-      // Also fire SerpAPI if enabled (runs alongside Apify)
-      if (serpApiEnabled && query.trim().length >= 2) {
-        setSerpApiLoading(true);
-        setSerpApiJobs([]);
-        setSerpApiCount(0);
-        const parsed = splitKeywordAndLocation(query);
-        serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
-          .then((serpResult) => {
-            setSerpApiJobs(serpResult.jobs);
-            setSerpApiCount(serpResult.totalResults);
-          })
-          .catch(() => { toast.error("SerpAPI search failed."); })
-          .finally(() => setSerpApiLoading(false));
-      }
+    // If SerpAPI is enabled, we treat it as the primary live source and skip Apify
+    if (isPrimaryApifySearch && !append && p === 1 && serpApiEnabled) {
+      stopApifySubscription();
+      setApifyStatus("idle");
+      setApifyResultCount(0);
+      
+      setIsRefreshing(true);
+      setSerpApiLoading(true);
+      setSerpApiJobs([]);
+      setSerpApiCount(0);
 
+      const parsed = splitKeywordAndLocation(query);
+      serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
+        .then((serpResult) => {
+          setSerpApiJobs(serpResult.jobs);
+          setSerpApiCount(serpResult.totalResults);
+        })
+        .catch(() => { toast.error("SerpAPI search failed."); })
+        .finally(() => {
+          setSerpApiLoading(false);
+          setIsRefreshing(false);
+        });
+      
+      // Still load DB results in the background
+      searchJobs(query, p, currentFilters).then(result => {
+        setJobs(sortJobList(result.jobs, sortBy));
+        setTotalResults(result.totalResults);
+        setHasNextPage(result.hasNext);
+      });
+      
       return;
     }
 

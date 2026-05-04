@@ -320,6 +320,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     }
     if (nextFilters.country?.trim()) params.set("country", nextFilters.country.trim());
     if (nextFilters.city?.trim()) params.set("city", nextFilters.city.trim());
+    if (serpApiEnabled) params.set("serpapi", "true");
     
     navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
@@ -437,9 +438,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const fetchJobs = useCallback(async (query: string = "", currentFilters: JobSearchFilters = filters, p: number = 1, append: boolean = false) => {
     if (isLandingMode) return;
 
-    const isPrimaryApifySearch = currentFilters.primary_search === "true";
+    const params = new URLSearchParams(window.location.search);
+    const isSerpApiActive = serpApiEnabled || params.get("serpapi") === "true";
+    const isPrimaryApifySearch = currentFilters.primary_search === "true" || params.get("primary_search") === "true";
 
-    if (isPrimaryApifySearch && !append && p === 1 && !serpApiEnabled) {
+    console.log(`[fetchJobs] query: "${query}", isPrimary: ${isPrimaryApifySearch}, serpapi: ${isSerpApiActive}`);
+
+    if (isPrimaryApifySearch && !append && p === 1 && !isSerpApiActive) {
       setIsRefreshing(true);
       setIsLoadingFilterOptions(false);
 
@@ -456,7 +461,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     }
 
     // If SerpAPI is enabled, we treat it as the primary live source and skip Apify
-    if (isPrimaryApifySearch && !append && p === 1 && serpApiEnabled) {
+    if (isPrimaryApifySearch && !append && p === 1 && isSerpApiActive) {
       stopApifySubscription();
       setApifyStatus("idle");
       setApifyResultCount(0);
@@ -466,8 +471,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setSerpApiJobs([]);
       setSerpApiCount(0);
 
-      const parsed = splitKeywordAndLocation(query);
-      const serpPromise = serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
+      const activeKeyword = (query || currentFilters.title || "").trim();
+      const parsed = splitKeywordAndLocation(activeKeyword);
+      const serpPromise = serpApiSearch(parsed.keyword || activeKeyword, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
         .then((serpResult) => {
           setSerpApiJobs(serpResult.jobs);
           setSerpApiCount(serpResult.totalResults);
@@ -516,19 +522,20 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setPage(p);
 
       // ── SerpAPI side-search (non-blocking) ──
-      if (serpApiEnabled && query.trim().length >= 2 && !append) {
+      const activeKeyword = (query || currentFilters.title || "").trim();
+      if (isSerpApiActive && activeKeyword.length >= 2 && !append) {
         setSerpApiLoading(true);
         setSerpApiJobs([]);
         setSerpApiCount(0);
-        const parsed = splitKeywordAndLocation(query);
-        serpApiSearch(parsed.keyword || query, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
+        const parsed = splitKeywordAndLocation(activeKeyword);
+        serpApiSearch(parsed.keyword || activeKeyword, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
           .then((serpResult) => {
             setSerpApiJobs(serpResult.jobs);
             setSerpApiCount(serpResult.totalResults);
           })
           .catch(() => { toast.error("SerpAPI search failed."); })
           .finally(() => setSerpApiLoading(false));
-      } else if (!serpApiEnabled) {
+      } else if (!isSerpApiActive) {
         setSerpApiJobs([]);
         setSerpApiCount(0);
       }
@@ -738,6 +745,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     };
     setSearchQuery(params.get("search") || "");
     setFilters(initial);
+    setSerpApiEnabled(params.get("serpapi") === "true");
 
     const isPrimary = params.get("primary_search") === "true";
     if (!isLandingMode) {
@@ -1175,7 +1183,17 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     type="button"
                     role="switch"
                     aria-checked={serpApiEnabled}
-                    onClick={() => setSerpApiEnabled(prev => !prev)}
+                    onClick={() => {
+                      const nextVal = !serpApiEnabled;
+                      setSerpApiEnabled(nextVal);
+                      // If we're already on results page, update URL immediately
+                      if (!isLandingMode) {
+                        const params = new URLSearchParams(location.search);
+                        if (nextVal) params.set("serpapi", "true");
+                        else params.delete("serpapi");
+                        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+                      }
+                    }}
                     className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 ${
                       serpApiEnabled
                         ? 'border-orange-500/40 bg-orange-500'

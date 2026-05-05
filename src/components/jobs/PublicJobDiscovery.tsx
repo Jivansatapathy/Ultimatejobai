@@ -272,6 +272,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [serpApiJobs, setSerpApiJobs] = useState<Job[]>([]);
   const [serpApiLoading, setSerpApiLoading] = useState(false);
   const [serpApiCount, setSerpApiCount] = useState(0);
+  const [serpApiStart, setSerpApiStart] = useState(0);
+  const [serpApiHasMore, setSerpApiHasMore] = useState(false);
+  const [isSerpApiLoadingMore, setIsSerpApiLoadingMore] = useState(false);
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
@@ -473,6 +476,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setSerpApiLoading(true);
       setSerpApiJobs([]);
       setSerpApiCount(0);
+      setSerpApiStart(0);
+      setSerpApiHasMore(false);
 
       const activeKeyword = (query || currentFilters.title || "").trim();
       const parsed = splitKeywordAndLocation(activeKeyword);
@@ -480,6 +485,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         .then((serpResult) => {
           setSerpApiJobs(serpResult.jobs);
           setSerpApiCount(serpResult.totalResults);
+          setSerpApiHasMore(serpResult.jobs.length >= 10);
+          setSerpApiStart(10);
           return serpResult;
         })
         .catch((err) => { 
@@ -530,17 +537,23 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         setSerpApiLoading(true);
         setSerpApiJobs([]);
         setSerpApiCount(0);
+        setSerpApiStart(0);
+        setSerpApiHasMore(false);
         const parsed = splitKeywordAndLocation(activeKeyword);
         serpApiSearch(parsed.keyword || activeKeyword, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
           .then((serpResult) => {
             setSerpApiJobs(serpResult.jobs);
             setSerpApiCount(serpResult.totalResults);
+            setSerpApiHasMore(serpResult.jobs.length >= 10);
+            setSerpApiStart(10);
           })
           .catch(() => { toast.error("SerpAPI search failed."); })
           .finally(() => setSerpApiLoading(false));
       } else if (!isSerpApiActive) {
         setSerpApiJobs([]);
         setSerpApiCount(0);
+        setSerpApiStart(0);
+        setSerpApiHasMore(false);
       }
     } catch (error: unknown) {
       toast.error("Failed to load jobs: " + getRequestErrorMessage(error));
@@ -1831,6 +1844,29 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                               serpApiJobs.map((job, index) => renderJobCard(job, index))
                             )}
                           </div>
+
+                          {serpApiHasMore && (
+                            <div className="pt-4 flex justify-center">
+                              <Button
+                                onClick={loadMoreSerpApiJobs}
+                                disabled={isSerpApiLoadingMore}
+                                variant="outline"
+                                className="rounded-full border-orange-500/20 bg-orange-500/5 text-orange-300 hover:bg-orange-500/10 hover:text-orange-200 min-w-[200px]"
+                              >
+                                {isSerpApiLoadingMore ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Loading...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Load More Google Jobs
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
 

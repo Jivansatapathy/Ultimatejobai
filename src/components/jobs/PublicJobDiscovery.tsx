@@ -276,6 +276,33 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [serpApiHasMore, setSerpApiHasMore] = useState(false);
   const [isSerpApiLoadingMore, setIsSerpApiLoadingMore] = useState(false);
 
+  const loadMoreSerpApiJobs = useCallback(async () => {
+    if (isSerpApiLoadingMore || !serpApiHasMore) return;
+
+    setIsSerpApiLoadingMore(true);
+    try {
+      const activeKeyword = (searchQuery || filters.title || "").trim();
+      const parsed = splitKeywordAndLocation(activeKeyword);
+      const result = await serpApiSearch(
+        parsed.keyword || activeKeyword, 
+        parsed.location || filters.location || filters.city || filters.country || "",
+        serpApiStart
+      );
+
+      if (result.jobs.length > 0) {
+        setSerpApiJobs(prev => [...prev, ...result.jobs]);
+        setSerpApiStart(prev => prev + result.jobs.length);
+        setSerpApiHasMore(result.jobs.length >= 10);
+      } else {
+        setSerpApiHasMore(false);
+      }
+    } catch (err) {
+      toast.error("Failed to load more Google Jobs.");
+    } finally {
+      setIsSerpApiLoadingMore(false);
+    }
+  }, [isSerpApiLoadingMore, serpApiHasMore, searchQuery, filters, serpApiStart]);
+
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
   const apifyPollTimerRef = useRef<number | null>(null);
@@ -628,6 +655,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setBulkApplying(false);
     }
   };
+
 
   // Visual list: Show everything (don't remove applied ones)
   const toShow = jobs.filter((j) => {

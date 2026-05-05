@@ -160,6 +160,7 @@ export interface JobSearchFilters {
     city?: string;
     page_size?: number;
     primary_search?: string;
+    serpapi?: string;
 }
 
 const FILTER_OPTIONS_CACHE_TTL_MS = 10 * 60 * 1000;

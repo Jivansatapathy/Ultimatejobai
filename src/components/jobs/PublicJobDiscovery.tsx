@@ -320,7 +320,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     }
     if (nextFilters.country?.trim()) params.set("country", nextFilters.country.trim());
     if (nextFilters.city?.trim()) params.set("city", nextFilters.city.trim());
-    if (serpApiEnabled) params.set("serpapi", "true");
+    
+    // Explicitly check state or a passed-in override
+    const isSerp = serpApiEnabled || params.get("serpapi") === "true";
+    if (isSerp) params.set("serpapi", "true");
     
     navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
@@ -438,8 +441,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const fetchJobs = useCallback(async (query: string = "", currentFilters: JobSearchFilters = filters, p: number = 1, append: boolean = false) => {
     if (isLandingMode) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const isSerpApiActive = serpApiEnabled || params.get("serpapi") === "true";
+    const params = new URLSearchParams(location.search);
+    const isSerpApiActive = currentFilters.serpapi === "true" || serpApiEnabled || params.get("serpapi") === "true";
     const isPrimaryApifySearch = currentFilters.primary_search === "true" || params.get("primary_search") === "true";
 
     console.log(`[fetchJobs] query: "${query}", isPrimary: ${isPrimaryApifySearch}, serpapi: ${isSerpApiActive}`);
@@ -742,16 +745,17 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       workplace_type: params.get("workplace_type") || (params.get("is_remote") === "true" ? "remote" : ""),
       country: params.get("country") || "",
       city: params.get("city") || "",
+      serpapi: params.get("serpapi") || "",
     };
     setSearchQuery(params.get("search") || "");
     setFilters(initial);
-     const serpFromUrl = params.get("serpapi") === "true";
+    const serpFromUrl = params.get("serpapi") === "true";
     console.log(`[URL Sync] SerpAPI from URL: ${serpFromUrl}`);
     setSerpApiEnabled(serpFromUrl);
 
     const isPrimary = params.get("primary_search") === "true";
     if (!isLandingMode) {
-      fetchJobs(params.get("search") || "", { ...initial, primary_search: isPrimary ? "true" : "false" }, 1, false);
+      fetchJobs(params.get("search") || "", { ...initial, primary_search: isPrimary ? "true" : "false", serpapi: serpFromUrl ? "true" : "false" }, 1, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLandingMode, location.search]);
@@ -1002,6 +1006,39 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           </select>
           <p className="ml-1 text-[11px] font-semibold text-slate-600">
             {filters.country ? `Showing cities with jobs in ${filters.country}.` : "Choose a country to narrow city counts."}
+          </p>
+        </div>
+
+        {/* Results-mode SerpAPI Toggle */}
+        <div className="space-y-3 rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 mt-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/15 border border-orange-500/20">
+                <Globe2 className="h-3.5 w-3.5 text-orange-400" />
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-wider text-orange-200">Google Jobs</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={serpApiEnabled}
+              onClick={() => {
+                const nextVal = !serpApiEnabled;
+                setSerpApiEnabled(nextVal);
+                const params = new URLSearchParams(location.search);
+                if (nextVal) params.set("serpapi", "true");
+                else params.delete("serpapi");
+                navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+              }}
+              className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus:outline-none ${
+                serpApiEnabled ? 'border-orange-500/40 bg-orange-500' : 'border-white/10 bg-white/10'
+              }`}
+            >
+              <span className={`pointer-events-none block h-4 w-4 rounded-full bg-white transition-transform duration-200 ${serpApiEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+          <p className="text-[10px] leading-relaxed text-slate-500">
+            Enable SerpAPI to search live Google Jobs.
           </p>
         </div>
 

@@ -631,7 +631,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   useEffect(() => {
     let mounted = true;
 
-    const run = async () => {
+    const timer = setTimeout(async () => {
       setIsLoadingFilterOptions(true);
       try {
         const options = await fetchJobFilterOptions(searchQuery, filters);
@@ -645,10 +645,12 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       } finally {
         if (mounted) setIsLoadingFilterOptions(false);
       }
-    };
+    }, 500);
 
-    run();
-    return () => { mounted = false; };
+    return () => { 
+      mounted = false; 
+      clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, filters.country]);
 
@@ -1690,7 +1692,23 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md px-5 py-4 space-y-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3 text-sm text-slate-400">
-                        {isRefreshing || isApifySearching ? <><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Searching live jobs...</> : <><span className="rounded-full bg-white/10 border border-white/10 px-3 py-1 font-semibold text-white">{displayJobs.length}</span><span>{totalResults > jobs.length ? `showing ${displayJobs.length} of ${totalResults} jobs` : `${displayJobs.length} jobs found`}</span></>}
+                        {isRefreshing || isApifySearching || serpApiLoading ? (
+                          <><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Searching live jobs...</>
+                        ) : (
+                          <>
+                            <span className="rounded-full bg-white/10 border border-white/10 px-3 py-1 font-semibold text-white">
+                              {serpApiEnabled ? serpApiJobs.length + displayJobs.length : displayJobs.length}
+                            </span>
+                            <span>
+                              {serpApiEnabled 
+                                ? `${serpApiJobs.length + displayJobs.length} jobs found (inc. Google Jobs)`
+                                : totalResults > jobs.length 
+                                  ? `showing ${displayJobs.length} of ${totalResults} jobs` 
+                                  : `${displayJobs.length} jobs found`
+                              }
+                            </span>
+                          </>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         {apifyStatus !== "idle" && apifyStatus !== "failed" && (
@@ -1724,7 +1742,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   {/* Queue bar — always visible above results */}
                   <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => setAppliedJobIds(prev => new Set(prev).add(jobId))} />
 
-                  {(isRefreshing || isApifySearching) && jobs.length === 0 ? (
+                  {(isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0 ? (
                     <div className="space-y-6">
                       {[1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-8 animate-pulse">
@@ -1742,7 +1760,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         </div>
                       ))}
                     </div>
-                  ) : displayJobs.length > 0 ? (
+                  ) : (displayJobs.length > 0 || serpApiJobs.length > 0) ? (
                     <div className="space-y-16">
                       {/* Section Header for the entire feed */}
                       <div className="pb-3 border-b border-white/[0.08] mb-8">
@@ -1750,7 +1768,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                           <LayoutDashboard className="h-5 w-5 text-teal-400" />
                           Discovery Feed
                           <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-400 uppercase tracking-widest ml-auto">
-                            {displayJobs.length} Results
+                            {serpApiJobs.length + displayJobs.length} Results
                           </span>
                         </h2>
                       </div>
@@ -1788,7 +1806,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       )}
 
                       {/* 2. SerpAPI Google Jobs Section */}
-                      {serpApiEnabled && serpApiJobs.length > 0 && (
+                      {(serpApiJobs.length > 0 || serpApiLoading) && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-gradient-to-r from-orange-500/[0.08] to-amber-500/[0.04] py-3 rounded-2xl border border-orange-500/20">
                             <div className="flex items-center gap-3">
@@ -1804,7 +1822,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </span>
                           </div>
                           <div className="space-y-6">
-                            {serpApiJobs.map((job, index) => renderJobCard(job, index))}
+                            {serpApiLoading && serpApiJobs.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-orange-500/10 bg-orange-500/5">
+                                <Loader2 className="h-6 w-6 animate-spin text-orange-400 mb-3" />
+                                <p className="text-sm text-orange-300 font-medium">Fetching live Google Jobs...</p>
+                              </div>
+                            ) : (
+                              serpApiJobs.map((job, index) => renderJobCard(job, index))
+                            )}
                           </div>
                         </div>
                       )}

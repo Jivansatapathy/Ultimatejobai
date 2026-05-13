@@ -77,6 +77,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         setIsAuthenticated(true);
         setIsAdmin(adminStatus);
+
+        // Sync with browser extension
+        window.postMessage({
+            type: 'JOBAI_AUTH_TOKEN',
+            token: accessToken
+        }, window.location.origin);
     };
 
     const logout = async () => {

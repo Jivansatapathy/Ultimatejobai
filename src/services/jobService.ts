@@ -163,6 +163,11 @@ export interface JobSearchFilters {
     serpapi?: string;
 }
 
+export const JOB_SEARCH_MAX_RESULTS = 50;
+export const JOB_SEARCH_PROVIDER = (import.meta.env.VITE_JOB_SEARCH_PROVIDER || 'jobfinder').toLowerCase();
+export const JOBFINDER_API_BASE_URL = (import.meta.env.VITE_JOBFINDER_API_BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
+export const isJobFinderSearchEnabled = () => JOB_SEARCH_PROVIDER === 'jobfinder';
+
 const FILTER_OPTIONS_CACHE_TTL_MS = 10 * 60 * 1000;
 const FILTER_OPTIONS_CACHE_PREFIX = 'job_filter_options_cache_v4:';
 
@@ -330,6 +335,55 @@ export const searchJobs = async (
 ): Promise<JobSearchResponse> => {
     try {
         console.log(`[JobDiscovery] Searching for: "${query}" with filters:`, filters);
+        if (isJobFinderSearchEnabled()) {
+            const response = await axios.get(`${JOBFINDER_API_BASE_URL}/api/search`, {
+                params: {
+                    query: query || filters.title || filters.department || 'jobs',
+                    page,
+                },
+            });
+
+            const data = response.data;
+            const rawJobs = Array.isArray(data.jobs) ? data.jobs : [];
+            const remainingSlots = Math.max(0, JOB_SEARCH_MAX_RESULTS - ((page - 1) * 10));
+            const visibleJobs = rawJobs.slice(0, remainingSlots);
+
+            const mappedJobs = visibleJobs.map((job: any) => {
+                const mockMatch = Math.floor(Math.random() * (98 - 75 + 1)) + 75;
+                const applyUrl = job.apply_url || job.url || '#';
+
+                return {
+                    id: job.id,
+                    title: job.title || 'Untitled Role',
+                    company: job.company || 'Unknown Company',
+                    company_slug: job.company || undefined,
+                    quick_apply_enabled: false,
+                    quick_apply_questions: [],
+                    hasEmail: false,
+                    location: 'View details',
+                    salary: 'Competitive',
+                    posted: 'Recently',
+                    match: mockMatch,
+                    match_reason: '',
+                    tags: ['Lever'],
+                    saved: false,
+                    description: '',
+                    url: applyUrl,
+                    apply_url: applyUrl,
+                    platform: 'lever',
+                    source: 'jobfinder',
+                };
+            });
+
+            const loadedCount = ((page - 1) * 10) + mappedJobs.length;
+            const providerHasNext = Boolean(data.pagination?.has_next);
+            return {
+                jobs: mappedJobs,
+                hasNext: providerHasNext && loadedCount < JOB_SEARCH_MAX_RESULTS && mappedJobs.length > 0,
+                totalResults: providerHasNext ? JOB_SEARCH_MAX_RESULTS : Math.min(JOB_SEARCH_MAX_RESULTS, loadedCount),
+            };
+        }
+
         const { primary_search, ...otherFilters } = filters;
         const response = await api.get(`/api/search/`, {
             params: {

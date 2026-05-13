@@ -45,6 +45,8 @@ import {
   searchJobs,
   fetchAllCountries,
   fetchApifySearchStatus,
+  isJobFinderSearchEnabled,
+  JOB_SEARCH_MAX_RESULTS,
   mapApifyResultToJob,
   subscribeApifySearch,
   serpApiSearch,
@@ -277,6 +279,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [isSerpApiLoadingMore, setIsSerpApiLoadingMore] = useState(false);
 
   const loadMoreSerpApiJobs = useCallback(async () => {
+    if (serpApiJobs.length >= JOB_SEARCH_MAX_RESULTS) {
+      setSerpApiHasMore(false);
+      return;
+    }
     if (isSerpApiLoadingMore || !serpApiHasMore) return;
 
     setIsSerpApiLoadingMore(true);
@@ -290,9 +296,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       );
 
       if (result.jobs.length > 0) {
-        setSerpApiJobs(prev => [...prev, ...result.jobs]);
+        setSerpApiJobs(prev => [...prev, ...result.jobs].slice(0, JOB_SEARCH_MAX_RESULTS));
         setSerpApiStart(prev => prev + result.jobs.length);
-        setSerpApiHasMore(result.jobs.length >= 10);
+        setSerpApiHasMore(result.jobs.length >= 10 && serpApiJobs.length + result.jobs.length < JOB_SEARCH_MAX_RESULTS);
       } else {
         setSerpApiHasMore(false);
       }
@@ -301,7 +307,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     } finally {
       setIsSerpApiLoadingMore(false);
     }
-  }, [isSerpApiLoadingMore, serpApiHasMore, searchQuery, filters, serpApiStart]);
+  }, [isSerpApiLoadingMore, serpApiHasMore, serpApiJobs.length, searchQuery, filters, serpApiStart]);
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
@@ -472,8 +478,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     if (isLandingMode) return;
 
     const params = new URLSearchParams(location.search);
-    const isSerpApiActive = currentFilters.serpapi === "true" || serpApiEnabled || params.get("serpapi") === "true";
-    const isPrimaryApifySearch = currentFilters.primary_search === "true" || params.get("primary_search") === "true";
+    const useJobFinderSearch = isJobFinderSearchEnabled();
+    const isSerpApiActive = !useJobFinderSearch && (currentFilters.serpapi === "true" || serpApiEnabled || params.get("serpapi") === "true");
+    const isPrimaryApifySearch = !useJobFinderSearch && (currentFilters.primary_search === "true" || params.get("primary_search") === "true");
 
     console.log(`[fetchJobs] query: "${query}", isPrimary: ${isPrimaryApifySearch}, serpapi: ${isSerpApiActive}`);
 
@@ -510,9 +517,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       const parsed = splitKeywordAndLocation(activeKeyword);
       const serpPromise = serpApiSearch(parsed.keyword || activeKeyword, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
         .then((serpResult) => {
-          setSerpApiJobs(serpResult.jobs);
-          setSerpApiCount(serpResult.totalResults);
-          setSerpApiHasMore(serpResult.jobs.length >= 10);
+          const cappedJobs = serpResult.jobs.slice(0, JOB_SEARCH_MAX_RESULTS);
+          setSerpApiJobs(cappedJobs);
+          setSerpApiCount(Math.min(serpResult.totalResults, JOB_SEARCH_MAX_RESULTS));
+          setSerpApiHasMore(serpResult.jobs.length >= 10 && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
           setSerpApiStart(10);
           return serpResult;
         })
@@ -528,9 +536,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       
       // Load DB results in the background, but don't let it block the "refreshing" state
       searchJobs(query, p, currentFilters).then(result => {
-        setJobs(sortJobList(result.jobs, sortBy));
-        setTotalResults(result.totalResults);
-        setHasNextPage(result.hasNext);
+        const cappedJobs = sortJobList(result.jobs, sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
+        setJobs(cappedJobs);
+        setTotalResults(Math.min(result.totalResults, JOB_SEARCH_MAX_RESULTS));
+        setHasNextPage(result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
       }).catch(err => {
         console.error("DB background search failed:", err);
       });
@@ -553,9 +562,19 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       const result = await searchJobs(query, p, currentFilters);
       const nextJobs = sortJobList(result.jobs, sortBy);
 
-      setJobs((prev) => (append ? sortJobList([...prev, ...nextJobs], sortBy) : nextJobs));
-      setTotalResults(result.totalResults);
-      setHasNextPage(result.hasNext);
+      const cappedTotalResults = Math.min(result.totalResults, JOB_SEARCH_MAX_RESULTS);
+      if (append) {
+        setJobs((prev) => {
+          const merged = sortJobList([...prev, ...nextJobs], sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
+          setHasNextPage(result.hasNext && merged.length < JOB_SEARCH_MAX_RESULTS);
+          return merged;
+        });
+      } else {
+        const cappedJobs = nextJobs.slice(0, JOB_SEARCH_MAX_RESULTS);
+        setJobs(cappedJobs);
+        setHasNextPage(result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
+      }
+      setTotalResults(cappedTotalResults);
       setPage(p);
 
       // ── SerpAPI side-search (non-blocking) ──
@@ -569,9 +588,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         const parsed = splitKeywordAndLocation(activeKeyword);
         serpApiSearch(parsed.keyword || activeKeyword, parsed.location || currentFilters.location || currentFilters.city || currentFilters.country || "")
           .then((serpResult) => {
-            setSerpApiJobs(serpResult.jobs);
-            setSerpApiCount(serpResult.totalResults);
-            setSerpApiHasMore(serpResult.jobs.length >= 10);
+            const cappedJobs = serpResult.jobs.slice(0, JOB_SEARCH_MAX_RESULTS);
+            setSerpApiJobs(cappedJobs);
+            setSerpApiCount(Math.min(serpResult.totalResults, JOB_SEARCH_MAX_RESULTS));
+            setSerpApiHasMore(serpResult.jobs.length >= 10 && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
             setSerpApiStart(10);
           })
           .catch(() => { toast.error("SerpAPI search failed."); })

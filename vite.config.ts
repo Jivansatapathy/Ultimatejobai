@@ -19,6 +19,12 @@ export default defineConfig(({ mode }) => ({
         target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
         changeOrigin: true,
       },
+      // Bot Apply WebSocket proxy
+      "/ws": {
+        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

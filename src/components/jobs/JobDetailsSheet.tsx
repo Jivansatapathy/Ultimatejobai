@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { activityService } from "@/services/activityService";
 import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
+import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
 import { CareerResume, careerService } from "@/services/careerService";
 
 interface JobDetailsSheetProps {
@@ -240,7 +241,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                               This application portal doesn't support embedding. Please click below to apply on the company's official website.
                            </p>
                         </div>
-                        <Button 
+                        <Button
                           className="w-full max-w-xs h-12 text-lg font-bold gap-2 shadow-xl hover:shadow-accent/20 transition-all"
                           onClick={() => {
                             window.open(job.apply_url, '_blank');
@@ -254,12 +255,35 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                           Continue to Application
                           <ArrowLeft className="h-4 w-4 rotate-180" />
                         </Button>
+                        <div className="flex flex-col items-center gap-1 w-full max-w-xs">
+                          <div className="relative flex items-center w-full py-2">
+                            <div className="flex-1 border-t border-border" />
+                            <span className="mx-3 text-xs text-muted-foreground">or let the bot do it</span>
+                            <div className="flex-1 border-t border-border" />
+                          </div>
+                          <ApplyBotButton
+                            jobUrl={job.apply_url!}
+                            jobTitle={job.title}
+                            company={job.company}
+                          />
+                        </div>
                       </div>
                     );
                   }
 
                   return (
                     <div className="flex flex-col h-full bg-white relative">
+                        {/* Bot apply bar */}
+                        <div className="flex items-center gap-3 px-6 py-2 border-b border-border bg-secondary/5 shrink-0">
+                          <span className="text-[10px] text-muted-foreground shrink-0">Prefer to auto-fill?</span>
+                          <div className="shrink-0">
+                            <ApplyBotButton
+                              jobUrl={job.apply_url!}
+                              jobTitle={job.title}
+                              company={job.company}
+                            />
+                          </div>
+                        </div>
                         {/* Sub-header inside the apply view */}
                         <div className="flex items-center justify-between px-6 py-2 border-b border-border bg-white z-10 shrink-0">
                             <div className="flex items-center gap-2 text-[10px] font-bold text-accent uppercase tracking-widest">
@@ -270,9 +294,9 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                               <span className="text-[10px] text-muted-foreground hidden sm:inline">
                                   {new URL(job.apply_url!).hostname}
                               </span>
-                              <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                              <Button
+                                  variant="ghost"
+                                  size="sm"
                                   className="h-7 px-2 text-[10px] gap-1 hover:bg-secondary/50"
                                   onClick={() => window.open(job.apply_url!, '_blank')}
                               >

@@ -114,7 +114,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       initiateCheckout,
       refreshPlans,
       refreshSummary,
-      hasFeature: (featureKey: string) => Boolean(summary?.enabled_feature_keys?.includes(featureKey)),
+      hasFeature: (_featureKey: string) => true, // All features unlocked for all users
     }),
     [plans, summary, loadingPlans, loadingSummary],
   );

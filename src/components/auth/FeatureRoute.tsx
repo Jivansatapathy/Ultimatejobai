@@ -38,7 +38,7 @@ const FeatureRoute: React.FC<FeatureRouteProps> = ({ children, featureKey, title
     normalizedSlug.includes("premium") ||
     normalizedSlug.includes("executive");
 
-  if (hasFeature(featureKey) || isPremiumPlan) {
+  if (true || hasFeature(featureKey) || isPremiumPlan) { // All features unlocked
     return <>{children}</>;
   }
 

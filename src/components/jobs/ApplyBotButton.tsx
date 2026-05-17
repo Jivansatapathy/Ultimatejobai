@@ -106,12 +106,18 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
     };
 
     ws.onclose = () => {
-      // Only mark failed if we were mid-flow
-      setStatus((prev) =>
-        prev !== "submitted" && prev !== "cancelled" && prev !== "failed" && prev !== "idle"
-          ? "failed"
-          : prev
-      );
+      setStatus((prev) => {
+        if (prev !== "submitted" && prev !== "cancelled" && prev !== "failed" && prev !== "idle") {
+          // Poll DB for the actual error reason
+          api.get<{ status: string; error_reason: string }>(`/api/bot/status/${id}/`)
+            .then(r => {
+              if (r.data.error_reason) setFailReason(r.data.error_reason);
+            })
+            .catch(() => {});
+          return "failed";
+        }
+        return prev;
+      });
     };
   }, [closeWs]);
 
@@ -138,13 +144,24 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setStatus("confirmed");
+    try {
+      await api.post("/api/bot/confirm/", { task_id: taskId, action: "confirm" });
+    } catch {
+      setStatus("failed");
+      setFailReason("Could not confirm. Please try again.");
+    }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     setModalOpen(false);
     setStatus("cancelled");
+    try {
+      await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
+    } catch {
+      // ignore — cancel is best-effort
+    }
     closeWs();
   };
 

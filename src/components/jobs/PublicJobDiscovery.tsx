@@ -54,6 +54,7 @@ import {
 import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 import { AutoApplyQueueBar } from "@/components/jobs/AutoApplyQueueBar";
 import { JobDetailsSheet } from "@/components/jobs/JobDetailsSheet";
+import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
 import { LoginRequiredModal } from "@/components/auth/LoginRequiredModal";
 import { autoApplyQueueService } from "@/services/autoApplyQueueService";
 import { autoApplyService } from "@/services/autoApplyService";
@@ -978,6 +979,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
             </>
           )}
 
+          {job.source !== 'employer' && job.apply_url && job.apply_url !== '#' && (
+            <ApplyBotButton
+              jobUrl={job.apply_url}
+              jobTitle={job.title}
+              company={job.company}
+            />
+          )}
           <Button variant="outline" size="sm" className="h-11 rounded-xl px-6 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
         </div>
       </div>

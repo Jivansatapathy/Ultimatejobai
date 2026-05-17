@@ -164,7 +164,7 @@ export interface JobSearchFilters {
 }
 
 export const JOB_SEARCH_MAX_RESULTS = 50;
-export const JOB_SEARCH_PROVIDER = (import.meta.env.VITE_JOB_SEARCH_PROVIDER || 'jobfinder').toLowerCase();
+export const JOB_SEARCH_PROVIDER = (import.meta.env.VITE_JOB_SEARCH_PROVIDER || 'api').toLowerCase();
 export const JOBFINDER_API_BASE_URL = (import.meta.env.VITE_JOBFINDER_API_BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 export const isJobFinderSearchEnabled = () => JOB_SEARCH_PROVIDER === 'jobfinder';
 

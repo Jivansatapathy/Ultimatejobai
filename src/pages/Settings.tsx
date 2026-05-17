@@ -35,9 +35,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const DEFAULT_PROFILE: CareerProfile = {
+  id: 0,
+  skills: [],
+  experience_level: "",
+  target_roles: [],
+  preferred_locations: [],
+  updated_at: "",
+};
+
+interface BotProfile {
+  first_name: string; last_name: string; phone: string;
+  address: string; city: string; state: string; country: string; zip_code: string;
+  linkedin_url: string; github_url: string; portfolio_url: string;
+  current_title: string; years_experience: string; expected_salary: string;
+  current_salary: string; notice_period: string; willing_to_relocate: string;
+  languages: string; degree: string; university: string;
+  graduation_year: string; gpa: string; cover_letter: string;
+}
+
+const EMPTY_BOT: BotProfile = {
+  first_name: "", last_name: "", phone: "", address: "", city: "", state: "",
+  country: "", zip_code: "", linkedin_url: "", github_url: "", portfolio_url: "",
+  current_title: "", years_experience: "", expected_salary: "", current_salary: "",
+  notice_period: "", willing_to_relocate: "", languages: "", degree: "",
+  university: "", graduation_year: "", gpa: "", cover_letter: "",
+};
+
 export default function Settings() {
   const { userEmail } = useAuth();
-  const [profile, setProfile] = useState<CareerProfile | null>(null);
+  const [profile, setProfile] = useState<CareerProfile>(DEFAULT_PROFILE);
+  const [botProfile, setBotProfile] = useState<BotProfile>(EMPTY_BOT);
   const [email, setEmail] = useState(userEmail || "");
   const [appPassword, setAppPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -45,6 +73,7 @@ export default function Settings() {
   const [isTesting, setIsTesting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingBot, setIsSavingBot] = useState(false);
   const [activeTab, setActiveTab] = useState<"personal" | "email" | "security">(
     "personal",
   );
@@ -52,15 +81,56 @@ export default function Settings() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [prof, status] = await Promise.all([
-          careerService.getProfile(),
-          autoApplyService.getStatus(),
+        const apiMod = await import("@/services/api");
+        const api = apiMod.default;
+        const [prof, status, botResp, resumesResp] = await Promise.all([
+          careerService.getProfile().catch(() => null),
+          autoApplyService.getStatus().catch(() => null),
+          api.get("/api/bot/profile/").catch(() => null),
+          api.get("/api/career/resumes/").catch(() => null),
         ]);
-        setProfile(prof);
-        setHasCredential(
-          !!(status?.has_credentials || status?.gmail_connected),
-        );
+        if (prof) setProfile(prof);
+        setHasCredential(!!(status?.has_credentials || status?.gmail_connected));
         if (status?.email) setEmail(status.email);
+
+        // Build base from resume structured_data (most recent resume)
+        const fromResume: Partial<BotProfile> = {};
+        const resumes = resumesResp?.data?.results ?? resumesResp?.data ?? [];
+        if (Array.isArray(resumes) && resumes.length > 0) {
+          const sd = resumes[0]?.structured_data ?? {};
+          const pick = (...keys: string[]) => keys.map(k => sd[k]).find(v => v) ?? "";
+          fromResume.first_name = pick("first_name", "name")?.split(" ")[0] ?? "";
+          fromResume.last_name = pick("last_name") || (pick("name")?.split(" ").slice(1).join(" ") ?? "");
+          fromResume.phone = pick("phone", "mobile", "telephone");
+          fromResume.address = pick("address");
+          fromResume.city = pick("city");
+          fromResume.state = pick("state");
+          fromResume.country = pick("country");
+          fromResume.zip_code = pick("zip", "postal_code", "zipcode");
+          fromResume.linkedin_url = pick("linkedin", "linkedin_url");
+          fromResume.github_url = pick("github", "github_url");
+          fromResume.portfolio_url = pick("portfolio", "portfolio_url", "website");
+          fromResume.current_title = pick("current_title", "title", "job_title");
+          fromResume.years_experience = String(pick("years_experience", "experience_years") ?? "");
+          fromResume.languages = Array.isArray(sd.languages)
+            ? sd.languages.join(", ")
+            : (sd.languages ?? "");
+          const edu = Array.isArray(sd.education) ? sd.education[0] : (sd.education ?? {});
+          if (edu) {
+            fromResume.degree = edu.degree ?? "";
+            fromResume.university = edu.university ?? edu.institution ?? edu.school ?? "";
+            fromResume.graduation_year = String(edu.graduation_year ?? edu.end_year ?? edu.year ?? "");
+            fromResume.gpa = String(edu.gpa ?? edu.cgpa ?? "");
+          }
+        }
+
+        // BotProfile values override resume; empty BotProfile fields fall back to resume
+        const saved = botResp?.data ?? {};
+        const merged: BotProfile = { ...EMPTY_BOT };
+        (Object.keys(EMPTY_BOT) as (keyof BotProfile)[]).forEach(key => {
+          merged[key] = (saved[key] || fromResume[key] || "") as string;
+        });
+        setBotProfile(merged);
       } catch (error) {
         console.error("Failed to load settings:", error);
       } finally {
@@ -69,6 +139,23 @@ export default function Settings() {
     };
     loadData();
   }, []);
+
+  const bp = (key: keyof BotProfile) => botProfile[key] as string;
+  const setBp = (key: keyof BotProfile) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setBotProfile(prev => ({ ...prev, [key]: e.target.value }));
+
+  const handleSaveBotProfile = async () => {
+    setIsSavingBot(true);
+    try {
+      const api = (await import("@/services/api")).default;
+      await api.patch("/api/bot/profile/", botProfile);
+      toast.success("Bot profile saved! It will be used to auto-fill applications.");
+    } catch {
+      toast.error("Failed to save bot profile.");
+    } finally {
+      setIsSavingBot(false);
+    }
+  };
 
   // Handle OAuth callback parameters
   useEffect(() => {
@@ -266,6 +353,7 @@ export default function Settings() {
             <aside className="lg:col-span-1 space-y-2">
               <nav className="flex flex-col gap-1">
                 <button
+                  type="button"
                   onClick={() => setActiveTab("personal")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "personal" ? "bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold" : "text-slate-400 hover:bg-white/[0.05] hover:text-white font-medium"} text-sm text-left`}
                 >
@@ -273,6 +361,7 @@ export default function Settings() {
                   Personal Profile
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveTab("email")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "email" ? "bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold" : "text-slate-400 hover:bg-white/[0.05] hover:text-white font-medium"} text-sm text-left`}
                 >
@@ -280,6 +369,7 @@ export default function Settings() {
                   Email Config
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveTab("security")}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "security" ? "bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold" : "text-slate-400 hover:bg-white/[0.05] hover:text-white font-medium"} text-sm text-left`}
                 >
@@ -494,8 +584,137 @@ export default function Settings() {
                   </section>
                 )}
 
-                {activeTab === "personal" && profile && (
-                  /* ── Career Profile ── */
+                {activeTab === "personal" && (
+                  <div className="space-y-6">
+                  {/* ── Bot Profile (Apply with Bot data) ── */}
+                  <section className="rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-6 md:p-8 space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
+                        <User className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white leading-none">Apply Bot Profile</h3>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Pre-filled from your saved resume. Edit anything that's wrong or missing — these values are what the bot types into job application forms.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Personal */}
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-teal-500 mb-3">Personal</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { label: "First Name", key: "first_name", placeholder: "John" },
+                          { label: "Last Name", key: "last_name", placeholder: "Doe" },
+                          { label: "Phone Number", key: "phone", placeholder: "+1 555 000 0000" },
+                          { label: "Languages", key: "languages", placeholder: "English, Spanish" },
+                        ].map(({ label, key, placeholder }) => (
+                          <div key={key} className="space-y-1.5">
+                            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">{label}</label>
+                            <input type="text" value={bp(key as keyof BotProfile)} onChange={setBp(key as keyof BotProfile)} placeholder={placeholder}
+                              className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-teal-500 mb-3">Location</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { label: "Address", key: "address", placeholder: "123 Main St" },
+                          { label: "City", key: "city", placeholder: "New York" },
+                          { label: "State / Province", key: "state", placeholder: "NY" },
+                          { label: "Country", key: "country", placeholder: "United States" },
+                          { label: "ZIP / Postal Code", key: "zip_code", placeholder: "10001" },
+                        ].map(({ label, key, placeholder }) => (
+                          <div key={key} className="space-y-1.5">
+                            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">{label}</label>
+                            <input type="text" value={bp(key as keyof BotProfile)} onChange={setBp(key as keyof BotProfile)} placeholder={placeholder}
+                              className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Online Presence */}
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-teal-500 mb-3">Online Presence</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { label: "LinkedIn URL", key: "linkedin_url", placeholder: "https://linkedin.com/in/yourname" },
+                          { label: "GitHub URL", key: "github_url", placeholder: "https://github.com/yourname" },
+                          { label: "Portfolio / Website", key: "portfolio_url", placeholder: "https://yoursite.com" },
+                        ].map(({ label, key, placeholder }) => (
+                          <div key={key} className="space-y-1.5">
+                            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">{label}</label>
+                            <input type="url" value={bp(key as keyof BotProfile)} onChange={setBp(key as keyof BotProfile)} placeholder={placeholder}
+                              className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Career */}
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-teal-500 mb-3">Career Details</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { label: "Current Job Title", key: "current_title", placeholder: "Senior Developer" },
+                          { label: "Years of Experience", key: "years_experience", placeholder: "5" },
+                          { label: "Expected Salary", key: "expected_salary", placeholder: "$80,000" },
+                          { label: "Current Salary", key: "current_salary", placeholder: "$70,000" },
+                          { label: "Notice Period", key: "notice_period", placeholder: "2 weeks" },
+                          { label: "Willing to Relocate", key: "willing_to_relocate", placeholder: "Yes / No" },
+                        ].map(({ label, key, placeholder }) => (
+                          <div key={key} className="space-y-1.5">
+                            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">{label}</label>
+                            <input type="text" value={bp(key as keyof BotProfile)} onChange={setBp(key as keyof BotProfile)} placeholder={placeholder}
+                              className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Education */}
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-teal-500 mb-3">Education</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { label: "Degree", key: "degree", placeholder: "Bachelor of Science" },
+                          { label: "University / College", key: "university", placeholder: "MIT" },
+                          { label: "Graduation Year", key: "graduation_year", placeholder: "2020" },
+                          { label: "GPA / CGPA", key: "gpa", placeholder: "3.8" },
+                        ].map(({ label, key, placeholder }) => (
+                          <div key={key} className="space-y-1.5">
+                            <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">{label}</label>
+                            <input type="text" value={bp(key as keyof BotProfile)} onChange={setBp(key as keyof BotProfile)} placeholder={placeholder}
+                              className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cover Letter */}
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-teal-500 mb-3">Cover Letter Template</p>
+                      <textarea
+                        value={bp("cover_letter")} onChange={setBp("cover_letter")}
+                        rows={5} placeholder="Write a default cover letter the bot will use when a cover letter field is detected..."
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all resize-none"
+                      />
+                    </div>
+
+                    <Button type="button" onClick={handleSaveBotProfile} disabled={isSavingBot}
+                      className="h-12 px-6 rounded-2xl bg-teal-500 hover:bg-teal-400 text-white font-bold text-sm transition-all">
+                      {isSavingBot ? <Loader2 className="h-4 w-4 animate-spin mr-2 inline" /> : <Save className="h-4 w-4 mr-2 inline" />}
+                      Save Bot Profile
+                    </Button>
+                  </section>
+
+                  {/* ── Career Profile ── */}
                   <section className="rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-6 md:p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="h-10 w-10 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-white">
@@ -609,6 +828,7 @@ export default function Settings() {
                       )}
                     </Button>
                   </section>
+                  </div>
                 )}
 
                 {activeTab === "security" && (

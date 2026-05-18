@@ -161,7 +161,7 @@ export default function Auth() {
       if (typeof error?.code === "string") {
         switch (error.code) {
           case "auth/network-request-failed":
-            errorMsg = "Authentication network error. Check your internet connection and disable ad-blocking/privacy extensions for localhost.";
+            errorMsg = "Can't reach the authentication server. If you have an ad blocker or privacy extension, disable it for this page and try again.";
             break;
           case "auth/email-already-in-use":
             errorMsg = "This email is already registered. Try logging in instead.";
@@ -177,8 +177,16 @@ export default function Auth() {
           case "auth/invalid-email":
             errorMsg = "Please enter a valid email address.";
             break;
+          case "auth/too-many-requests":
+            errorMsg = "Too many failed attempts. Please wait a few minutes before trying again.";
+            break;
           default:
-            errorMsg = error.message || errorMsg;
+            // Firebase socket/fetch errors fall here — give actionable message
+            if (error.message?.toLowerCase().includes("socket") || error.message?.toLowerCase().includes("fetch") || error.message?.toLowerCase().includes("network")) {
+              errorMsg = "Can't reach the authentication server. Disable any ad blockers or privacy extensions for this page, then try again.";
+            } else {
+              errorMsg = error.message || errorMsg;
+            }
         }
       } else if (error.response?.data) {
         const data = error.response.data;
@@ -370,6 +378,7 @@ export default function Auth() {
           <p className="text-center mt-6 text-slate-400">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
+              type="button"
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-teal-400 hover:underline font-medium"
             >

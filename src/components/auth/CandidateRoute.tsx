@@ -12,8 +12,8 @@ const CandidateRoute: React.FC<CandidateRouteProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0f1e]">
+        <div className="h-10 w-10 animate-spin rounded-full border-t-2 border-teal-500" />
       </div>
     );
   }

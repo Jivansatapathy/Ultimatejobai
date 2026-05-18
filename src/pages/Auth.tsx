@@ -18,7 +18,7 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { sanitizeString, sanitizeEmail } from "@/lib/sanitization";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "firebase/auth";
 
 const features = [
   "AI-powered resume optimization",
@@ -32,15 +32,21 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  
+
   const [formData, setFormData] = useState({
     name: "",
     email: !isSignUp && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_EMAIL || "") : "",
     password: !isSignUp && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_PASSWORD || "") : "",
+    confirmPassword: "",
   });
+
+  // Redirect already-authenticated users away from login page
+  useEffect(() => {
+    if (isAuthenticated) navigate("/dashboard", { replace: true });
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     setIsSignUp(searchParams.get("mode") === "signup");
@@ -75,6 +81,24 @@ export default function Auth() {
     localStorage.setItem("login_attempts", JSON.stringify(attempts));
   };
 
+  const handleForgotPassword = async () => {
+    const sanitizedEmail = sanitizeEmail(formData.email);
+    if (!sanitizedEmail) {
+      toast.error("Enter your email address above first, then click Forgot password.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, sanitizedEmail);
+      toast.success(`Password reset email sent to ${sanitizedEmail}. Check your inbox.`);
+    } catch (error: any) {
+      if (error.code === "auth/user-not-found") {
+        toast.error("No account found with that email address.");
+      } else {
+        toast.error("Failed to send reset email. Please try again.");
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -85,6 +109,11 @@ export default function Auth() {
         return;
       }
       recordAttempt();
+    }
+
+    if (isSignUp && formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
     }
 
     setLoading(true);
@@ -121,14 +150,9 @@ export default function Auth() {
       if (!isSignUp) toast.success("Welcome back!");
 
       if (is_new_user) {
-        navigate("/plans?select=1&welcome=1");
+        navigate("/onboarding");
       } else {
-        const savedResumes = localStorage.getItem('resumes');
-        if (!savedResumes || JSON.parse(savedResumes).length === 0) {
-          navigate("/resume");
-        } else {
-          navigate("/dashboard");
-        }
+        navigate("/dashboard");
       }
     } catch (error: any) {
       console.error(`${isSignUp ? "Sign up" : "Login"} failed:`, error);
@@ -238,23 +262,20 @@ export default function Auth() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                    <input
-                      type="text"
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
-                      required
-                    />
-                  </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Full Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
+                    required
+                  />
                 </div>
-
-              </>
+              </div>
             )}
 
             <div className="space-y-2">
@@ -294,13 +315,39 @@ export default function Auth() {
               </div>
             </div>
 
+            {isSignUp && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Confirm Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/[0.05] border text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all ${
+                      formData.confirmPassword && formData.confirmPassword !== formData.password
+                        ? "border-red-500/50"
+                        : "border-white/10"
+                    }`}
+                    required
+                  />
+                </div>
+                {formData.confirmPassword && formData.confirmPassword !== formData.password && (
+                  <p className="text-xs text-red-400">Passwords do not match</p>
+                )}
+              </div>
+            )}
+
             {!isSignUp && (
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-white/10 bg-white/5 text-teal-500 focus:ring-teal-500/40" />
-                  <span className="text-sm text-slate-400">Remember me</span>
-                </label>
-                <a href="#" className="text-sm text-teal-400 hover:underline">Forgot password?</a>
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-teal-400 hover:underline"
+                >
+                  Forgot password?
+                </button>
               </div>
             )}
 

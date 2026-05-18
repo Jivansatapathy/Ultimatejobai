@@ -235,9 +235,9 @@ export default function Dashboard() {
                   <div>
                     <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
                       <Zap className="h-5 w-5 text-teal-400" />
-                      Deployment Heatmap
+                      Application Activity
                     </h3>
-                    <p className="text-xs text-slate-500 font-medium">Strategic consistency over the last deployment cycle</p>
+                    <p className="text-xs text-slate-500 font-medium">Your activity over the last 30 days</p>
                   </div>
                   <Button
                     variant="ghost"
@@ -276,8 +276,8 @@ export default function Dashboard() {
                     })}
                   </div>
                   <div className="flex justify-between mt-6 text-[11px] font-black uppercase tracking-widest text-slate-600">
-                    <span>Initiation (30d)</span>
-                    <span>Current Vector</span>
+                    <span>30 Days Ago</span>
+                    <span>Today</span>
                   </div>
                 </div>
               </motion.div>
@@ -344,24 +344,24 @@ export default function Dashboard() {
                   
                   <h3 className="text-xl font-black tracking-tight text-white mb-2 flex items-center gap-2">
                     <Zap className="h-5 w-5 text-teal-400" />
-                    Strategy Insights
+                    AI Insights
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium mb-8">AI-driven optimizations for your search</p>
+                  <p className="text-xs text-slate-500 font-medium mb-8">Personalized tips to improve your job search</p>
 
                   <div className="space-y-4 relative z-10">
                     <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
-                      <p className="text-xs font-black text-teal-500 uppercase mb-2">Resume Insight</p>
-                      <p className="text-sm font-bold text-slate-200">System architecture keywords are missing from your technical stack. Impact: -12% SEO potential.</p>
+                      <p className="text-xs font-black text-teal-500 uppercase mb-2">Resume Tip</p>
+                      <p className="text-sm font-bold text-slate-200">Keep your resume updated with your latest skills and experience to improve match scores.</p>
                     </div>
                     <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
-                      <p className="text-xs font-black text-orange-400 uppercase mb-2">Market Action</p>
-                      <p className="text-sm font-bold text-slate-200">High hiring volume detected for 'Senior Architect' roles in NYC. Suggest deploying updated resume.</p>
+                      <p className="text-xs font-black text-orange-400 uppercase mb-2">Search Tip</p>
+                      <p className="text-sm font-bold text-slate-200">Apply consistently — candidates who apply daily get 3x more responses than those who apply in bursts.</p>
                     </div>
-                    <Button 
+                    <Button
                       className="w-full h-12 rounded-xl bg-teal-500 text-[#050811] font-black uppercase text-xs tracking-widest hover:bg-teal-400 transition-all shadow-[0_0_20px_rgba(20,184,166,0.3)]"
                       onClick={() => navigate("/ai-mentor")}
                     >
-                      Enter Strategy Room
+                      Open AI Mentor
                     </Button>
                   </div>
                 </motion.div>
@@ -376,11 +376,11 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between mb-10">
                   <div>
                     <h3 className="text-xl font-black tracking-tight text-white">Application Pipeline</h3>
-                    <p className="text-xs text-slate-500 font-medium mt-1">Real-time status tracking of all active deployments</p>
+                    <p className="text-xs text-slate-500 font-medium mt-1">Track the status of all your job applications</p>
                   </div>
                   <Link to="/applications">
                     <Button variant="ghost" className="h-10 rounded-xl px-4 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-white gap-2 border border-white/5">
-                      Open Full Ledger
+                      View All Applications
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </Button>
                   </Link>
@@ -442,8 +442,8 @@ export default function Dashboard() {
               >
                 <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
                 
-                <h3 className="text-2xl font-black tracking-tighter uppercase mb-2 relative z-10">Deployment Zone</h3>
-                <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-8 relative z-10">Instant Career Operations</p>
+                <h3 className="text-2xl font-black tracking-tighter uppercase mb-2 relative z-10">Quick Actions</h3>
+                <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-8 relative z-10">Get things done fast</p>
                 
                 <div className="space-y-3 relative z-10">
                   <Button 
@@ -458,7 +458,7 @@ export default function Dashboard() {
                     onClick={() => navigate("/resume")}
                   >
                     <FileText className="h-4 w-4 mr-3" />
-                    Review Blueprint
+                    View Resume
                   </Button>
                 </div>
               </motion.div>
@@ -480,12 +480,22 @@ export default function Dashboard() {
                   </div>
                   
                   <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10">
-                    <p className="text-[10px] font-black text-slate-500 uppercase mb-4">Quota Utilization</p>
+                    <p className="text-[10px] font-black text-slate-500 uppercase mb-4">Feature Usage</p>
                     <div className="space-y-4">
-                      {subscriptionSummary?.current_usage?.slice(0, 3).map(item => (
+                      {subscriptionSummary?.current_usage?.slice(0, 3).map(item => {
+                        const featureLabels: Record<string, string> = {
+                          auto_apply_access: "Auto Apply",
+                          ats_optimizer_access: "ATS Optimizer",
+                          text_interview_access: "Interview Practice",
+                          video_interview_access: "Video Interview",
+                          resume_builder_access: "Resume Builder",
+                          career_insights_access: "Career Insights",
+                        };
+                        const label = featureLabels[item.feature_key] || item.feature_key.replace(/_access$/, '').replace(/_/g, ' ');
+                        return (
                         <div key={item.feature_key}>
                           <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5 uppercase">
-                            <span>{item.feature_key.replace(/_/g, ' ')}</span>
+                            <span>{label}</span>
                             <span>{item.is_unlimited ? '∞' : `${item.used_count}/${item.limit}`}</span>
                           </div>
                           <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -496,7 +506,8 @@ export default function Dashboard() {
                             />
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -528,9 +539,11 @@ export default function Dashboard() {
                       </div>
                     </motion.div>
                   )) : (
-                    <div className="py-10 text-center opacity-40">
-                      <Briefcase className="h-10 w-10 mx-auto mb-2 opacity-10" />
-                      <p className="text-xs font-black uppercase tracking-widest">Awaiting match vector...</p>
+                    <div className="py-10 text-center">
+                      <Briefcase className="h-10 w-10 mx-auto mb-3 text-slate-700" />
+                      <p className="text-sm font-bold text-slate-500 mb-1">No recommendations yet</p>
+                      <p className="text-xs text-slate-600 mb-3">Search for jobs to see personalized matches here.</p>
+                      <Button variant="link" className="text-teal-500 font-black uppercase text-[11px] tracking-widest" onClick={() => navigate("/jobs")}>Browse Jobs</Button>
                     </div>
                   )}
                 </div>

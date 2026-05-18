@@ -123,17 +123,17 @@ export default function Applications() {
           >
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-2">Portfolio Control</p>
-                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic">Application Central</h1>
+                <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-2">Job Applications</p>
+                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic">My Applications</h1>
                 <p className="mt-4 max-w-2xl text-base font-medium text-slate-400 leading-relaxed">
-                  Real-time synchronization with employer ATS pipelines and multimodal interview tracking.
+                  Track all your job applications and follow up with employers in one place.
                 </p>
               </div>
               <div className="flex flex-wrap gap-4">
                 <Link to="/jobs">
                   <Button className="gap-2 h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[11px] bg-teal-500 hover:bg-teal-400 border-none shadow-lg shadow-teal-500/20">
                     <Briefcase className="h-4 w-4" />
-                    Browse Talent
+                    Browse Jobs
                   </Button>
                 </Link>
                 <Link to="/resume">
@@ -148,19 +148,19 @@ export default function Applications() {
 
             <div className="grid gap-6 md:grid-cols-3">
               <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-6 hover:border-teal-500/30 transition-all group">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">Manifested</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">Total Applied</p>
                 <p className="text-4xl font-black text-white tracking-tighter">{applications.length}</p>
-                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">Total institutional record sends and portal submissions.</p>
+                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">Total applications submitted via email or employer portal.</p>
               </div>
               <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-6 hover:border-teal-500/30 transition-all group">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">Managed</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">Employer Portal</p>
                 <p className="text-4xl font-black text-white tracking-tighter">{employerManagedCount}</p>
-                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">Live applications synchronized with active employer ATS environments.</p>
+                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">Applications sent through employer portals or ATS systems.</p>
               </div>
               <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] p-6 hover:border-teal-500/30 transition-all group">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">In-Flight</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-teal-400 transition-colors">Active Pipeline</p>
                 <p className="text-4xl font-black text-white tracking-tighter">{activePipelineCount}</p>
-                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">High-velocity movement through screening and interview stages.</p>
+                <p className="mt-3 text-xs font-medium text-slate-400 leading-relaxed group-hover:text-slate-300">Applications currently in screening, interview, or offer stage.</p>
               </div>
             </div>
 
@@ -199,8 +199,8 @@ export default function Applications() {
                   <SelectValue placeholder="Pipeline stage" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#0a0f1e] border-white/10 text-white rounded-2xl overflow-hidden p-1">
-                  <SelectItem value="all" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">All ATS stages</SelectItem>
-                  <SelectItem value="none" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">No ATS yet</SelectItem>
+                  <SelectItem value="all" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">All pipeline stages</SelectItem>
+                  <SelectItem value="none" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Not in pipeline yet</SelectItem>
                   <SelectItem value="applied" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Applied</SelectItem>
                   <SelectItem value="screening" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Screening</SelectItem>
                   <SelectItem value="shortlisted" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Shortlisted</SelectItem>
@@ -256,7 +256,7 @@ export default function Applications() {
                                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75"></span>
                                   <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-400"></span>
                                 </span>
-                                New Intelligence
+                                New Update
                               </span>
                             )}
                           </div>
@@ -265,10 +265,10 @@ export default function Applications() {
 
                         <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
                           <span className="rounded-full bg-white/[0.05] border border-white/10 px-4 py-1.5 hover:border-white/20 transition-all">
-                            {application.delivery_method === "employer_portal" ? "Institutional Portal" : "Direct Delivery"}
+                            {application.delivery_method === "employer_portal" ? "Employer Portal" : "Email"}
                           </span>
                           <span className="rounded-full bg-white/[0.05] border border-white/10 px-4 py-1.5 hover:border-white/20 transition-all uppercase">
-                            SR: {formatStatus(application.job_source || "unknown")}
+                            Source: {formatStatus(application.job_source || "unknown")}
                           </span>
                           {typeof application.match_score === "number" ? (
                             <span className="rounded-full bg-teal-500/10 border border-teal-500/20 px-4 py-1.5 text-teal-400 hover:bg-teal-500/20 transition-all">

@@ -103,6 +103,15 @@ export const Navbar = () => {
           <div className="hidden md:flex items-center gap-2 shrink-0">
             {!isAuthenticated ? (
               <>
+                <Link to="/employer/auth">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-slate-400 hover:text-white hover:bg-white/10 font-medium border-0"
+                  >
+                    Employer Login
+                  </Button>
+                </Link>
                 <Link to="/auth">
                   <Button
                     variant="ghost"

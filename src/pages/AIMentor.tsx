@@ -176,10 +176,10 @@ export default function AIMentor() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20">
                   <Lightbulb className="h-5 w-5 text-amber-500" />
                 </div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight">Consolidation</h3>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">Everything in One Place</h3>
               </div>
               <p className="mt-5 text-sm font-medium leading-relaxed text-slate-400">
-                Gap analysis, interview planning, AI insights, and job fairs are now unified under the Strategic hub for a seamless high-velocity experience.
+                Gap analysis, interview practice, AI insights, and job fairs are all here so you don't have to jump between different tools.
               </p>
             </div>
 
@@ -188,10 +188,10 @@ export default function AIMentor() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20">
                   <BarChart3 className="h-5 w-5 text-sky-400" />
                 </div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight">Mechanics</h3>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">Powered by Your Profile</h3>
               </div>
               <p className="mt-5 text-sm font-medium leading-relaxed text-slate-400">
-                The hub leverages your existing resume diagnostics and interview data to provide cross-functional insights without losing any context.
+                Recommendations are based on your resume, skills, and interview history so every suggestion is relevant to where you are right now.
               </p>
             </div>
           </section>

@@ -43,9 +43,13 @@ export default function NotificationBell() {
                 className="relative flex items-center justify-center h-9 w-9 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
             >
                 <Bell className="h-4.5 w-4.5 h-[18px] w-[18px]" />
-                {(unread > 0 || !hasSetup) && (
+                {unread > 0 ? (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-teal-500 text-[9px] font-black text-white leading-none">
+                        {unread > 9 ? "9+" : unread}
+                    </span>
+                ) : !hasSetup ? (
                     <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-teal-400" />
-                )}
+                ) : null}
             </button>
 
             {/* Dropdown panel */}

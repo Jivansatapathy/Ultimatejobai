@@ -373,6 +373,9 @@ export default function Resume() {
                             "Analyze ATS Match"
                           )}
                         </Button>
+                        {!activeResume?.targetJobRole && (
+                          <p className="text-[11px] text-amber-400/80 text-center mt-1">Enter a target role above to enable analysis</p>
+                        )}
                       </div>
                     </div>
                   </div>

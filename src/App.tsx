@@ -19,6 +19,7 @@ import GettingStartedPopup from "./components/GettingStartedPopup";
 import ChecklistSidebar from "./components/ChecklistSidebar";
 import ChecklistToggle from "./components/ChecklistToggle";
 import NotificationSetupModal from "./components/NotificationSetupModal";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // High-Performance Route-based Code Splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -127,6 +128,7 @@ const App = () => (
                   <GettingStartedPopup />
                   <NotificationSetupModal />
                   <AppChecklist />
+                  <ErrorBoundary>
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                   <Route path="/" element={<CandidateRoute><Index /></CandidateRoute>} />
@@ -260,6 +262,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
+                  </ErrorBoundary>
                 </BrowserRouter>
               </ResumeProvider>
             </SubscriptionProvider>

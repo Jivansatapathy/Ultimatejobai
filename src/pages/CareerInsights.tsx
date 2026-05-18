@@ -719,12 +719,18 @@ export default function CareerInsights() {
                                     {fair.location || fair.city || 'Online/Virtual'}
                                   </p>
                                 </div>
-                                <Button className="w-full gap-2" variant="secondary" asChild>
-                                  <a href={fair.link} target="_blank" rel="noopener noreferrer">
-                                    View Event Details
-                                    <ArrowRight className="h-4 w-4" />
-                                  </a>
-                                </Button>
+                                {fair.link ? (
+                                  <Button className="w-full gap-2" variant="secondary" asChild>
+                                    <a href={fair.link} target="_blank" rel="noopener noreferrer">
+                                      View Event Details
+                                      <ArrowRight className="h-4 w-4" />
+                                    </a>
+                                  </Button>
+                                ) : (
+                                  <Button className="w-full gap-2" variant="secondary" disabled>
+                                    No Link Available
+                                  </Button>
+                                )}
                               </div>
                             ))}
                           </div>

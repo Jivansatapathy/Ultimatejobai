@@ -15,6 +15,10 @@ interface PlansSectionProps {
 }
 
 const formatPlanPrice = (plan: Partial<SubscriptionPlan> & { price?: string }) => {
+  if (plan.slug === "free" || plan.is_default) {
+    return plan.price_display || "Free";
+  }
+
   const priceData = plan.price_data;
   if (priceData?.amount !== null && priceData?.amount !== undefined) {
     const currency = (priceData.currency || "usd").toUpperCase();

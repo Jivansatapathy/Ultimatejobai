@@ -47,10 +47,19 @@ export interface SubscriptionSummary {
   enabled_feature_keys: string[];
 }
 
+interface PaginatedPlansResponse {
+  results?: SubscriptionPlan[];
+}
+
 export const subscriptionService = {
   async getPlans(): Promise<SubscriptionPlan[]> {
     const response = await api.get("/api/subscriptions/plans/");
-    return Array.isArray(response.data) ? response.data : [];
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+
+    const paginatedData = response.data as PaginatedPlansResponse;
+    return Array.isArray(paginatedData?.results) ? paginatedData.results : [];
   },
 
   async getSummary(): Promise<SubscriptionSummary> {

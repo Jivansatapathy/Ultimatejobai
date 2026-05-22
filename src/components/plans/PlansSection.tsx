@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Crown, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { planUiConfig, plans as fallbackPlans } from "@/data/plans";
+import { planUiConfig } from "@/data/plans";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
 import type { SubscriptionPlan, SubscriptionPlanFeature } from "@/services/subscriptionService";
@@ -18,10 +18,13 @@ const formatPlanPrice = (plan: Partial<SubscriptionPlan> & { price?: string }) =
   const priceData = plan.price_data;
   if (priceData?.amount !== null && priceData?.amount !== undefined) {
     const currency = (priceData.currency || "usd").toUpperCase();
-    const symbol = currency === "USD" ? "$" : `${currency} `;
-    const amount = Number.isInteger(priceData.amount) ? priceData.amount.toFixed(0) : priceData.amount.toFixed(2);
+    const amount = new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: Number.isInteger(priceData.amount) ? 0 : 2,
+    }).format(priceData.amount);
     const interval = priceData.interval === "month" ? "/mo" : priceData.interval ? `/${priceData.interval}` : "";
-    return `${symbol}${amount}${interval}`;
+    return `${amount}${interval}`;
   }
 
   if (plan.price_display) {
@@ -50,15 +53,14 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
   const isSelectionFlow = searchParams.get("select") === "1";
   const isWelcomeFlow = searchParams.get("welcome") === "1";
   const executiveApiPlan = plans.find((plan) => plan.slug === "executive" || plan.slug === "enterprise");
-  const executivePrice = executiveApiPlan ? formatPlanPrice(executiveApiPlan) : planUiConfig.executive.price;
+  const executivePrice = executiveApiPlan ? formatPlanPrice(executiveApiPlan) : "";
   const executivePlanSlug = executiveApiPlan?.slug || "executive";
-  const planSource = plans.length > 0 ? plans : fallbackPlans;
-  const primaryPlans = planSource
+  const primaryPlans = plans
     .filter((plan) => !["explorer", "enterprise", "executive"].includes(plan.slug))
     .slice(0, 3);
 
   const isPaidPlan = (planSlug: string) => {
-    const plan = plans.find((p) => p.slug === planSlug) || planSource.find((p) => p.slug === planSlug);
+    const plan = plans.find((p) => p.slug === planSlug);
     return Boolean(
       plan?.stripe_price_id ||
       (plan?.price_data?.amount && plan.price_data.amount > 0) ||
@@ -119,8 +121,21 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
           </p>
         </motion.div>
 
+        {loadingPlans && (
+          <div className="mb-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 text-center text-sm font-bold text-slate-400">
+            Loading current Stripe prices...
+          </div>
+        )}
+
+        {!loadingPlans && primaryPlans.length === 0 && (
+          <div className="mb-6 rounded-2xl border border-orange-500/20 bg-orange-500/5 p-8 text-center">
+            <p className="text-sm font-bold text-white">Stripe pricing is unavailable right now.</p>
+            <p className="mt-2 text-xs text-slate-400">Please check the subscription API and Stripe price configuration.</p>
+          </div>
+        )}
+
         {/* Main Tiers */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+        {primaryPlans.length > 0 && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
           {primaryPlans
             .map((plan, index) => {
               const ui = planUiConfig[plan.slug] || planUiConfig.free;
@@ -198,10 +213,10 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
                 </motion.div>
               );
             })}
-        </div>
+        </div>}
 
         {/* Executive Tier */}
-        <motion.div
+        {executiveApiPlan && <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -240,7 +255,7 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
               </Button>
             </div>
           </div>
-        </motion.div>
+        </motion.div>}
 
         {/* Feature Comparison Section */}
         {!compact && (

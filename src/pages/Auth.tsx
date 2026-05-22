@@ -14,6 +14,7 @@ import {
   Building2
 } from "lucide-react";
 import api from "@/services/api";
+import { subscriptionService } from "@/services/subscriptionService";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { sanitizeString, sanitizeEmail } from "@/lib/sanitization";
@@ -35,6 +36,8 @@ export default function Auth() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const selectedPlanSlug = searchParams.get("plan") || "";
+  const shouldStartCheckout = searchParams.get("checkout") === "1" && Boolean(selectedPlanSlug);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,8 +48,8 @@ export default function Auth() {
 
   // Redirect already-authenticated users away from login page
   useEffect(() => {
-    if (isAuthenticated) navigate("/dashboard", { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated && !selectedPlanSlug) navigate("/dashboard", { replace: true });
+  }, [isAuthenticated, navigate, selectedPlanSlug]);
 
   useEffect(() => {
     setIsSignUp(searchParams.get("mode") === "signup");
@@ -142,14 +145,27 @@ export default function Auth() {
 
       // Exchange Firebase ID Token for Backend JWT
       const token = await firebaseUser.getIdToken();
-      const response = await api.post("/api/auth/firebase-login/", { token });
+      const response = await api.post("/api/auth/firebase-login/", {
+        token,
+        selected_plan_slug: selectedPlanSlug,
+      });
 
       const { access, refresh, is_new_user, is_admin } = response.data;
       login(access, refresh, is_admin, response.data.email || formData.email);
       
       if (!isSignUp) toast.success("Welcome back!");
 
-      if (is_new_user) {
+      if (shouldStartCheckout) {
+        toast.success("Account ready. Taking you to secure checkout...");
+        const { url } = await subscriptionService.createCheckoutSession(selectedPlanSlug);
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+        navigate(`/plans?select=1&plan=${encodeURIComponent(selectedPlanSlug)}`);
+      } else if (selectedPlanSlug) {
+        navigate(`/plans?welcome=1&plan=${encodeURIComponent(selectedPlanSlug)}`);
+      } else if (is_new_user) {
         navigate("/onboarding");
       } else {
         navigate("/dashboard");

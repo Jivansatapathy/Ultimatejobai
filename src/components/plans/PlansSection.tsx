@@ -15,10 +15,6 @@ interface PlansSectionProps {
 }
 
 const formatPlanPrice = (plan: Partial<SubscriptionPlan> & { price?: string }) => {
-  if (plan.price_display) {
-    return plan.price_display;
-  }
-
   const priceData = plan.price_data;
   if (priceData?.amount !== null && priceData?.amount !== undefined) {
     const currency = (priceData.currency || "usd").toUpperCase();
@@ -26,6 +22,10 @@ const formatPlanPrice = (plan: Partial<SubscriptionPlan> & { price?: string }) =
     const amount = Number.isInteger(priceData.amount) ? priceData.amount.toFixed(0) : priceData.amount.toFixed(2);
     const interval = priceData.interval === "month" ? "/mo" : priceData.interval ? `/${priceData.interval}` : "";
     return `${symbol}${amount}${interval}`;
+  }
+
+  if (plan.price_display) {
+    return plan.price_display;
   }
 
   return plan.price || "";
@@ -57,17 +57,31 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
     .filter((plan) => !["explorer", "enterprise", "executive"].includes(plan.slug))
     .slice(0, 3);
 
+  const isPaidPlan = (planSlug: string) => {
+    const plan = plans.find((p) => p.slug === planSlug) || planSource.find((p) => p.slug === planSlug);
+    return Boolean(
+      plan?.stripe_price_id ||
+      (plan?.price_data?.amount && plan.price_data.amount > 0) ||
+      (planSlug !== "free" && planSlug !== "explorer")
+    );
+  };
+
+  const signupUrlForPlan = (planSlug: string) => {
+    const params = new URLSearchParams({ mode: "signup", plan: planSlug });
+    if (isPaidPlan(planSlug)) {
+      params.set("checkout", "1");
+    }
+    return `/auth?${params.toString()}`;
+  };
+
   const handlePlanAction = async (planSlug: string) => {
     if (!isAuthenticated) {
+      navigate(signupUrlForPlan(planSlug));
       return;
     }
 
-    const plan = plans.find((p) => p.slug === planSlug);
-    // Robust check for paid plans: either price_data indicates a price, or it's a known paid slug and not the free one
-    const isPaid = (plan?.price_data?.amount && plan.price_data.amount > 0) || (planSlug !== "free" && planSlug !== "explorer");
-
     try {
-      if (isPaid) {
+      if (isPaidPlan(planSlug)) {
         await initiateCheckout(planSlug);
       } else {
         await selectPlan(planSlug);
@@ -179,13 +193,7 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
                         : "bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20"
                     }`}
                   >
-                    {!isAuthenticated ? (
-                      <Link to="/auth?mode=signup" className="flex items-center justify-center w-full h-full">
-                        {ui?.cta || "Get Started"}
-                      </Link>
-                    ) : (
-                      summary?.plan?.slug === plan.slug ? "Current Plan" : (ui?.cta || "Select Plan")
-                    )}
+                    {summary?.plan?.slug === plan.slug ? "Current Plan" : (ui?.cta || "Select Plan")}
                   </Button>
                 </motion.div>
               );
@@ -222,7 +230,7 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
               <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">Starting at</p>
               <div className="flex justify-center items-baseline gap-1 mb-6">
                 <span className="text-3xl font-black text-white tracking-tight">{executivePrice}</span>
-                {!executivePrice.includes("/mo") && <span className="text-xs font-medium text-slate-500">/mo</span>}
+                {!executivePrice.includes("/mo") && !/contact/i.test(executivePrice) && <span className="text-xs font-medium text-slate-500">/mo</span>}
               </div>
               <Button
                 onClick={() => handlePlanAction(executivePlanSlug)}

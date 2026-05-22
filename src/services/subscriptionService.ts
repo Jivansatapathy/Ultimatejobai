@@ -24,6 +24,7 @@ export interface SubscriptionPlan {
   is_active: boolean;
   is_default: boolean;
   sort_order: number;
+  stripe_price_id?: string | null;
   features: SubscriptionPlanFeature[];
 }
 

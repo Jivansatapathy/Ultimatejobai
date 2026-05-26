@@ -76,7 +76,9 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
   useEffect(() => () => closeWs(), [closeWs]);
 
   const connectWs = useCallback((id: string) => {
-    const ws = new WebSocket(getWsUrl(id));
+    const token = localStorage.getItem("access_token");
+    const wsUrl = token ? `${getWsUrl(id)}?token=${encodeURIComponent(token)}` : getWsUrl(id);
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onmessage = (event) => {

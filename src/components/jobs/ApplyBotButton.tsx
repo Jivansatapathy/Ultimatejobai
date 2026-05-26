@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BotPreviewModal } from "@/components/jobs/BotPreviewModal";
 import { Bot, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import api from "@/services/api";
+import { API_BASE_URL } from "@/config";
 
 type BotStatus =
   | "idle"
@@ -25,8 +26,19 @@ interface ApplyBotButtonProps {
 function getWsUrl(taskId: string): string {
   const base = import.meta.env.VITE_WS_BASE_URL as string | undefined;
   if (base) return `${base}/ws/bot/${taskId}/`;
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.host}/ws/bot/${taskId}/`;
+
+  if (API_BASE_URL && (API_BASE_URL.startsWith("http://") || API_BASE_URL.startsWith("https://"))) {
+    const wsBase = API_BASE_URL.replace(/^http/, "ws");
+    return `${wsBase}/ws/bot/${taskId}/`;
+  }
+
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  if (isLocal) {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/ws/bot/${taskId}/`;
+  } else {
+    return `wss://jobai-production-7672.up.railway.app/ws/bot/${taskId}/`;
+  }
 }
 
 const STATUS_LABELS: Record<BotStatus, string> = {

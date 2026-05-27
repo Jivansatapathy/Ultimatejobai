@@ -51,8 +51,17 @@ export default function Applications() {
   useEffect(() => {
     const loadApplications = async () => {
       try {
-        const response = await autoApplyService.getHistory();
-        setApplications(Array.isArray(response?.applications) ? response.applications : []);
+        const [emailRes, botRes] = await Promise.allSettled([
+          autoApplyService.getHistory(),
+          autoApplyService.getBotHistory(),
+        ]);
+        const emailApps = emailRes.status === "fulfilled" && Array.isArray(emailRes.value?.applications)
+          ? emailRes.value.applications
+          : [];
+        const botApps = botRes.status === "fulfilled" && Array.isArray(botRes.value?.applications)
+          ? botRes.value.applications
+          : [];
+        setApplications([...emailApps, ...botApps]);
       } catch (error) {
         console.error("Failed to load applications:", error);
       } finally {
@@ -191,6 +200,7 @@ export default function Applications() {
                   <SelectItem value="all" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">All methods</SelectItem>
                   <SelectItem value="email" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Email</SelectItem>
                   <SelectItem value="employer_portal" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Employer portal</SelectItem>
+                  <SelectItem value="bot" className="rounded-xl py-3 focus:bg-teal-500/10 font-bold">Bot Apply</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -265,7 +275,9 @@ export default function Applications() {
 
                         <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
                           <span className="rounded-full bg-white/[0.05] border border-white/10 px-4 py-1.5 hover:border-white/20 transition-all">
-                            {application.delivery_method === "employer_portal" ? "Employer Portal" : "Email"}
+                            {application.delivery_method === "employer_portal" ? "Employer Portal"
+                              : application.delivery_method === "bot" ? "Bot Apply"
+                              : "Email"}
                           </span>
                           <span className="rounded-full bg-white/[0.05] border border-white/10 px-4 py-1.5 hover:border-white/20 transition-all uppercase">
                             Source: {formatStatus(application.job_source || "unknown")}
@@ -304,8 +316,21 @@ export default function Applications() {
                           Employer pipeline: <span className="font-medium text-white">{formatStatus(application.pipeline_status || "not started")}</span>
                         </p>
                         <p>
-                          Delivery method: <span className="font-medium text-white">{application.delivery_method === "employer_portal" ? "Employer portal" : "Email"}</span>
+                          Delivery method: <span className="font-medium text-white">
+                            {application.delivery_method === "employer_portal" ? "Employer portal"
+                              : application.delivery_method === "bot" ? "Bot Apply"
+                              : "Email"}
+                          </span>
                         </p>
+                        {application.job_url ? (
+                          <p>
+                            Applied URL:{" "}
+                            <a href={application.job_url} target="_blank" rel="noopener noreferrer"
+                              className="font-medium text-teal-400 underline underline-offset-2 break-all">
+                              {application.job_url}
+                            </a>
+                          </p>
+                        ) : null}
                         {application.response_message ? (
                           <p>
                             Latest response: <span className="font-medium text-white">{application.response_message}</span>

@@ -5,8 +5,9 @@ export interface ApplicationHistoryItem {
     job_id: string;
     job_title: string;
     company: string;
-    status: "queued" | "sent" | "failed";
-    delivery_method: "email" | "employer_portal" | "test";
+    status: "queued" | "sent" | "failed" | "submitted";
+    delivery_method: "email" | "employer_portal" | "test" | "bot";
+    job_url?: string | null;
     job_source?: string | null;
     selected_resume_id?: number | null;
     selected_resume_name?: string | null;
@@ -61,9 +62,15 @@ export const autoApplyService = {
         return res.data;
     },
 
-    // Get application history
+    // Get email/portal application history
     async getHistory() {
         const res = await api.get<{ applications: ApplicationHistoryItem[] }>('/api/apply/history/');
+        return res.data;
+    },
+
+    // Get bot-applied job history
+    async getBotHistory() {
+        const res = await api.get<{ applications: ApplicationHistoryItem[] }>('/api/bot/history/');
         return res.data;
     },
 

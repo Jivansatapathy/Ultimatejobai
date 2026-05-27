@@ -21,6 +21,9 @@ interface ApplyBotButtonProps {
   jobUrl: string;
   jobTitle: string;
   company: string;
+  jobId?: string;
+  alreadyApplied?: boolean;
+  onApplied?: (jobId: string) => void;
 }
 
 function getWsUrl(taskId: string): string {
@@ -54,7 +57,7 @@ const STATUS_LABELS: Record<BotStatus, string> = {
   failed: "Bot failed",
 };
 
-export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProps) {
+export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplied, onApplied }: ApplyBotButtonProps) {
   const [status, setStatus] = useState<BotStatus>("idle");
   const [failReason, setFailReason] = useState("");
   const [taskId, setTaskId] = useState("");
@@ -72,7 +75,6 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
     }
   }, []);
 
-  // Clean up WebSocket on unmount
   useEffect(() => () => closeWs(), [closeWs]);
 
   const connectWs = useCallback((id: string) => {
@@ -104,7 +106,13 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
           closeWs();
         }
 
-        if (data.status === "submitted" || data.status === "cancelled") {
+        if (data.status === "submitted") {
+          setModalOpen(false);
+          closeWs();
+          if (jobId) onApplied?.(jobId);
+        }
+
+        if (data.status === "cancelled") {
           setModalOpen(false);
           closeWs();
         }
@@ -122,7 +130,6 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
     ws.onclose = () => {
       setStatus((prev) => {
         if (prev !== "submitted" && prev !== "cancelled" && prev !== "failed" && prev !== "idle") {
-          // Poll DB for the actual error reason
           api.get<{ status: string; error_reason: string }>(`/api/bot/status/${id}/`)
             .then(r => {
               if (r.data.error_reason) setFailReason(r.data.error_reason);
@@ -133,12 +140,12 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
         return prev;
       });
     };
-  }, [closeWs]);
+  }, [closeWs, jobId, onApplied]);
 
   const handleStart = async () => {
+    if (alreadyApplied) return;
     if (status !== "idle" && status !== "submitted" && status !== "cancelled" && status !== "failed") return;
 
-    // Reset state
     setStatus("starting");
     setFailReason("");
     setTaskId("");
@@ -148,7 +155,12 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
     closeWs();
 
     try {
-      const res = await api.post<{ task_id: string }>("/api/bot/apply/", { job_url: jobUrl });
+      const res = await api.post<{ task_id: string }>("/api/bot/apply/", {
+        job_url: jobUrl,
+        job_id: jobId ?? "",
+        job_title: jobTitle,
+        job_company: company,
+      });
       const id = res.data.task_id;
       setTaskId(id);
       connectWs(id);
@@ -174,7 +186,7 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
     try {
       await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
     } catch {
-      // ignore — cancel is best-effort
+      // cancel is best-effort
     }
     closeWs();
   };
@@ -187,7 +199,16 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
     status === "preview_ready" ||
     status === "confirmed";
 
-  const isTerminal = status === "submitted" || status === "cancelled" || status === "failed";
+  const isApplied = alreadyApplied || status === "submitted";
+
+  if (isApplied) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium py-2">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        Applied via Bot
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-start gap-2 w-full">
@@ -202,14 +223,11 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
         ) : (
           <Bot className="h-4 w-4" />
         )}
-        {status === "idle" || isTerminal ? "Apply with Bot" : "Bot running…"}
+        {isRunning ? "Bot running…" : "Apply with Bot"}
       </Button>
 
       {status !== "idle" && (
         <div className="flex items-center gap-1.5 text-sm">
-          {status === "submitted" && (
-            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-          )}
           {status === "cancelled" && (
             <XCircle className="h-4 w-4 text-muted-foreground shrink-0" />
           )}
@@ -221,9 +239,7 @@ export function ApplyBotButton({ jobUrl, jobTitle, company }: ApplyBotButtonProp
           )}
           <span
             className={
-              status === "submitted"
-                ? "text-emerald-600 font-medium"
-                : status === "failed"
+              status === "failed"
                 ? "text-destructive"
                 : "text-muted-foreground"
             }

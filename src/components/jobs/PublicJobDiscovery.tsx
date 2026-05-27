@@ -327,11 +327,19 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const loadAppliedHistory = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const data = await autoApplyService.getHistory();
-      if (data?.applications) {
-        setAppliedJobIds(new Set(data.applications.map(a => String(a.job_id))));
+      const [emailData, botData] = await Promise.allSettled([
+        autoApplyService.getHistory(),
+        autoApplyService.getBotHistory(),
+      ]);
+      const ids = new Set<string>();
+      if (emailData.status === "fulfilled" && emailData.value?.applications) {
+        emailData.value.applications.forEach(a => { if (a.job_id) ids.add(String(a.job_id)); });
       }
-    } catch (err) {
+      if (botData.status === "fulfilled" && botData.value?.applications) {
+        botData.value.applications.forEach(a => { if (a.job_id) ids.add(String(a.job_id)); });
+      }
+      setAppliedJobIds(ids);
+    } catch {
       // non-fatal
     }
   }, [isAuthenticated]);
@@ -987,7 +995,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           </Button>
           <div className="flex flex-col gap-2 mt-1">
             {job.source !== 'employer' && job.apply_url && job.apply_url !== '#' && (
-              <ApplyBotButton jobUrl={job.apply_url} jobTitle={job.title} company={job.company} />
+              <ApplyBotButton
+                jobUrl={job.apply_url}
+                jobTitle={job.title}
+                company={job.company}
+                jobId={String(job.id)}
+                alreadyApplied={appliedJobIds.has(String(job.id))}
+                onApplied={(id) => setAppliedJobIds(prev => new Set(prev).add(id))}
+              />
             )}
             <Button variant="outline" size="sm" className="h-10 rounded-xl px-5 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
           </div>
@@ -1924,7 +1939,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       </main>
 
       <LoginRequiredModal open={loginPromptOpen} onOpenChange={setLoginPromptOpen} title={loginPromptCopy.title} description={loginPromptCopy.description} />
-      <JobDetailsSheet job={selectedDetailsJob} open={detailsOpen} onOpenChange={setDetailsOpen} />
+      <JobDetailsSheet
+        job={selectedDetailsJob}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        appliedJobIds={appliedJobIds}
+        onBotApplied={(id) => setAppliedJobIds(prev => new Set(prev).add(id))}
+      />
       <AutoApplyModal job={autoApplyJob ? {
         id: String(autoApplyJob.id),
         title: autoApplyJob.title,

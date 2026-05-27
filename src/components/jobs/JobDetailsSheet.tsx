@@ -19,9 +19,11 @@ interface JobDetailsSheetProps {
   job: Job | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  appliedJobIds?: Set<string>;
+  onBotApplied?: (jobId: string) => void;
 }
 
-export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProps) {
+export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotApplied }: JobDetailsSheetProps) {
   const { checkReady } = useJobReadiness();
   const [isIframeLoading, setIsIframeLoading] = useState(true);
   const [leverDetails, setLeverDetails] = useState<LeverJobDetails | null>(null);
@@ -250,6 +252,9 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                             jobUrl={job.apply_url!}
                             jobTitle={job.title}
                             company={job.company}
+                            jobId={String(job.id)}
+                            alreadyApplied={appliedJobIds?.has(String(job.id))}
+                            onApplied={onBotApplied}
                           />
                         </div>
                       </div>
@@ -266,6 +271,9 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                               jobUrl={job.apply_url!}
                               jobTitle={job.title}
                               company={job.company}
+                              jobId={String(job.id)}
+                              alreadyApplied={appliedJobIds?.has(String(job.id))}
+                              onApplied={onBotApplied}
                             />
                           </div>
                         </div>

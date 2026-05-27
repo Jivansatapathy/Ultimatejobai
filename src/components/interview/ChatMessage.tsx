@@ -1,5 +1,5 @@
 import { Message } from "@/lib/interview-api";
-import { cn } from "@/lib/utils";
+import { cn, stripMarkdown } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
 
 interface ChatMessageProps {
@@ -33,7 +33,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             : "bg-primary text-primary-foreground rounded-tr-sm"
         )}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap">{stripMarkdown(message.content)}</p>
         <p
           className={cn(
             "text-xs mt-1.5 opacity-70",

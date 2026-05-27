@@ -108,10 +108,17 @@ export const api = {
     return response.data;
   },
 
-  async startInterview(interviewType: InterviewType, jobDescription?: string): Promise<StartInterviewResponse> {
+  async startInterview(
+    interviewType: InterviewType,
+    jobDescription?: string,
+    targetRole?: string,
+    experienceLevel?: string,
+  ): Promise<StartInterviewResponse> {
     const response = await api_instance.post("/api/interviews/start/", {
       interview_type: interviewType,
-      job_description: jobDescription
+      job_description: jobDescription,
+      target_role: targetRole,
+      experience_level: experienceLevel,
     });
     return response.data;
   },
@@ -139,10 +146,17 @@ export const api = {
     return response.data;
   },
 
-  async startLocalInterview(interviewType: InterviewType, jobDescription?: string): Promise<StartLocalInterviewResponse> {
+  async startLocalInterview(
+    interviewType: InterviewType,
+    jobDescription?: string,
+    targetRole?: string,
+    experienceLevel?: string,
+  ): Promise<StartLocalInterviewResponse> {
     const response = await api_instance.post("/api/interviews/local-start/", {
       interview_type: interviewType,
-      job_description: jobDescription
+      job_description: jobDescription,
+      target_role: targetRole,
+      experience_level: experienceLevel,
     });
     return response.data;
   },

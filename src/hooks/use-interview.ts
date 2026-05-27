@@ -79,10 +79,10 @@ export function useInterview() {
   }, []);
 
   const startInterview = useCallback(
-    async (type: InterviewType, jobDescription?: string) => {
+    async (type: InterviewType, jobDescription?: string, targetRole?: string, experienceLevel?: string): Promise<boolean> => {
       setState((prev) => ({ ...prev, loading: true }));
       try {
-        const response = await api.startInterview(type, jobDescription);
+        const response = await api.startInterview(type, jobDescription, targetRole, experienceLevel);
         const firstMessage: Message = {
           role: "interviewer",
           content: response.interviewer_message,
@@ -99,18 +99,20 @@ export function useInterview() {
           minQuestions: response.min_questions || 0,
           maxQuestions: response.max_questions || 10,
         });
+        return true;
       } catch (error) {
         handleError(error);
+        return false;
       }
     },
     [handleError]
   );
 
   const startLocalInterview = useCallback(
-    async (type: InterviewType, jobDescription?: string) => {
+    async (type: InterviewType, jobDescription?: string, targetRole?: string, experienceLevel?: string): Promise<boolean> => {
       setState((prev) => ({ ...prev, loading: true }));
       try {
-        const response = await api.startLocalInterview(type, jobDescription);
+        const response = await api.startLocalInterview(type, jobDescription, targetRole, experienceLevel);
         const firstMessage: Message = {
           role: "interviewer",
           content: response.interviewer_message,
@@ -128,8 +130,10 @@ export function useInterview() {
           maxQuestions: response.max_questions,
         });
         setAudioUrl(response.interviewer_audio_url);
+        return true;
       } catch (error) {
         handleError(error);
+        return false;
       }
     },
     [handleError]
@@ -181,12 +185,13 @@ export function useInterview() {
         loading: true,
       }));
 
+      setIsValid(null);
+      setValidationFeedback(null);
+      if (validationTimeoutRef.current) clearTimeout(validationTimeoutRef.current);
       setIsTyping(true);
 
       try {
         const response = await api.sendMessage(state.sessionId, content);
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
 
         const interviewerMessage: Message = {
           role: "interviewer",
@@ -334,7 +339,6 @@ export function useInterview() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   }, [state]);
 

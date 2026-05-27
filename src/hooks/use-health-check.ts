@@ -7,9 +7,14 @@ export function useHealthCheck() {
 
   const checkHealth = useCallback(async () => {
     setIsChecking(true);
-    const healthy = await api.checkHealth();
-    setIsHealthy(healthy);
-    setIsChecking(false);
+    try {
+      const response = await api.checkHealth();
+      setIsHealthy(response.status === "ok");
+    } catch {
+      setIsHealthy(false);
+    } finally {
+      setIsChecking(false);
+    }
   }, []);
 
   useEffect(() => {

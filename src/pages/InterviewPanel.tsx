@@ -1,10 +1,8 @@
-import { Suspense, lazy, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { useLocation, useNavigate, useMatch } from "react-router-dom";
 import { ModeSelector } from "@/components/interview/ModeSelector";
 import { useHealthCheck } from "@/hooks/use-health-check";
 import { AIStatusBadge } from "@/components/interview/AIStatusBadge";
-import { ThemeToggle } from "@/components/interview/ThemeToggle";
-import { useTheme } from "@/hooks/use-theme";
 import { Loader2, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -31,17 +29,32 @@ const InterviewModeLoader = () => (
 
 const InterviewPanel = () => {
   const location = useLocation();
-  const initialState = location.state as { 
-    mode?: "text" | "audio", 
-    jobDescription?: string,
-    interviewType?: string 
+  const navigate = useNavigate();
+
+  const initialState = location.state as {
+    mode?: "text" | "audio";
+    jobDescription?: string;
+    interviewType?: string;
   } | null;
 
-  const [selectedMode, setSelectedMode] = useState<"text" | "audio" | null>(initialState?.mode || null);
+  const isText = useMatch("/interview/text");
+  const isAudio = useMatch("/interview/audio");
+  const selectedMode: "text" | "audio" | null = isText
+    ? "text"
+    : isAudio
+    ? "audio"
+    : null;
+
   const { isHealthy, isChecking } = useHealthCheck();
-  const { theme, toggleTheme } = useTheme();
-  
   const initialJD = initialState?.jobDescription || "";
+
+  const handleSelect = (mode: "text" | "audio") => {
+    navigate(`/interview/${mode}`, { state: location.state });
+  };
+
+  const handleBack = () => {
+    navigate("/interview");
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] relative overflow-hidden">
@@ -54,7 +67,6 @@ const InterviewPanel = () => {
       {/* Mode-selection view */}
       {!selectedMode && (
         <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Sub-header with AI status */}
           <div className="container mx-auto max-w-5xl mb-8 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-teal-500/10 border border-teal-500/20">
@@ -67,10 +79,9 @@ const InterviewPanel = () => {
             </div>
             <div className="flex items-center gap-3">
               <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
-              <ThemeToggle theme={theme} onToggle={toggleTheme} />
             </div>
           </div>
-          <ModeSelector onSelect={setSelectedMode} />
+          <ModeSelector onSelect={handleSelect} />
         </main>
       )}
 
@@ -78,7 +89,7 @@ const InterviewPanel = () => {
       {selectedMode === "text" && (
         <div className="pt-16">
           <Suspense fallback={<InterviewModeLoader />}>
-            <TextInterview onBack={() => setSelectedMode(null)} initialJobDescription={initialJD} />
+            <TextInterview onBack={handleBack} initialJobDescription={initialJD} />
           </Suspense>
         </div>
       )}
@@ -86,7 +97,7 @@ const InterviewPanel = () => {
       {selectedMode === "audio" && (
         <div className="pt-16">
           <Suspense fallback={<InterviewModeLoader />}>
-            <VideoInterview onBack={() => setSelectedMode(null)} initialJobDescription={initialJD} />
+            <VideoInterview onBack={handleBack} initialJobDescription={initialJD} />
           </Suspense>
         </div>
       )}

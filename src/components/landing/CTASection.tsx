@@ -34,7 +34,7 @@ export const CTASection = () => {
           </h2>
 
           <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed mb-12">
-            Join 50,000+ professionals who use UltimateJobAI to navigate the
+            Join 50,000+ professionals who use Hozorex to navigate the
             modern job market with confidence.
           </p>
 

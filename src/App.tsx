@@ -215,7 +215,7 @@ const App = () => (
                       </ProtectedRoute>
                     </CandidateRoute>
                   } />
-                  <Route path="/interview" element={
+                  <Route path="/interview/*" element={
                     <CandidateRoute>
                       <ProtectedRoute>
                         <FeatureRoute

@@ -1,6 +1,5 @@
 import { InterviewType } from "@/lib/interview-api";
 import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "./ThemeToggle";
 import { InterviewProgress } from "./InterviewProgress";
 import { cn } from "@/lib/utils";
 import { Code2, Users, MessageSquare, GraduationCap, BadgeDollarSign, Sparkles } from "lucide-react";
@@ -9,8 +8,6 @@ interface InterviewHeaderProps {
   interviewType: InterviewType;
   questionCount: number;
   maxQuestions: number;
-  theme: "light" | "dark";
-  onThemeToggle: () => void;
 }
 
 const typeIcons: Record<InterviewType, React.ComponentType<{ className?: string }>> = {
@@ -35,8 +32,6 @@ export function InterviewHeader({
   interviewType,
   questionCount,
   maxQuestions,
-  theme,
-  onThemeToggle,
 }: InterviewHeaderProps) {
   const Icon = typeIcons[interviewType];
 
@@ -51,7 +46,6 @@ export function InterviewHeader({
 
       <div className="flex items-center gap-4">
         <InterviewProgress current={questionCount} max={maxQuestions} />
-        <ThemeToggle theme={theme} onToggle={onThemeToggle} />
       </div>
     </div>
   );

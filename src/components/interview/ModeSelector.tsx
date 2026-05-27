@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Volume2 } from "lucide-react";
-
+import { MessageSquare, Volume2, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSubscription } from "@/context/SubscriptionContext";
 
 interface ModeSelectorProps {
@@ -17,7 +17,7 @@ export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
       <div className="mb-12 space-y-4 text-center">
         <h2 className="text-4xl font-bold tracking-tight">Choose Interview Mode</h2>
         <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
-          Practice your skills with a traditional text-based interface or an immersive AI voice interview.
+          Practice with a text-based chat interface or an immersive AI voice interview.
         </p>
       </div>
 
@@ -37,7 +37,7 @@ export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
           </CardHeader>
           <CardContent>
             <div className="mt-4 flex items-center gap-2 text-sm font-medium text-primary">
-              Select Mode -&gt;
+              Select Mode <ArrowRight className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
@@ -49,13 +49,11 @@ export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
               : "border-dashed opacity-80"
           }`}
           onClick={() => {
-            if (hasAudioInterview) {
-              onSelect("audio");
-            }
+            if (hasAudioInterview) onSelect("audio");
           }}
         >
           <div className="absolute right-0 top-0 rounded-bl-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-            {hasAudioInterview ? "PREMIUM" : "LOCKED"}
+            {hasAudioInterview ? "PRO" : "LOCKED"}
           </div>
           <CardHeader>
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -69,7 +67,7 @@ export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
           <CardContent>
             {hasAudioInterview ? (
               <div className="mt-4 flex items-center gap-2 text-sm font-medium text-primary">
-                Select Voice Mode -&gt;
+                Select Voice Mode <ArrowRight className="h-4 w-4" />
               </div>
             ) : (
               <div className="mt-4">
@@ -77,7 +75,7 @@ export const ModeSelector = ({ onSelect }: ModeSelectorProps) => {
                   Audio interview practice is available on Accelerator and Executive plans.
                 </p>
                 <Button asChild variant="outline" className="mt-3 w-full">
-                  <a href="/plans">Upgrade For Audio Mode</a>
+                  <Link to="/plans">Upgrade For Audio Mode</Link>
                 </Button>
               </div>
             )}

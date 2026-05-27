@@ -9,7 +9,6 @@ import {
   Plus,
   Target,
   Sparkles,
-  TrendingUp,
   AlertCircle,
   Edit3,
   Trash2,
@@ -18,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { useResume } from "@/hooks/useResume";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GapAnalysisPanel } from "@/components/resume/GapAnalysisPanel";
 import { activityTracker } from "@/services/activityTracker";
 import { careerService } from "@/services/careerService";
@@ -30,14 +29,12 @@ import {
   SelectValue
 } from "@/components/ui/select";
 
-const suggestions = [
-  { type: "keyword", text: "Add 'TypeScript' to skills section - appears in 89% of matching job descriptions" },
-  { type: "improvement", text: "Quantify your achievement at TechCorp with specific metrics" },
-  { type: "keyword", text: "Include 'CI/CD' experience - highly requested in target roles" },
-];
-
 export default function Resume() {
-  const [activeTab, setActiveTab] = useState<"build" | "upload" | "gap-analysis">("build");
+  const location = useLocation();
+  const fromReadiness = !!(location.state as any)?.fromReadiness;
+  const [activeTab, setActiveTab] = useState<"build" | "upload" | "gap-analysis">(
+    fromReadiness ? "upload" : "build"
+  );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAnalysisVisible, setIsAnalysisVisible] = useState(false);
   const {
@@ -65,36 +62,40 @@ export default function Resume() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      lastUploadedFileRef.current = file;
-      const toastId = toast.loading("Parsing resume with AI...");
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are supported. Please upload a PDF.");
+      e.target.value = "";
+      return;
+    }
+    lastUploadedFileRef.current = file;
+    const toastId = toast.loading("Parsing resume with AI...");
+    try {
+      const { parseResumeFromFile } = await import('@/services/aiService');
+      const parsedData = await parseResumeFromFile(file);
       try {
-        const { parseResumeFromFile } = await import('@/services/aiService');
-        const parsedData = await parseResumeFromFile(file);
-        try {
-          await careerService.analyzeResume(file);
-        } catch (backendError) {
-          console.warn("Backend resume registration failed:", backendError);
-          toast.warning("Resume parsed locally, but could not register it for employer applications yet.");
-        }
-
-        const newResume = importResumeData(parsedData);
-        activityTracker.trackAction(
-          "RESUME_EDIT",
-          `Imported resume from file: ${file.name}`,
-          {
-            fileName: file.name,
-            resumeId: newResume.id,
-          },
-          { dedupeKey: `resume-import:${newResume.id}`, dedupeMs: 5000 },
-        );
-
-        toast.success("Resume parsed! Add job details to analyze match.", { id: toastId });
-        navigate(`/resume/${newResume.id}`);
-      } catch (error: any) {
-        console.error("Upload failed:", error);
-        toast.error("Failed to parse resume: " + error.message, { id: toastId });
+        await careerService.analyzeResume(file);
+      } catch (backendError) {
+        console.warn("Backend resume registration failed:", backendError);
+        toast.warning("Resume parsed locally, but could not register it for employer applications yet.");
       }
+
+      const newResume = importResumeData(parsedData);
+      activityTracker.trackAction(
+        "RESUME_EDIT",
+        `Imported resume from file: ${file.name}`,
+        {
+          fileName: file.name,
+          resumeId: newResume.id,
+        },
+        { dedupeKey: `resume-import:${newResume.id}`, dedupeMs: 5000 },
+      );
+
+      toast.success("Resume uploaded! Now complete your profile to browse jobs.", { id: toastId });
+      navigate(`/resume/${newResume.id}`);
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      toast.error("Failed to parse resume: " + error.message, { id: toastId });
     }
   };
 
@@ -116,6 +117,20 @@ export default function Resume() {
             <h1 className="text-4xl font-black mb-2 text-white font-outfit" data-tour="resume-header">Resume Intelligence</h1>
             <p className="text-slate-400 font-medium tracking-wide">Create, optimize, and manage ATS-ready resumes locally</p>
           </motion.div>
+
+          {fromReadiness && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3"
+            >
+              <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-300">Upload your resume to continue</p>
+                <p className="text-xs text-amber-400/80 mt-0.5">You need a resume before browsing and applying to jobs. Upload or build one below, then head back to Jobs.</p>
+              </div>
+            </motion.div>
+          )}
 
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Main Content */}
@@ -190,6 +205,7 @@ export default function Resume() {
                         ref={fileInputRef}
                         className="hidden"
                         accept=".pdf"
+                        aria-label="Upload PDF resume"
                         onChange={handleFileUpload}
                       />
                       <div className="inline-flex p-4 rounded-full bg-teal-500/10 border border-teal-500/20 mb-4">
@@ -197,7 +213,7 @@ export default function Resume() {
                       </div>
                       <h3 className="text-lg font-semibold mb-2 text-white">Upload Your Resume</h3>
                       <p className="text-sm text-slate-400 mb-4">
-                        Drop your PDF or DOCX file here, and we'll analyze it using multimodal AI.
+                        Upload your PDF resume and we'll parse it with AI to fill your profile.
                       </p>
                       <Button variant="outline" className="gap-2" onClick={(e) => {
                         e.stopPropagation();
@@ -260,7 +276,8 @@ export default function Resume() {
                   ))}
                   {resumes.length === 0 && (
                     <div className="text-center py-8 text-slate-500">
-                      No resumes found. Create one to get started!
+                      <p className="mb-2">No resumes yet.</p>
+                      <p className="text-xs text-slate-600">Use <span className="text-teal-400 font-semibold">Upload &amp; Optimize</span> to import your existing resume, or <span className="text-teal-400 font-semibold">Build New</span> to start from scratch.</p>
                     </div>
                   )}
                 </div>
@@ -384,7 +401,7 @@ export default function Resume() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400">Target Role</p>
-                        <p className="font-semibold text-white">{activeResume.targetJobRole}</p>
+                        <p className="font-semibold text-white">{activeResume?.targetJobRole}</p>
                       </div>
                       <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => {
                         updateTargetJobRole("");

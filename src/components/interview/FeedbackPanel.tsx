@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Download, RotateCcw, Loader2, CheckCircle2, Video, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,11 +46,7 @@ export function FeedbackPanel({
 
       {!feedback && (
         <div className="flex justify-center">
-          <button
-            onClick={onGetFeedback}
-            disabled={isLoading}
-            className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-medium flex items-center gap-2 hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
+          <Button type="button" onClick={onGetFeedback} disabled={isLoading} className="gap-2">
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -58,7 +55,7 @@ export function FeedbackPanel({
             ) : (
               "Get Your Feedback"
             )}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -105,10 +102,11 @@ export function FeedbackPanel({
             </div>
           ) : (
             <div className="flex justify-center">
-              <button
+              <Button
+                type="button"
                 onClick={onRenderVideo}
                 disabled={isRenderingVideo}
-                className="px-5 py-2 rounded-lg bg-violet-600 text-white font-medium flex items-center gap-2 hover:bg-violet-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
               >
                 {isRenderingVideo ? (
                   <>
@@ -121,27 +119,21 @@ export function FeedbackPanel({
                     Render Interview Video
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           )}
         </div>
       )}
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-        <button
-          onClick={onExportTranscript}
-          className="px-5 py-2 rounded-lg border border-border bg-background font-medium flex items-center gap-2 hover:bg-muted"
-        >
+        <Button type="button" variant="outline" onClick={onExportTranscript} className="gap-2">
           <Download className="h-4 w-4" />
           Export Transcript
-        </button>
-        <button
-          onClick={onRestart}
-          className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-medium flex items-center gap-2 hover:bg-primary/90"
-        >
+        </Button>
+        <Button type="button" onClick={onRestart} className="gap-2">
           <RotateCcw className="h-4 w-4" />
           Start New Interview
-        </button>
+        </Button>
       </div>
     </div>
   );

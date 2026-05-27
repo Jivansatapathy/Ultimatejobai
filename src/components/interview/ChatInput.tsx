@@ -29,7 +29,7 @@ export function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
-    if (isValid && !disabled && !isLoading) {
+    if (isValid !== false && value.trim() && !disabled && !isLoading) {
       onSend(value);
       setValue("");
     }
@@ -85,8 +85,9 @@ export function ChatInput({
           </div>
         </div>
         <Button
+          type="button"
           onClick={handleSend}
-          disabled={isValid !== true || disabled || isLoading}
+          disabled={isValid === false || !value.trim() || disabled || isLoading}
           size="icon"
           className="h-12 w-12 rounded-xl flex-shrink-0"
         >

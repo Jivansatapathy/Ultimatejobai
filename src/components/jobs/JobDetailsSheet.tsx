@@ -1,5 +1,4 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Job, fetchLeverJobDetails, LeverJobDetails } from "@/services/jobService";
 import { Building2, MapPin, Globe, ArrowLeft, Send, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +8,12 @@ import { activityService } from "@/services/activityService";
 import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
 import { CareerResume, careerService } from "@/services/careerService";
+import { useJobReadiness } from "@/hooks/useJobReadiness";
+
+const safeHostname = (url?: string) => {
+  if (!url) return "";
+  try { return new URL(url).hostname; } catch { return ""; }
+};
 
 interface JobDetailsSheetProps {
   job: Job | null;
@@ -17,7 +22,7 @@ interface JobDetailsSheetProps {
 }
 
 export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProps) {
-  const [activeTab, setActiveTab] = useState<string>("apply");
+  const { checkReady } = useJobReadiness();
   const [isIframeLoading, setIsIframeLoading] = useState(true);
   const [leverDetails, setLeverDetails] = useState<LeverJobDetails | null>(null);
   const [isLoadingLever, setIsLoadingLever] = useState(false);
@@ -30,11 +35,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
     const fetchFullDescription = async () => {
       if (!open || !job) return;
 
-      console.log('Opening JobDetailsSheet for:', job.title, 'Platform:', job.platform, 'Description length:', job.description?.length);
-
-      // If we have a substantial description in the DB already, use it and don't fetch from Lever
       if (job.description && job.description.length > 20) {
-        console.log('Using database-stored description');
         setLeverDetails(null);
         setIsLoadingLever(false);
         return;
@@ -42,19 +43,14 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
 
       const urlToTest = job.url || job.apply_url || '';
       const leverMatch = urlToTest.match(/jobs\.lever\.co\/([^/]+)\/([^/?#\s/]+)/);
-      
+
       if (leverMatch) {
         setIsLoadingLever(true);
         try {
-          console.log('Fetching from Lever API for ID:', leverMatch[2]);
           const details = await fetchLeverJobDetails(leverMatch[1], leverMatch[2]);
-          if (details) {
-            setLeverDetails(details);
-          } else {
-            console.warn('Lever API returned no details (likely CORS)');
-          }
-        } catch (error) {
-          console.error("Failed to fetch Lever details", error);
+          if (details) setLeverDetails(details);
+        } catch {
+          // Lever fetch failed — show no additional details
         } finally {
           setIsLoadingLever(false);
         }
@@ -72,9 +68,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
 
   useEffect(() => {
     const loadResumes = async () => {
-      if (!open || !job || job.source !== "employer" || activeTab !== "apply") {
-        return;
-      }
+      if (!open || !job || job.source !== "employer") return;
       try {
         setResumesLoading(true);
         const items = await careerService.getResumes();
@@ -94,7 +88,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
     };
 
     loadResumes();
-  }, [activeTab, job, open]);
+  }, [job, open]);
 
   if (!job) return null;
 
@@ -111,27 +105,27 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
       >
         <ScrollArea className="h-full">
           <div className="p-6 md:p-8">
-            <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`mb-4 gap-2 -ml-2 text-muted-foreground hover:text-foreground transition-all duration-300 ${activeTab === 'apply' ? 'opacity-0 h-0 mb-0 overflow-hidden' : 'opacity-100'}`}
+            <Button
+                variant="ghost"
+                size="sm"
+                className="mb-4 gap-2 -ml-2 text-muted-foreground hover:text-foreground"
                 onClick={() => onOpenChange(false)}
             >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Jobs
             </Button>
 
-            <SheetHeader className={`space-y-4 transition-all duration-500 ease-in-out ${activeTab === 'apply' ? 'mb-4 opacity-70' : 'mb-8'}`}>
+            <SheetHeader className="space-y-4 mb-8">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center border border-border shrink-0">
                   <Building2 className="h-7 w-7 text-foreground" />
                 </div>
                 <div className="space-y-1">
-                  <SheetTitle className={`font-bold leading-tight transition-all duration-300 ${activeTab === 'apply' ? 'text-lg' : 'text-2xl'}`}>{job.title}</SheetTitle>
-                  <p className={`text-accent font-medium transition-all duration-300 ${activeTab === 'apply' ? 'text-sm' : 'text-lg'}`}>{job.company}</p>
+                  <SheetTitle className="text-2xl font-bold leading-tight">{job.title}</SheetTitle>
+                  <p className="text-accent font-medium text-lg">{job.company}</p>
                 </div>
               </div>
-              <div className={`flex flex-wrap gap-4 text-sm text-muted-foreground transition-all duration-300 ${activeTab === 'apply' ? 'h-0 opacity-0 overflow-hidden' : 'opacity-100'}`}>
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5 bg-secondary/50 px-3 py-1.5 rounded-full">
                   <MapPin className="h-4 w-4" />
                   {job.location}
@@ -147,16 +141,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
               </div>
             </SheetHeader>
 
-            <Tabs value={activeTab} onValueChange={(val) => {
-              setActiveTab(val);
-            }} className="w-full">
-              <TabsList className="hidden">
-                <TabsTrigger value="apply">Quick Apply</TabsTrigger>
-              </TabsList>
-              
-
-              
-              <TabsContent value="apply" className="mt-0 flex-1 flex flex-col focus-visible:outline-none focus-visible:ring-0 -mx-6 md:-mx-8 h-[calc(100vh-200px)]">
+            <div className="mt-0 flex-1 flex flex-col -mx-6 md:-mx-8 h-[calc(100vh-200px)]">
                 {(() => {
                   const isIframeable = job.platform === 'lever' || 
                                       job.platform === 'greenhouse' || 
@@ -197,7 +182,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                               <p className="mt-3 text-sm text-muted-foreground">No uploaded resumes found yet. You can upload one in the next step.</p>
                             )}
                           </div>
-                          {job.quick_apply_enabled === false && job.quick_apply_questions?.length ? (
+                          {job.quick_apply_questions?.length ? (
                             <div className="rounded-2xl border border-border bg-background p-4 text-left">
                               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Requested details</p>
                               <ul className="mt-3 space-y-2 text-sm text-foreground">
@@ -210,7 +195,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                         </div>
                         <Button
                           className="w-full max-w-xs h-12 text-lg font-bold gap-2 shadow-xl hover:shadow-accent/20 transition-all"
-                          onClick={() => setAutoApplyOpen(true)}
+                          onClick={() => { if (checkReady()) setAutoApplyOpen(true); }}
                         >
                           Continue with Quick Apply
                         </Button>
@@ -291,9 +276,11 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                                 Live Portal
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-muted-foreground hidden sm:inline">
-                                  {new URL(job.apply_url!).hostname}
-                              </span>
+                              {safeHostname(job.apply_url) && (
+                                <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                                  {safeHostname(job.apply_url)}
+                                </span>
+                              )}
                               <Button
                                   variant="ghost"
                                   size="sm"
@@ -326,8 +313,7 @@ export function JobDetailsSheet({ job, open, onOpenChange }: JobDetailsSheetProp
                     </div>
                   );
                 })()}
-              </TabsContent>
-            </Tabs>
+            </div>
           </div>
         </ScrollArea>
       </SheetContent>

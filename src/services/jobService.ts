@@ -17,11 +17,9 @@ export const fetchLeverJobDetails = async (
     jobId: string
 ): Promise<LeverJobDetails | null> => {
     try {
-        console.log(`[LeverAPI] Fetching details for ${companySlug}/${jobId}`);
         const response = await axios.get(`https://api.lever.co/v0/postings/${companySlug}/${jobId}`);
         return response.data;
     } catch (error) {
-        console.error('[LeverAPI] Error fetching job details:', error);
         return null;
     }
 };
@@ -30,7 +28,6 @@ export const fetchJobById = async (jobId: string): Promise<Job | null> => {
     try {
         const response = await api.get(`/api/search/${jobId}/`);
         const job = response.data;
-        const mockMatch = Math.floor(Math.random() * (98 - 75 + 1)) + 75;
 
         return {
             id: job.id,
@@ -43,7 +40,7 @@ export const fetchJobById = async (jobId: string): Promise<Job | null> => {
             location: flatten(job.location) || 'Remote',
             salary: job.salary || flatten(job.employment_type) || 'Competitive',
             posted: job.posted_at ? new Date(job.posted_at).toLocaleDateString() : 'Recently',
-            match: job.match_score || job.match || mockMatch,
+            match: job.match_score || job.match || stableMatch(job.id),
             match_reason: job.match_reason || "",
             tags: [flatten(job.department), flatten(job.employment_type)].filter(Boolean),
             saved: false,
@@ -54,7 +51,6 @@ export const fetchJobById = async (jobId: string): Promise<Job | null> => {
             source: job.source || 'scraped',
         };
     } catch (error) {
-        console.error('[JobDiscovery] Error fetching job by id:', error);
         return null;
     }
 };
@@ -168,25 +164,13 @@ export const JOB_SEARCH_PROVIDER = (import.meta.env.VITE_JOB_SEARCH_PROVIDER || 
 export const JOBFINDER_API_BASE_URL = (import.meta.env.VITE_JOBFINDER_API_BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 export const isJobFinderSearchEnabled = () => JOB_SEARCH_PROVIDER === 'jobfinder';
 
-const FILTER_OPTIONS_CACHE_TTL_MS = 10 * 60 * 1000;
-const FILTER_OPTIONS_CACHE_PREFIX = 'job_filter_options_cache_v4:';
 
-const normalizeFilterCacheKey = (query: string, filters: JobSearchFilters) => {
-    const normalizedEntries = Object.entries(filters)
-        .filter(([, value]) => value !== undefined && value !== null && value !== '')
-        .sort(([left], [right]) => left.localeCompare(right));
-    return JSON.stringify({
-        query: query.trim(),
-        filters: normalizedEntries,
-    });
-};
-
-const readCachedFilterOptions = (cacheKey: string): JobFilterOptionsResponse | null => {
-    return null; // Disable caching for reliability
-};
-
-const writeCachedFilterOptions = (cacheKey: string, data: JobFilterOptionsResponse) => {
-    return; // Disable caching for reliability
+// Deterministic pseudo-random score from job id so it doesn't re-randomise on every fetch
+const stableMatch = (id: string | number): number => {
+    const s = String(id);
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+    return 72 + (Math.abs(h) % 27); // 72–98 range
 };
 
 const flatten = (val: unknown): string => {
@@ -265,18 +249,18 @@ export const mapApifyResultToJob = (raw: unknown, index: number): Job => {
     const source = firstText(record, ['source', 'platform', 'job_board']) || nestedText(record.locations, ['source']) || 'apify';
     const url = firstText(record, ['apply_url', 'applyUrl', 'url', 'job_url', 'jobUrl', 'listing_url', 'listingUrl', 'source_url', 'sourceUrl', 'link']);
     const rawId = firstText(record, ['id', 'job_id', 'external_id', 'source_id']) || `${source}:${url || index}`;
-    const mockMatch = Math.floor(Math.random() * (95 - 72 + 1)) + 72;
+    const stableId = `apify:${rawId}`;
     const location = formatApifyLocation(record.locations) || firstText(record, ['location', 'city', 'country']);
     const salary = formatApifyCompensation(record.compensation) || firstText(record, ['salary', 'salary_range']) || firstText(record, ['job_type', 'employment_type']);
 
     return {
-        id: `apify:${rawId}`,
+        id: stableId,
         title: firstText(record, ['title', 'job_title', 'jobTitle', 'name', 'position']) || 'Untitled Role',
         company: company || 'Unknown Company',
         location: location || 'Remote',
         salary: salary || 'Competitive',
         posted: formatPostedDate(postedDate),
-        match: Number(record.match_score || record.match) || mockMatch,
+        match: Number(record.match_score || record.match) || stableMatch(stableId),
         tags: [
             firstText(record, ['job_type', 'employment_type']),
             firstText(record, ['workplace_type', 'workplaceType']),
@@ -334,7 +318,6 @@ export const searchJobs = async (
     filters: JobSearchFilters = {}
 ): Promise<JobSearchResponse> => {
     try {
-        console.log(`[JobDiscovery] Searching for: "${query}" with filters:`, filters);
         if (isJobFinderSearchEnabled()) {
             const response = await axios.get(`${JOBFINDER_API_BASE_URL}/api/search`, {
                 params: {
@@ -349,7 +332,6 @@ export const searchJobs = async (
             const visibleJobs = rawJobs.slice(0, remainingSlots);
 
             const mappedJobs = visibleJobs.map((job: any) => {
-                const mockMatch = Math.floor(Math.random() * (98 - 75 + 1)) + 75;
                 const applyUrl = job.apply_url || job.url || '#';
 
                 return {
@@ -363,7 +345,7 @@ export const searchJobs = async (
                     location: 'View details',
                     salary: 'Competitive',
                     posted: 'Recently',
-                    match: mockMatch,
+                    match: stableMatch(job.id),
                     match_reason: '',
                     tags: ['Lever'],
                     saved: false,
@@ -395,15 +377,12 @@ export const searchJobs = async (
         });
 
         const data = response.data;
-        console.log('[JobDiscovery] API Response:', data);
 
         const results = Array.isArray(data.results) ? data.results : [];
         const hasNext = Boolean(data.meta?.has_next);
         const totalResults = Number(data.meta?.total_results || 0);
 
         const mappedJobs = results.map((job: any) => {
-            const mockMatch = Math.floor(Math.random() * (98 - 75 + 1)) + 75;
-
             return {
                 id: job.id,
                 title: job.title || 'Untitled Role',
@@ -416,7 +395,7 @@ export const searchJobs = async (
                 location: flatten(job.location) || 'Remote',
                 salary: job.salary || flatten(job.employment_type) || 'Competitive',
                 posted: job.posted_at ? new Date(job.posted_at).toLocaleDateString() : 'Recently',
-                match: job.match_score || job.match || mockMatch,
+                match: job.match_score || job.match || stableMatch(job.id),
                 match_reason: job.match_reason || "",
                 tags: [flatten(job.department), flatten(job.employment_type)].filter(Boolean),
                 saved: false,
@@ -437,7 +416,6 @@ export const searchJobs = async (
                 totalResults: 0,
             };
         }
-        console.error('Search API Error:', error.response?.data || error.message);
         throw error;
     }
 };
@@ -446,12 +424,6 @@ export const fetchJobFilterOptions = async (
     query: string = '',
     filters: JobSearchFilters = {}
 ): Promise<JobFilterOptionsResponse> => {
-    const cacheKey = normalizeFilterCacheKey(query, filters);
-    const cached = readCachedFilterOptions(cacheKey);
-    if (cached) {
-        return cached;
-    }
-
     try {
         const response = await api.get(`/api/search/filters/`, {
             params: {
@@ -460,7 +432,7 @@ export const fetchJobFilterOptions = async (
             },
         });
 
-        const data = {
+        return {
             departments: Array.isArray(response.data?.departments) ? response.data.departments : [],
             employmentTypes: Array.isArray(response.data?.employment_types) ? response.data.employment_types : [],
             workplaceTypes: Array.isArray(response.data?.workplace_types) ? response.data.workplace_types : [],
@@ -468,10 +440,7 @@ export const fetchJobFilterOptions = async (
             cities: Array.isArray(response.data?.cities) ? response.data.cities : [],
             defaultFilters: Array.isArray(response.data?.default_filters) ? response.data.default_filters : [],
         };
-        writeCachedFilterOptions(cacheKey, data);
-        return data;
     } catch (error: any) {
-        console.warn('Filter options API Error:', error.response?.data || error.message);
         return {
             departments: [],
             employmentTypes: [],
@@ -495,7 +464,6 @@ export const fetchAllCountries = async (): Promise<CountryOption[]> => {
         const response = await api.get('/api/search/countries/');
         return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-        console.warn('Countries API Error:', error);
         return [];
     }
 };
@@ -513,7 +481,6 @@ export const fetchJobLocationOptions = async (): Promise<JobLocationOptions> => 
             cityMapByRegion: response.data?.city_map_by_region && typeof response.data.city_map_by_region === 'object' ? response.data.city_map_by_region : {},
         };
     } catch (error: any) {
-        console.warn('Location options API Error:', error.response?.data || error.message);
         return {
             countries: [],
             regions: [],
@@ -530,7 +497,6 @@ export const ingestJob = async (payload: any) => {
         const response = await api.post('/api/ingest/ingest/', payload);
         return response.data;
     } catch (error: any) {
-        console.error('Ingestion API Error:', error.response?.data || error.message);
         throw error;
     }
 };
@@ -577,7 +543,6 @@ export const googleCSESearch = async (
         });
         return response.data;
     } catch (error: any) {
-        console.error('[GoogleCSE] API Error:', error.response?.data || error.message);
         return {
             status: 'error',
             source: 'google_cse',
@@ -633,16 +598,16 @@ export const mapSerpApiResultToJob = (raw: SerpApiRawJob, index: number): Job =>
     const salary = detected.salary || (raw.extensions || []).find(e => e.includes('$') || e.toLowerCase().includes('salary')) || '';
     const posted = detected.posted_at || 'Recently';
     const scheduleType = detected.schedule_type || (raw.extensions || []).find(e => e.toLowerCase().includes('time') || e.toLowerCase().includes('contract')) || '';
-    const mockMatch = Math.floor(Math.random() * (95 - 72 + 1)) + 72;
+    const serpId = `serp:${raw.job_id || `${(raw.title || '').slice(0, 30)}-${index}`}`;
 
     return {
-        id: `serp:${raw.job_id || `${(raw.title || '').slice(0, 30)}-${index}`}`,
+        id: serpId,
         title: raw.title || 'Untitled Role',
         company: raw.company_name || 'Unknown Company',
         location: raw.location || 'Remote',
         salary: salary || scheduleType || 'Competitive',
         posted,
-        match: mockMatch,
+        match: stableMatch(serpId),
         tags: [scheduleType, raw.via || ''].filter(Boolean),
         saved: false,
         description: raw.description || '',
@@ -668,7 +633,6 @@ export const serpApiSearch = async (
     start: number = 0,
 ): Promise<{ jobs: Job[]; totalResults: number; raw: SerpApiSearchResult | null }> => {
     try {
-        console.log(`[SerpAPI] Searching for: "${query}" location: "${location || 'auto'}" start: ${start}`);
         const response = await api.get<SerpApiSearchResult & { cached?: boolean; response_time_ms?: number }>('/api/search/serpapi/jobs/', {
             params: {
                 q: query,
@@ -681,7 +645,6 @@ export const serpApiSearch = async (
         const rawJobs = Array.isArray(data.jobs_results) ? data.jobs_results : [];
         const mappedJobs = rawJobs.map(mapSerpApiResultToJob);
 
-        console.log(`[SerpAPI] Result: ${mappedJobs.length} jobs at index ${start} (Cached: ${!!data.cached})`);
         
         return {
             jobs: mappedJobs,
@@ -689,7 +652,6 @@ export const serpApiSearch = async (
             raw: data,
         };
     } catch (error: any) {
-        console.error('[SerpAPI] API Error:', error.response?.data || error.message);
         return {
             jobs: [],
             totalResults: 0,

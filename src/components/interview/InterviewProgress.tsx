@@ -6,7 +6,7 @@ interface InterviewProgressProps {
 }
 
 export function InterviewProgress({ current, max }: InterviewProgressProps) {
-  const percentage = Math.min((current / max) * 100, 100);
+  const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
 
   return (
     <div className="flex items-center gap-3 w-full max-w-xs">

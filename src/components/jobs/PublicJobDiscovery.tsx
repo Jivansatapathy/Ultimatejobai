@@ -26,6 +26,7 @@ import {
   Wand2,
   CheckCircle2,
   LayoutDashboard,
+  Bot,
 } from "lucide-react";
 import { useResume } from "@/hooks/useResume";
 
@@ -55,10 +56,12 @@ import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 import { AutoApplyQueueBar } from "@/components/jobs/AutoApplyQueueBar";
 import { JobDetailsSheet } from "@/components/jobs/JobDetailsSheet";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
+import { BotMultiApplyPanel } from "@/components/jobs/BotMultiApplyPanel";
 import { LoginRequiredModal } from "@/components/auth/LoginRequiredModal";
 import { autoApplyQueueService } from "@/services/autoApplyQueueService";
 import { autoApplyService } from "@/services/autoApplyService";
 import { careerService } from "@/services/careerService";
+import api from "@/services/api";
 
 type DiscoveryMode = "landing" | "results";
 type DiscoveryCard = DefaultDiscoveryFilter;
@@ -233,6 +236,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
   const [autoApplyOpen, setAutoApplyOpen] = useState(false);
   const [selectedDetailsJob, setSelectedDetailsJob] = useState<Job | null>(null);
+  const [botMultiTasks, setBotMultiTasks] = useState<Array<{ taskId: string; jobTitle: string; company: string }> | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [loginPromptCopy, setLoginPromptCopy] = useState({
@@ -265,7 +269,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [bulkApplying, setBulkApplying] = useState(false);
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
   const [queueKey, setQueueKey] = useState(0);
   const [apifyStatus, setApifyStatus] = useState<ApifySearchStatus>("idle");
   const [apifyResultCount, setApifyResultCount] = useState(0);
@@ -297,9 +302,12 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       );
 
       if (result.jobs.length > 0) {
-        setSerpApiJobs(prev => [...prev, ...result.jobs].slice(0, JOB_SEARCH_MAX_RESULTS));
+        setSerpApiJobs(prev => {
+          const merged = [...prev, ...result.jobs].slice(0, JOB_SEARCH_MAX_RESULTS);
+          setSerpApiHasMore(result.jobs.length >= 10 && merged.length < JOB_SEARCH_MAX_RESULTS);
+          return merged;
+        });
         setSerpApiStart(prev => prev + result.jobs.length);
-        setSerpApiHasMore(result.jobs.length >= 10 && serpApiJobs.length + result.jobs.length < JOB_SEARCH_MAX_RESULTS);
       } else {
         setSerpApiHasMore(false);
       }
@@ -324,13 +332,25 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         setAppliedJobIds(new Set(data.applications.map(a => String(a.job_id))));
       }
     } catch (err) {
-      console.warn("Failed to load application history:", err);
+      // non-fatal
+    }
+  }, [isAuthenticated]);
+
+  const loadSavedJobs = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const res = await import("@/services/api").then(m => m.default.get("/api/search/saved/"));
+      const ids: (string | number)[] = (res.data?.results ?? res.data ?? []).map((j: { id: string | number }) => j.id);
+      setSavedJobs(ids);
+    } catch {
+      // non-fatal
     }
   }, [isAuthenticated]);
 
   useEffect(() => {
     loadAppliedHistory();
-  }, [loadAppliedHistory]);
+    loadSavedJobs();
+  }, [loadAppliedHistory, loadSavedJobs]);
 
   const isFiltered = searchQuery.trim() !== "" || Object.values(filters).some(v => v !== "");
 
@@ -453,7 +473,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         search.firestore_doc_id,
         applyApifySnapshot,
         (error) => {
-          console.warn("Apify Firestore subscription failed; using status endpoint fallback", error);
         },
       );
 
@@ -461,8 +480,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         try {
           const snapshot = await fetchApifySearchStatus(search.firestore_doc_id);
           applyApifySnapshot(snapshot);
-        } catch (error) {
-          console.warn("Apify status polling failed", error);
+        } catch {
+          // polling failed — will retry on next interval
         }
       };
 
@@ -471,7 +490,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     } catch (error) {
       if (apifySearchSeqRef.current !== seq) return;
       setApifyStatus("failed");
-      console.error("Apify search creation failed", error);
     }
   }, [sortBy]);
 
@@ -483,7 +501,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     const isSerpApiActive = !useJobFinderSearch && (currentFilters.serpapi === "true" || serpApiEnabled || params.get("serpapi") === "true");
     const isPrimaryApifySearch = !useJobFinderSearch && (currentFilters.primary_search === "true" || params.get("primary_search") === "true");
 
-    console.log(`[fetchJobs] query: "${query}", isPrimary: ${isPrimaryApifySearch}, serpapi: ${isSerpApiActive}`);
 
     if (isPrimaryApifySearch && !append && p === 1 && !isSerpApiActive) {
       setIsRefreshing(true);
@@ -542,7 +559,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         setTotalResults(Math.min(result.totalResults, JOB_SEARCH_MAX_RESULTS));
         setHasNextPage(result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
       }).catch(err => {
-        console.error("DB background search failed:", err);
       });
       
       return;
@@ -630,52 +646,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const toggleAutoApplyOnly = () => setShowAutoApplyOnly(prev => !prev);
 
-  const handleBulkAutoApply = async () => {
-    if (!isAuthenticated) { promptLogin("Login to auto-apply", "Sign in to use bulk auto-apply."); return; }
-    if (autoApplyQueueService.getDailyCount().count >= autoApplyQueueService.DAILY_LIMIT) {
-      toast.error(`Daily limit of ${autoApplyQueueService.DAILY_LIMIT} reached. Try again tomorrow.`);
-      return;
-    }
-
-    setBulkApplying(true);
-    try {
-      const status = await autoApplyService.getStatus();
-      const hasCredentials = !!(status?.has_credentials || status?.gmail_connected);
-      if (!hasCredentials) {
-        const first = autoApplyJobs[0];
-        if (first) { setAutoApplyJob(first); setAutoApplyOpen(true); }
-        toast.error("Email not configured. Set up your email below.");
-        setBulkApplying(false);
-        return;
-      }
-
-      // Important: Use cloud-saved resumes for backend API
-      const cloudResumes = await careerService.getResumes();
-      if (!cloudResumes || cloudResumes.length === 0) {
-        toast.error("Cloud-saved resume required for bulk apply.");
-        setBulkApplying(false);
-        return;
-      }
-      const cloudResumeId = String(cloudResumes[0].id);
-
-      const toQueue = autoApplyJobs.slice(0, 10);
-      const added = autoApplyQueueService.addToQueue(
-        toQueue.map(j => ({ id: String(j.id), title: j.title, company: j.company })),
-        cloudResumeId,
-      );
-
-      if (added === 0) {
-        toast.error("No slots left in today's queue.");
-      } else {
-        toast.success(`${added} jobs queued — applying gradually.`);
-        setQueueKey(k => k + 1);
-      }
-    } catch {
-      toast.error("Unexpected error starting bulk apply.");
-    } finally {
-      setBulkApplying(false);
-    }
-  };
 
 
   // Visual list: Show everything (don't remove applied ones)
@@ -713,8 +683,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       mounted = false; 
       clearTimeout(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, filters.country]);
+  }, [searchQuery, filters.country, filters.department, filters.employment_type, filters.workplace_type]);
 
   useEffect(() => {
     let mounted = true;
@@ -797,7 +766,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     next.set("search", targetRole);
     navigate(`/jobs?${next.toString()}`, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, isLandingMode]);
+  }, [isAuthenticated, isLandingMode, targetRole]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -814,7 +783,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     setSearchQuery(params.get("search") || "");
     setFilters(initial);
     const serpFromUrl = params.get("serpapi") === "true";
-    console.log(`[URL Sync] SerpAPI from URL: ${serpFromUrl}`);
     setSerpApiEnabled(serpFromUrl);
 
     const isPrimary = params.get("primary_search") === "true";
@@ -877,12 +845,71 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     navigateToJobs(nextQuery, nextFilters);
   };
 
-  const toggleSave = (jobId: string | number) => {
+  const toggleSave = async (jobId: string | number) => {
     if (!isAuthenticated) {
       promptLogin("Login to save jobs", "Create an account to save jobs, track them, and come back to them anytime.");
       return;
     }
-    setSavedJobs((prev) => prev.includes(jobId) ? prev.filter((id) => id !== jobId) : [...prev, jobId]);
+    const isSaved = savedJobs.includes(jobId);
+    // Optimistic update
+    setSavedJobs((prev) => isSaved ? prev.filter((id) => id !== jobId) : [...prev, jobId]);
+    try {
+      const api = (await import("@/services/api")).default;
+      if (isSaved) {
+        await api.delete(`/api/search/saved/${jobId}/delete/`);
+      } else {
+        await api.post("/api/search/saved/", { job_id: jobId });
+      }
+    } catch {
+      // Revert optimistic update on failure
+      setSavedJobs((prev) => isSaved ? [...prev, jobId] : prev.filter((id) => id !== jobId));
+      toast.error("Failed to update saved jobs.");
+    }
+  };
+
+  const handleBulkBotApply = async (jobs: Job[]) => {
+    if (!isAuthenticated) {
+      promptLogin("Login to use Bot Apply", "Sign in to let the bot apply to jobs on your behalf.");
+      return;
+    }
+    const botJobs = jobs.filter((j) => j.apply_url && j.apply_url !== "#" && j.source !== "employer");
+    if (!botJobs.length) return;
+
+    try {
+      const res = await api.post<{ task_ids: string[] }>("/api/bot/apply/bulk/", {
+        job_urls: botJobs.map((j) => j.apply_url),
+      });
+      setBotMultiTasks(
+        res.data.task_ids.map((taskId, i) => ({
+          taskId,
+          jobTitle: botJobs[i].title,
+          company: botJobs[i].company,
+        }))
+      );
+    } catch {
+      toast.error("Failed to start bot apply. Please try again.");
+    } finally {
+      setBulkSelectMode(false);
+      setSelectedJobIds(new Set());
+    }
+  };
+
+  const enterBulkSelectMode = () => {
+    if (!isAuthenticated) {
+      promptLogin("Login to use Bot Apply", "Sign in to let the bot apply to jobs on your behalf.");
+      return;
+    }
+    setBulkSelectMode(true);
+    setSelectedJobIds(new Set());
+  };
+
+  const toggleJobSelection = (jobId: string) => {
+    setSelectedJobIds(prev => {
+      const next = new Set(prev);
+      if (next.has(jobId)) next.delete(jobId);
+      else next.add(jobId);
+      return next;
+    });
   };
 
   const openJobDetails = (job: Job) => {
@@ -896,97 +923,74 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const renderJobCard = (job: Job, index: number) => {
     const isApplied = appliedJobIds.has(String(job.id));
-    
+    const isSaved = savedJobs.includes(job.id);
+    const isSelectable = bulkSelectMode && job.apply_url && job.apply_url !== '#' && job.source !== 'employer';
+    const isSelected = selectedJobIds.has(String(job.id));
+
     return (
-    <motion.div 
-      key={`${job.id}-${index}`} 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      transition={{ delay: 0.03 * (index % 10) }} 
-      className={`group rounded-[28px] border bg-white/[0.03] backdrop-blur-md p-7 relative transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] ${job.source === 'employer' ? 'border-teal-500/25 hover:border-teal-500/40' : 'border-white/[0.08] hover:border-white/[0.15]'} ${isApplied ? 'opacity-60' : ''}`}
+    <motion.div
+      key={`${job.id}-${index}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.03 * (index % 10) }}
+      onClick={isSelectable ? () => toggleJobSelection(String(job.id)) : undefined}
+      className={`group relative rounded-[28px] border bg-white/[0.03] backdrop-blur-md p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] ${isSelectable ? 'cursor-pointer' : ''} ${isSelected ? 'border-teal-500/60 bg-teal-500/[0.07] ring-1 ring-teal-500/30' : job.source === 'employer' ? 'border-teal-500/25 hover:border-teal-500/40' : 'border-white/[0.08] hover:border-white/[0.15]'} ${isApplied && !bulkSelectMode ? 'opacity-60' : ''}`}
     >
-      {isApplied && (
-        <div className="absolute top-4 left-4 flex items-center gap-1 rounded-full bg-teal-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
-          <CheckCircle2 className="h-3 w-3" />
-          Applied
+      {/* Selection checkbox */}
+      {isSelectable && (
+        <div className={`absolute top-4 left-4 h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-teal-500 border-teal-500' : 'border-white/30 bg-white/5'}`}>
+          {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
         </div>
       )}
-      {job.source === 'employer' ? (
-        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-teal-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
-          <Zap className="h-3 w-3 fill-current" />
-          Verified
+      <div className="flex items-center gap-5">
+        {/* Company icon */}
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-white/[0.06] border border-white/10">
+          <Building2 className="h-7 w-7 text-slate-400" />
         </div>
-      ) : (
-        <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border border-white/[0.08]">
-          <Globe2 className="h-3 w-3" />
-          External
-        </div>
-      )}
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex min-w-0 gap-5">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] bg-white/[0.06] border border-white/10"><Building2 className="h-8 w-8 text-slate-400" /></div>
-          <div className="min-w-0">
-            <button type="button" className="text-left text-2xl font-black text-white tracking-tight hover:text-teal-400 transition-colors" onClick={() => openJobDetails(job)}>{job.title}</button>
-            {job.company_slug ? (
-              <button
-                type="button"
-                className="block mt-1 text-base font-bold text-slate-400 transition hover:text-teal-400"
-                onClick={() => navigate(`/companies/${job.company_slug}`)}
-              >
-                {job.company}
-              </button>
-            ) : (
-              <p className="mt-1 text-base font-bold text-slate-400">{job.company}</p>
+
+        {/* Job info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <button type="button" className="text-left text-lg font-black text-white tracking-tight hover:text-teal-400 transition-colors leading-snug" onClick={() => openJobDetails(job)}>{job.title}</button>
+            {isApplied && (
+              <div className="flex items-center gap-1 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
+                <CheckCircle2 className="h-3 w-3" />
+                Applied
+              </div>
             )}
-            <div className="mt-4 flex flex-wrap gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-              <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-slate-600" />{job.location}</div>
-              <div className="flex items-center gap-2"><DollarSign className="h-3.5 w-3.5 text-slate-600" />{job.salary}</div>
-              <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-slate-600" />{job.posted}</div>
-            </div>
-            {isAuthenticated && job.match_reason ? (
-              <p className="mt-3 max-w-2xl text-[13px] font-medium text-slate-500 leading-relaxed">{job.match_reason}</p>
-            ) : null}
+            {job.source === 'employer' && (
+              <div className="flex items-center gap-1 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
+                <Zap className="h-3 w-3 fill-current" />
+                Verified
+              </div>
+            )}
           </div>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-3 xl:justify-end">
-          <Button variant="ghost" size="icon" onClick={() => toggleSave(job.id)} className={`h-11 w-11 rounded-xl border ${savedJobs.includes(job.id) ? "border-teal-500/40 bg-teal-500/10 text-teal-400" : "border-white/10 bg-white/5 text-slate-500 hover:text-slate-300 hover:bg-white/10"}`}><Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} /></Button>
-
-          {appliedJobIds.has(String(job.id)) ? (
-            <Button variant="secondary" disabled className="h-11 gap-2 rounded-xl px-6 font-bold bg-white/5 text-slate-500 border-white/10">
-              <CheckCircle2 className="h-4 w-4" />
-              Applied
-            </Button>
+          {job.company_slug ? (
+            <button type="button" className="text-sm font-bold text-slate-400 hover:text-teal-400 transition-colors" onClick={() => navigate(`/companies/${job.company_slug}`)}>{job.company}</button>
           ) : (
-            <>
-              {job.hasEmail && (
-                <Button
-                  variant={isApplied ? "outline" : "hero"}
-                  size="sm"
-                  disabled={isApplied}
-                  className={`h-11 gap-2 rounded-xl px-6 font-bold ${isApplied ? 'bg-white/5 border-white/10 text-slate-500' : 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/20'}`}
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      promptLogin("Login to apply", "Sign in to start applying, save your progress, and unlock guided job actions.");
-                      return;
-                    }
-                    handleBulkAutoApply();
-                  }}
-                >
-                  {isApplied ? <CheckCircle2 className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
-                  {isApplied ? "Applied" : "Auto Apply"}
-                </Button>
-              )}
-            </>
+            <p className="text-sm font-bold text-slate-400">{job.company}</p>
           )}
+          <div className="mt-2 flex flex-wrap gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-600" />{job.location}</div>
+            <div className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-slate-600" />{job.salary}</div>
+            <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-slate-600" />{job.posted}</div>
+          </div>
+          {isAuthenticated && job.match_reason ? (
+            <p className="mt-1.5 text-[13px] font-medium text-slate-500 leading-relaxed">{job.match_reason}</p>
+          ) : null}
+        </div>
 
-          {job.source !== 'employer' && job.apply_url && job.apply_url !== '#' && (
-            <ApplyBotButton
-              jobUrl={job.apply_url}
-              jobTitle={job.title}
-              company={job.company}
-            />
-          )}
-          <Button variant="outline" size="sm" className="h-11 rounded-xl px-6 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
+        {/* Right side: bookmark + action buttons */}
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <Button variant="ghost" size="icon" onClick={() => toggleSave(job.id)} className={`h-8 w-8 rounded-xl border ${isSaved ? "border-teal-500/40 bg-teal-500/10 text-teal-400" : "border-white/10 bg-white/5 text-slate-500 hover:text-slate-300 hover:bg-white/10"}`}>
+            <Bookmark className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+          </Button>
+          <div className="flex flex-col gap-2 mt-1">
+            {job.source !== 'employer' && job.apply_url && job.apply_url !== '#' && (
+              <ApplyBotButton jobUrl={job.apply_url} jobTitle={job.title} company={job.company} />
+            )}
+            <Button variant="outline" size="sm" className="h-10 rounded-xl px-5 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -1018,8 +1022,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         </div>
 
         <div className="space-y-2">
-          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Department</label>
+          <label htmlFor="filter-department" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Department</label>
           <select
+            id="filter-department"
             value={filters.department || ""}
             onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))}
             className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
@@ -1030,8 +1035,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         </div>
 
         <div className="space-y-2">
-          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Engagement</label>
+          <label htmlFor="filter-employment" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Engagement</label>
           <select
+            id="filter-employment"
             value={filters.employment_type || ""}
             onChange={(e) => setFilters((p) => ({ ...p, employment_type: e.target.value }))}
             className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
@@ -1042,8 +1048,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         </div>
 
         <div className="space-y-2">
-          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Country</label>
+          <label htmlFor="filter-country" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Country</label>
           <select
+            id="filter-country"
             value={filters.country || ""}
             onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))}
             disabled={isLoadingLocations}
@@ -1059,8 +1066,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         </div>
 
         <div className="space-y-2">
-          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">City</label>
+          <label htmlFor="filter-city" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">City</label>
           <select
+            id="filter-city"
             value={filters.city || ""}
             onChange={(e) => setFilters((p) => ({ ...p, city: e.target.value }))}
             disabled={isLoadingFilterOptions || cityOptions.length === 0}
@@ -1077,39 +1085,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           </select>
           <p className="ml-1 text-[11px] font-semibold text-slate-600">
             {filters.country ? `Showing cities with jobs in ${filters.country}.` : "Choose a country to narrow city counts."}
-          </p>
-        </div>
-
-        {/* Results-mode SerpAPI Toggle */}
-        <div className="space-y-3 rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 mt-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/15 border border-orange-500/20">
-                <Globe2 className="h-3.5 w-3.5 text-orange-400" />
-              </div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-orange-200">Google Jobs</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={serpApiEnabled}
-              onClick={() => {
-                const nextVal = !serpApiEnabled;
-                setSerpApiEnabled(nextVal);
-                const params = new URLSearchParams(location.search);
-                if (nextVal) params.set("serpapi", "true");
-                else params.delete("serpapi");
-                navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-              }}
-              className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus:outline-none ${
-                serpApiEnabled ? 'border-orange-500/40 bg-orange-500' : 'border-white/10 bg-white/10'
-              }`}
-            >
-              <span className={`pointer-events-none block h-4 w-4 rounded-full bg-white transition-transform duration-200 ${serpApiEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
-            </button>
-          </div>
-          <p className="text-[10px] leading-relaxed text-slate-500">
-            Enable SerpAPI to search live Google Jobs.
           </p>
         </div>
 
@@ -1250,6 +1225,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                 {searchQuery && (
                   <button
                     type="button"
+                    aria-label="Clear search"
                     onClick={() => setSearchQuery("")}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-slate-500"
                   >
@@ -1264,64 +1240,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                 {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
               </Button>
             </motion.form>
-
-            {/* ── SerpAPI Toggle ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.22 }}
-              className="mx-auto mt-4 max-w-2xl"
-            >
-              <div className="flex items-center justify-between rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/[0.06] to-amber-500/[0.04] backdrop-blur-md px-5 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-500/15 border border-orange-500/20">
-                    <Globe2 className="h-4 w-4 text-orange-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-orange-200">Google Jobs (SerpAPI)</p>
-                    <p className="text-[11px] text-slate-500">Search Google Jobs live & ingest results</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {serpApiLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-400" />}
-                  {serpApiCount > 0 && !serpApiLoading && (
-                    <span className="rounded-full bg-orange-500/15 border border-orange-500/25 px-2.5 py-0.5 text-[10px] font-black text-orange-300 uppercase tracking-wider">
-                      {serpApiCount} found
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={serpApiEnabled}
-                    onClick={() => {
-                      const nextVal = !serpApiEnabled;
-                      console.log(`[SerpAPI Toggle] Swapping to: ${nextVal ? 'ON' : 'OFF'}`);
-                      setSerpApiEnabled(nextVal);
-                      
-                      const params = new URLSearchParams(location.search);
-                      if (nextVal) params.set("serpapi", "true");
-                      else params.delete("serpapi");
-                      
-                      const nextUrl = `${location.pathname}?${params.toString()}`;
-                      console.log(`[SerpAPI Toggle] Updating URL to: ${nextUrl}`);
-                      
-                      navigate(nextUrl, { replace: true });
-                    }}
-                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40 ${
-                      serpApiEnabled
-                        ? 'border-orange-500/40 bg-orange-500'
-                        : 'border-white/10 bg-white/10'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${
-                        serpApiEnabled ? 'translate-x-5' : 'translate-x-0.5'
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
 
             {/* Quick-filter tags & Magic Search */}
             <motion.div
@@ -1689,7 +1607,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     AI tools, resume scoring &<br className="hidden sm:block" /> smart matching — all free.
                   </h3>
                   <p className="text-slate-500 text-sm mb-8 max-w-md mx-auto">
-                    Join 50,000+ professionals who found their next role faster with UltimateJobAI.
+                    Join 50,000+ professionals who found their next role faster with Hozorex.
                   </p>
                   <div className="flex flex-wrap justify-center gap-3">
                     <Button
@@ -1856,14 +1774,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                               <span className="text-[10px] font-black uppercase text-slate-500">
                                 {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length} new
                               </span>
-                              {isAuthenticated && displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                              {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !appliedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== '#' && j.source !== 'employer').length > 0 && (
                                 <button
-                                  onClick={handleBulkAutoApply}
-                                  disabled={bulkApplying}
-                                  className="flex items-center gap-1.5 rounded-full bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white text-[10px] font-black px-4 py-1.5 transition-all shadow-sm"
+                                  type="button"
+                                  onClick={enterBulkSelectMode}
+                                  className="flex items-center gap-2 rounded-full bg-teal-500 hover:bg-teal-400 shadow-lg shadow-teal-500/30 text-white text-sm font-black px-6 py-2.5 transition-all hover:-translate-y-0.5"
                                 >
-                                  <Zap className="h-2.5 w-2.5 fill-white" />
-                                  {bulkApplying ? "Checking…" : `Apply All`}
+                                  <Bot className="h-4 w-4" />
+                                  Bot Apply All
                                 </button>
                               )}
                             </div>
@@ -1936,9 +1854,21 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                                 Global Discovery <span className="mx-2 text-white/10">|</span> <span className="text-slate-500">External Sources</span>
                               </h3>
                             </div>
-                            <span className="text-[10px] font-black uppercase text-slate-500">
-                              {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length} Jobs
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-black uppercase text-slate-500">
+                                {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length} Jobs
+                              </span>
+                              {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== "#" && j.source !== "employer").length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={enterBulkSelectMode}
+                                  className="flex items-center gap-2 rounded-full bg-teal-500 hover:bg-teal-400 shadow-lg shadow-teal-500/30 text-white text-sm font-black px-6 py-2.5 transition-all hover:-translate-y-0.5"
+                                >
+                                  <Bot className="h-4 w-4" />
+                                  Bot Apply All
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <div className="space-y-6">
                             {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
@@ -2003,18 +1933,60 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         source: autoApplyJob.source,
         quick_apply_enabled: autoApplyJob.quick_apply_enabled,
         quick_apply_questions: autoApplyJob.quick_apply_questions,
-      } : null} 
-      open={autoApplyOpen} 
-      onClose={() => { 
-        setAutoApplyOpen(false); 
-        setAutoApplyJob(null); 
+      } : null}
+      open={autoApplyOpen}
+      onClose={() => {
+        setAutoApplyOpen(false);
+        setAutoApplyJob(null);
         loadAppliedHistory(); // Check for new applications
-      }} 
+      }}
       onSuccess={(jobId) => {
         setAppliedJobIds(prev => new Set(prev).add(String(jobId)));
         setQueueKey(prev => prev + 1); // Refresh queue bar
       }}
       />
+
+      {/* Multi-apply progress panel */}
+      {botMultiTasks && (
+        <BotMultiApplyPanel
+          jobs={botMultiTasks}
+          onClose={() => setBotMultiTasks(null)}
+        />
+      )}
+
+      {/* Bulk select mode — floating action bar */}
+      {bulkSelectMode && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0d1424]/95 backdrop-blur-xl px-5 py-3 shadow-2xl shadow-black/60">
+          <div className="text-sm font-bold text-white">
+            {selectedJobIds.size === 0 ? (
+              <span className="text-slate-400">Click cards to select jobs</span>
+            ) : (
+              <span><span className="text-teal-400">{selectedJobIds.size}</span> job{selectedJobIds.size !== 1 ? 's' : ''} selected</span>
+            )}
+          </div>
+          <div className="h-4 w-px bg-white/10" />
+          <button
+            type="button"
+            disabled={selectedJobIds.size === 0}
+            onClick={() => {
+              const allJobs = [...displayJobs, ...serpApiJobs];
+              const chosen = allJobs.filter(j => selectedJobIds.has(String(j.id)));
+              handleBulkBotApply(chosen);
+            }}
+            className="flex items-center gap-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-black px-4 py-2 transition-all"
+          >
+            <Bot className="h-3.5 w-3.5" />
+            Apply to Selected
+          </button>
+          <button
+            type="button"
+            onClick={() => { setBulkSelectMode(false); setSelectedJobIds(new Set()); }}
+            className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-400 hover:text-white text-[11px] font-black px-4 py-2 transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </>
   );
 }

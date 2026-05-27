@@ -39,6 +39,7 @@ import {
   DefaultDiscoveryFilter,
   fetchJobFilterOptions,
   fetchJobLocationOptions,
+  fetchJobById,
   Job,
   JobSearchFilters,
   ApifySearchStatus,
@@ -319,6 +320,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   }, [isSerpApiLoadingMore, serpApiHasMore, serpApiJobs.length, searchQuery, filters, serpApiStart]);
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [appliedHistoryItems, setAppliedHistoryItems] = useState<import("@/services/autoApplyService").ApplicationHistoryItem[]>([]);
   const [feedTab, setFeedTab] = useState<"discover" | "applied">("discover");
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
   const apifyPollTimerRef = useRef<number | null>(null);
@@ -333,13 +335,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         autoApplyService.getBotHistory(),
       ]);
       const ids = new Set<string>();
+      const items: import("@/services/autoApplyService").ApplicationHistoryItem[] = [];
       if (emailData.status === "fulfilled" && emailData.value?.applications) {
-        emailData.value.applications.forEach(a => { if (a.job_id) ids.add(String(a.job_id)); });
+        emailData.value.applications.forEach(a => {
+          // always show in history; only add to filter set when we have a real job_id
+          items.push(a);
+          if (a.job_id) ids.add(String(a.job_id));
+        });
       }
       if (botData.status === "fulfilled" && botData.value?.applications) {
-        botData.value.applications.forEach(a => { if (a.job_id) ids.add(String(a.job_id)); });
+        botData.value.applications.forEach(a => {
+          items.push(a);
+          if (a.job_id) ids.add(String(a.job_id));
+        });
       }
       setAppliedJobIds(ids);
+      setAppliedHistoryItems(items);
     } catch {
       // non-fatal
     }
@@ -1002,7 +1013,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                 company={job.company}
                 jobId={String(job.id)}
                 alreadyApplied={appliedJobIds.has(String(job.id))}
-                onApplied={(id) => setAppliedJobIds(prev => new Set(prev).add(id))}
+                onApplied={(id) => {
+                  setAppliedJobIds(prev => new Set(prev).add(id));
+                  setAppliedHistoryItems(prev => {
+                    if (prev.some(a => String(a.job_id) === id)) return prev;
+                    return [...prev, { id, job_id: id, job_title: job.title, company: job.company, status: "submitted", delivery_method: "bot", job_url: job.apply_url, created_at: new Date().toISOString() }];
+                  });
+                }}
               />
             )}
             <Button variant="outline" size="sm" className="h-10 rounded-xl px-5 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
@@ -1785,7 +1802,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
                         <button
                           type="button"
-                          onClick={() => setFeedTab("applied")}
+                          onClick={() => { setFeedTab("applied"); loadAppliedHistory(); }}
                           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${
                             feedTab === "applied"
                               ? "bg-teal-500/10 text-teal-300 border border-teal-500/30"
@@ -1805,15 +1822,60 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       {/* Applied tab view */}
                       {feedTab === "applied" && (
                         <div className="space-y-4">
-                          {displayJobs.filter(j => appliedJobIds.has(String(j.id))).length === 0 ? (
+                          {appliedHistoryItems.length === 0 ? (
                             <div className="text-center py-20 text-slate-500">
                               <CheckCircle2 className="h-10 w-10 mx-auto mb-4 opacity-30" />
                               <p className="font-bold uppercase tracking-widest text-sm">No applied jobs yet</p>
                               <p className="text-xs mt-2">Jobs you apply to will appear here</p>
                             </div>
                           ) : (
-                            <div className="space-y-6">
-                              {displayJobs.filter(j => appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                            <div className="space-y-4">
+                              {appliedHistoryItems.map((item) => {
+                                const matchedJob = displayJobs.find(j => String(j.id) === String(item.job_id));
+                                if (matchedJob) return renderJobCard(matchedJob, 0);
+                                return (
+                                  <div key={item.id} className="flex items-start justify-between gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 hover:border-teal-500/30 transition-all">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <CheckCircle2 className="h-4 w-4 text-teal-400 shrink-0" />
+                                        <p className="font-black text-white truncate">{item.job_title || "Job Application"}</p>
+                                      </div>
+                                      <p className="text-sm text-slate-400 mb-2">{item.company}</p>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400">
+                                          {item.delivery_method === "bot" ? "Bot Apply" : item.delivery_method === "employer_portal" ? "Employer Portal" : "Email"}
+                                        </span>
+                                        {item.created_at && (
+                                          <span className="text-[10px] text-slate-500">
+                                            {new Date(item.created_at).toLocaleDateString()}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col gap-2 shrink-0">
+                                      {item.job_id && (
+                                        <button
+                                          type="button"
+                                          className="text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border border-white/10 text-slate-400 hover:border-teal-500/30 hover:text-teal-400 transition-all"
+                                          onClick={async () => {
+                                            const job = await fetchJobById(String(item.job_id));
+                                            if (job) openJobDetails(job);
+                                            else if (item.job_url) window.open(item.job_url, "_blank");
+                                          }}
+                                        >
+                                          View Details
+                                        </button>
+                                      )}
+                                      {item.job_url && (
+                                        <a href={item.job_url} target="_blank" rel="noopener noreferrer"
+                                          className="text-center text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border border-white/10 text-slate-400 hover:border-white/20 hover:text-white transition-all">
+                                          Open URL
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -1971,7 +2033,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         appliedJobIds={appliedJobIds}
-        onBotApplied={(id) => setAppliedJobIds(prev => new Set(prev).add(id))}
+        onBotApplied={(id) => {
+          setAppliedJobIds(prev => new Set(prev).add(id));
+          setAppliedHistoryItems(prev => prev.some(a => String(a.job_id) === id) ? prev : prev);
+        }}
       />
       <AutoApplyModal job={autoApplyJob ? {
         id: String(autoApplyJob.id),

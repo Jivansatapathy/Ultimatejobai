@@ -1772,6 +1772,16 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                           <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-400 uppercase tracking-widest ml-auto">
                             {serpApiJobs.length + displayJobs.length} Results
                           </span>
+                          {appliedJobIds.size > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => navigate("/applications")}
+                              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[11px] font-black uppercase tracking-widest hover:bg-teal-500/20 transition-all"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              {appliedJobIds.size} Applied
+                            </button>
+                          )}
                         </h2>
                       </div>
 
@@ -1891,23 +1901,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         </div>
                       )}
 
-                      {/* 3. Applied Jobs Section — ALWAYS BOTTOM */}
-                      {displayJobs.filter(j => appliedJobIds.has(String(j.id))).length > 0 && (
-                        <div className="space-y-6 mt-12 py-12 border-t border-white/[0.06] relative">
-                          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0a0f1e] px-6 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-teal-400" />
-                            <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">My Applications</span>
-                          </div>
-
-                          <div className="flex items-center justify-between px-2 mb-4">
-                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 italic">History Archive</h3>
-                            <span className="text-[10px] font-black uppercase text-slate-600">{displayJobs.filter(j => appliedJobIds.has(String(j.id))).length} Completed</span>
-                          </div>
-                          <div className="grid grid-cols-1 gap-6 opacity-60 filter grayscale-[0.4]">
-                            {displayJobs.filter(j => appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md px-6 py-16 text-center">

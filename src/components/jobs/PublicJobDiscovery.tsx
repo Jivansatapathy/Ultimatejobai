@@ -319,6 +319,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   }, [isSerpApiLoadingMore, serpApiHasMore, serpApiJobs.length, searchQuery, filters, serpApiStart]);
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [feedTab, setFeedTab] = useState<"discover" | "applied">("discover");
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
   const apifyPollTimerRef = useRef<number | null>(null);
   const activeApifyDocIdRef = useRef<string | null>(null);
@@ -1764,29 +1765,62 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     </div>
                   ) : (displayJobs.length > 0 || serpApiJobs.length > 0) ? (
                     <div className="space-y-16">
-                      {/* Section Header for the entire feed */}
-                      <div className="pb-3 border-b border-white/[0.08] mb-8">
-                        <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
-                          <LayoutDashboard className="h-5 w-5 text-teal-400" />
-                          Discovery Feed
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-400 uppercase tracking-widest ml-auto">
-                            {serpApiJobs.length + displayJobs.length} Results
+                      {/* Feed tabs */}
+                      <div className="pb-3 border-b border-white/[0.08] mb-8 flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setFeedTab("discover")}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${
+                            feedTab === "discover"
+                              ? "bg-white/[0.08] text-white border border-white/20"
+                              : "text-slate-500 hover:text-slate-300"
+                          }`}
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          Discover
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10">
+                            {serpApiJobs.length + displayJobs.filter(j => !appliedJobIds.has(String(j.id))).length}
                           </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setFeedTab("applied")}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${
+                            feedTab === "applied"
+                              ? "bg-teal-500/10 text-teal-300 border border-teal-500/30"
+                              : "text-slate-500 hover:text-teal-400"
+                          }`}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Applied
                           {appliedJobIds.size > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => navigate("/applications")}
-                              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[11px] font-black uppercase tracking-widest hover:bg-teal-500/20 transition-all"
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              {appliedJobIds.size} Applied
-                            </button>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400">
+                              {appliedJobIds.size}
+                            </span>
                           )}
-                        </h2>
+                        </button>
                       </div>
 
+                      {/* Applied tab view */}
+                      {feedTab === "applied" && (
+                        <div className="space-y-4">
+                          {displayJobs.filter(j => appliedJobIds.has(String(j.id))).length === 0 ? (
+                            <div className="text-center py-20 text-slate-500">
+                              <CheckCircle2 className="h-10 w-10 mx-auto mb-4 opacity-30" />
+                              <p className="font-bold uppercase tracking-widest text-sm">No applied jobs yet</p>
+                              <p className="text-xs mt-2">Jobs you apply to will appear here</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-6">
+                              {displayJobs.filter(j => appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* 1. New Auto-Apply Opportunities Section — ALWAYS TOP */}
-                      {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                      {feedTab === "discover" && displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-teal-500/[0.06] py-3 rounded-2xl border border-teal-500/20">
                             <div className="flex items-center gap-2">
@@ -1818,7 +1852,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       )}
 
                       {/* 2. SerpAPI Google Jobs Section */}
-                      {(serpApiJobs.length > 0 || serpApiLoading) && (
+                      {feedTab === "discover" && (serpApiJobs.length > 0 || serpApiLoading) && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-gradient-to-r from-orange-500/[0.08] to-amber-500/[0.04] py-3 rounded-2xl border border-orange-500/20">
                             <div className="flex items-center gap-3">
@@ -1870,7 +1904,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       )}
 
                       {/* 3. Other/External Jobs Section */}
-                      {!showAutoApplyOnly && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                      {feedTab === "discover" && !showAutoApplyOnly && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-white/[0.03] py-3 rounded-2xl border border-white/[0.08]">
                             <div className="flex items-center gap-3">

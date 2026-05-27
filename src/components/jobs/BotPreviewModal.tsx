@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Paperclip } from "lucide-react";
 import api from "@/services/api";
 
 type ModalState = "idle" | "confirming" | "submitting" | "submitted" | "cancelled";
@@ -79,7 +79,9 @@ export function BotPreviewModal({
     }
   }, [state]);
 
-  const entries = Object.entries(filledFields);
+  const resumeFile = filledFields["resume_file"] ?? null;
+  // Exclude resume_file from the general fields table — it gets its own banner
+  const entries = Object.entries(filledFields).filter(([k]) => k !== "resume_file");
   const emptyKeys = entries.filter(([, v]) => !v || v.trim() === "").map(([k]) => k);
 
   const isConfirmDisabled = state !== "idle";
@@ -121,6 +123,22 @@ export function BotPreviewModal({
             <p className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
               Filled Fields
             </p>
+
+            {/* Resume uploaded banner */}
+            {resumeFile ? (
+              <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2.5 text-xs text-blue-800 shrink-0 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
+                <Paperclip className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                <span>
+                  <span className="font-semibold">Resume uploaded: </span>
+                  <span className="font-mono break-all">{resumeFile}</span>
+                </span>
+              </div>
+            ) : (
+              <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 text-xs text-yellow-800 shrink-0 dark:bg-yellow-950/40 dark:border-yellow-700 dark:text-yellow-300">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                <span>No resume was uploaded for this application.</span>
+              </div>
+            )}
             {emptyKeys.length > 0 && (
               <div className="mx-4 mb-3 flex items-start gap-2 rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 text-xs text-yellow-800 shrink-0">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />

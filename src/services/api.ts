@@ -4,7 +4,7 @@ import { API_BASE_URL } from '@/config';
 // ---------------------------------------------------------------------------
 // In-memory GET cache — survives React route changes (component unmount/remount)
 // ---------------------------------------------------------------------------
-const _cache = new Map<string, { data: unknown; headers: unknown; ts: number }>();
+const _cache = new Map<string, { data: unknown; ts: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Never cache these prefixes (real-time / user-action results)
@@ -32,27 +32,23 @@ const api = axios.create({
     },
 });
 
-// Patch the adapter so GET responses are served from cache on re-navigation
-const _httpAdapter = axios.defaults.adapter as (config: unknown) => Promise<unknown>;
+// Wrap api.get to serve cached responses — avoids adapter compatibility issues
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(api.defaults as any).adapter = async (config: any) => {
-  const url: string = config.url || '';
-  const isGet = (config.method || 'get').toLowerCase() === 'get';
+const _originalGet = api.get.bind(api) as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(api as any).get = async function (url: string, config?: any) {
   const excluded = NO_CACHE_PREFIXES.some((p) => url.includes(p));
-
-  if (isGet && !excluded) {
-    const key = url + '|' + JSON.stringify(config.params || {});
+  if (!excluded) {
+    const key = url + '|' + JSON.stringify(config?.params || {});
     const hit = _cache.get(key);
     if (hit && Date.now() - hit.ts < CACHE_TTL) {
-      // Return a synthetic axios response — interceptors still run normally
-      return { data: hit.data, status: 200, statusText: 'OK (cached)', headers: hit.headers, config, request: {} };
+      return { data: hit.data, status: 200, statusText: 'OK (cached)', headers: {}, config: config || {}, request: {} };
     }
-    const response = await _httpAdapter(config) as any;
-    _cache.set(key, { data: response.data, headers: response.headers, ts: Date.now() });
+    const response = await _originalGet(url, config);
+    _cache.set(key, { data: response.data, ts: Date.now() });
     return response;
   }
-
-  return _httpAdapter(config);
+  return _originalGet(url, config);
 };
 
 // Request interceptor for rate limiting and JWT
@@ -65,14 +61,14 @@ api.interceptors.request.use(
             const now = Date.now();
             const timeframe = 60 * 1000; // 1 minute
             const endpoint = config.url || 'default';
-            
+
             if (!mutationAttempts[endpoint]) mutationAttempts[endpoint] = [];
             mutationAttempts[endpoint] = mutationAttempts[endpoint].filter(t => now - t < timeframe);
-            
+
             if (mutationAttempts[endpoint].length >= 50) {
-                return Promise.reject({ 
+                return Promise.reject({
                     message: "Rate limit exceeded (client-side). Please wait a moment.",
-                    isRateLimit: true 
+                    isRateLimit: true
                 });
             }
             mutationAttempts[endpoint].push(now);
@@ -89,8 +85,7 @@ api.interceptors.request.use(
     }
 );
 
-// Mutation → cache invalidation map: when a URL matching the pattern succeeds,
-// clear GET caches whose keys include any of the listed substrings.
+// Mutation → cache invalidation map
 const INVALIDATIONS: Array<[RegExp, string[]]> = [
   [/\/api\/apply\//, ['apply/history', 'activity/']],
   [/\/api\/bot\/confirm/, ['apply/history', 'activity/', 'bot/history']],

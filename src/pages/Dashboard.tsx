@@ -26,6 +26,7 @@ import { DailyGoalModal } from "@/components/dashboard/DailyGoalModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import { activityService } from "@/services/activityService";
 import { careerService } from "@/services/careerService";
+import { prefetchJobs } from "@/services/jobsPreloadCache";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { useJobReadiness } from "@/hooks/useJobReadiness";
 import { buildDailyMissionTasks, readDailyMissionManualTaskIds } from "@/components/dashboard/dailyMission";
@@ -117,6 +118,10 @@ export default function Dashboard() {
       if (!profile?.target_roles?.length || profile.target_roles[0] === "") {
         setShowOnboarding(true);
       }
+
+      // Silently prefetch jobs in background so /jobs loads instantly
+      const role = profile?.target_roles?.[0];
+      if (role) prefetchJobs(role);
 
       if (summary?.recommended_jobs) setRecommendedJobs(summary.recommended_jobs);
       if (summary?.chart_data) setChartData(summary.chart_data);

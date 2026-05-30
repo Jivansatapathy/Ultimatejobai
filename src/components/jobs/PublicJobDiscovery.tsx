@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { waitForPrefetch } from "@/services/jobsPreloadCache";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -682,6 +683,29 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     stopApifySubscription();
     setApifyStatus("idle");
     setApifyResultCount(0);
+
+    // Use prefetched cache on initial page-1 load — avoids the 5s wait entirely
+    if (!append && p === 1) {
+      const prefetched = waitForPrefetch(query);
+      if (prefetched) {
+        setIsRefreshing(true);
+        try {
+          const result = await prefetched;
+          if (result?.jobs?.length) {
+            const cappedJobs = sortJobList(result.jobs, sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
+            setJobs(cappedJobs);
+            setTotalResults(Math.min(result.totalResults, JOB_SEARCH_MAX_RESULTS));
+            setHasNextPage(result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
+            setPage(1);
+            return;
+          }
+        } catch {
+          // prefetch failed — fall through to normal fetch below
+        } finally {
+          setIsRefreshing(false);
+        }
+      }
+    }
 
     if (append || p > 1) {
       setIsLoadingMore(true);

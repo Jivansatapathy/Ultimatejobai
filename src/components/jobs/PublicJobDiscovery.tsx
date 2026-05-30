@@ -982,8 +982,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     if (!isLandingMode) {
       // Skip if redirect is about to change the URL anyway
       const aboutToRedirect = !params.toString() && !!notificationService.getPrefs().targetRole;
-      // Skip if page-level cache already has fresh data for this exact query
-      const pageCacheHit = _isJobsCacheFresh() && _jobsPageCache?.searchQuery === searchParam;
+      // Skip only if cache has fresh data for the exact same query AND filters
+      const pageCacheHit = _isJobsCacheFresh()
+        && _jobsPageCache?.searchQuery === searchParam
+        && JSON.stringify(_jobsPageCache?.filters) === JSON.stringify(initial);
       if (!aboutToRedirect && !pageCacheHit) {
         fetchJobs(searchParam, { ...initial, primary_search: isPrimary ? "true" : "false", serpapi: serpFromUrl ? "true" : "false" }, 1, false);
       }

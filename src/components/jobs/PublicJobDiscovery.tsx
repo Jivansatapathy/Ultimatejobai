@@ -855,6 +855,19 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     .filter(j => !dismissedJobIds.has(String(j.id)));
   const isApifySearching = apifyStatus === "pending" || apifyStatus === "processing";
 
+  // Client-side pagination — 10 jobs per page
+  const JOBS_PER_PAGE = 10;
+  const [displayPage, setDisplayPage] = useState(1);
+  const totalDisplayPages = Math.max(1, Math.ceil(displayJobs.length / JOBS_PER_PAGE));
+  const pagedJobs = displayJobs.slice((displayPage - 1) * JOBS_PER_PAGE, displayPage * JOBS_PER_PAGE);
+
+  // Reset to page 1 whenever the jobs list changes (new search/filter)
+  const prevJobsLenRef = useRef(0);
+  if (prevJobsLenRef.current !== displayJobs.length) {
+    prevJobsLenRef.current = displayJobs.length;
+    if (displayPage !== 1) setDisplayPage(1);
+  }
+
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -2086,7 +2099,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           </div>
                           <div className="space-y-6">
-                            {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                            {pagedJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
                           </div>
                         </div>
                       )}
@@ -2170,7 +2183,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           </div>
                           <div className="space-y-6">
-                            {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                            {pagedJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
                           </div>
                         </div>
                       )}
@@ -2192,9 +2205,55 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     </div>
                   )}
 
-                  <div ref={observerTarget} className="flex w-full justify-center py-8">
-                    {hasNextPage ? <div className="flex flex-col items-center gap-3"><div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Loading more opportunities...</div><button onClick={() => fetchJobs(searchQuery, filters, page + 1, true)} className="text-xs font-medium text-teal-400 underline underline-offset-2">Click here if it doesn't load automatically</button></div> : displayJobs.length > 0 ? <div className="text-sm italic text-slate-600">You&apos;ve reached the end of the current results.</div> : null}
-                  </div>
+                  {/* Numbered pagination */}
+                  {displayJobs.length > JOBS_PER_PAGE && (
+                    <div className="flex items-center justify-center gap-1.5 py-6">
+                      <button
+                        type="button"
+                        disabled={displayPage === 1}
+                        onClick={() => { setDisplayPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        ‹ Prev
+                      </button>
+                      {Array.from({ length: Math.min(totalDisplayPages, 7) }, (_, i) => {
+                        let p: number;
+                        if (totalDisplayPages <= 7) { p = i + 1; }
+                        else if (i === 0) { p = 1; }
+                        else if (i === 6) { p = totalDisplayPages; }
+                        else if (displayPage <= 4) { p = i + 1; }
+                        else if (displayPage >= totalDisplayPages - 3) { p = totalDisplayPages - 6 + i; }
+                        else { p = displayPage - 3 + i; }
+                        const isEllipsis = totalDisplayPages > 7 && ((i === 1 && p > 2) || (i === 5 && p < totalDisplayPages - 1));
+                        if (isEllipsis) return <span key={i} className="text-slate-600 px-1">…</span>;
+                        return (
+                          <button
+                            type="button"
+                            key={p}
+                            onClick={() => { setDisplayPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                            className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${displayPage === p ? 'bg-teal-500 text-white' : 'border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                          >
+                            {p}
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        disabled={displayPage === totalDisplayPages}
+                        onClick={() => {
+                          setDisplayPage(p => Math.min(totalDisplayPages, p + 1));
+                          if (displayPage >= totalDisplayPages - 1 && hasNextPage) {
+                            fetchJobs(searchQuery, filters, page + 1, true);
+                          }
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next ›
+                      </button>
+                    </div>
+                  )}
+                  <div ref={observerTarget} />
                 </div>
                 <aside className="hidden xl:block">
                   {renderCuratedShortcutBox()}

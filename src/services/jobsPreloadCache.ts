@@ -1,4 +1,11 @@
-import { searchJobs, JobSearchFilters, JobSearchResponse } from "./jobService";
+import {
+  searchJobs,
+  fetchJobFilterOptions,
+  fetchJobLocationOptions,
+  fetchAllCountries,
+  JobSearchFilters,
+  JobSearchResponse,
+} from "./jobService";
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -16,8 +23,8 @@ let _inflight: Promise<JobSearchResponse> | null = null;
  * time the user navigates to /jobs. Safe to call multiple times — de-duped.
  */
 export function prefetchJobs(query: string, filters: JobSearchFilters = {}): void {
-  if (_inflight) return; // already in-flight
-  if (_cache && _cache.query === query && Date.now() - _cache.timestamp < CACHE_TTL_MS) return; // fresh cache
+  if (_inflight) return;
+  if (_cache && _cache.query === query && Date.now() - _cache.timestamp < CACHE_TTL_MS) return;
 
   _inflight = searchJobs(query, 1, filters)
     .then((result) => {
@@ -29,6 +36,21 @@ export function prefetchJobs(query: string, filters: JobSearchFilters = {}): voi
       _inflight = null;
       return null as unknown as JobSearchResponse;
     });
+}
+
+/**
+ * Prefetch ALL data the Jobs page needs on mount so every panel loads instantly.
+ * - Jobs results (via prefetchJobs, de-duped internally)
+ * - Filter options  → GET /api/search/filters/  (cached by api.get)
+ * - Location options → GET /api/search/locations/ (cached by api.get)
+ * - Countries list   → GET /api/search/countries/ (cached by api.get)
+ */
+export function prefetchJobsPage(query: string, filters: JobSearchFilters = {}): void {
+  prefetchJobs(query, filters);
+  // Fire-and-forget — api.get caches the responses automatically
+  fetchJobFilterOptions(query, filters).catch(() => {});
+  fetchJobLocationOptions().catch(() => {});
+  fetchAllCountries().catch(() => {});
 }
 
 /**

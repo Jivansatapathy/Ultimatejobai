@@ -803,8 +803,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   useEffect(() => {
     let mounted = true;
-
-    const timer = setTimeout(async () => {
+    // No debounce needed — api.get serves from cache instantly when prefetched
+    (async () => {
       setIsLoadingFilterOptions(true);
       try {
         const options = await fetchJobFilterOptions(searchQuery, filters);
@@ -818,12 +818,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       } finally {
         if (mounted) setIsLoadingFilterOptions(false);
       }
-    }, 500);
-
-    return () => { 
-      mounted = false; 
-      clearTimeout(timer);
-    };
+    })();
+    return () => { mounted = false; };
   }, [searchQuery, filters.country, filters.department, filters.employment_type, filters.workplace_type]);
 
   useEffect(() => {

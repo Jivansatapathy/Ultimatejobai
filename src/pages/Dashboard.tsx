@@ -27,6 +27,7 @@ import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import { activityService } from "@/services/activityService";
 import { careerService } from "@/services/careerService";
 import { prefetchJobs } from "@/services/jobsPreloadCache";
+import { notificationService } from "@/services/notificationService";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { useJobReadiness } from "@/hooks/useJobReadiness";
 import { buildDailyMissionTasks, readDailyMissionManualTaskIds } from "@/components/dashboard/dailyMission";
@@ -119,8 +120,9 @@ export default function Dashboard() {
         setShowOnboarding(true);
       }
 
-      // Silently prefetch jobs in background so /jobs loads instantly
-      const role = profile?.target_roles?.[0];
+      // Silently prefetch jobs in background so /jobs loads instantly.
+      // Must use notificationService (localStorage) — same source Jobs uses for its query.
+      const role = notificationService.getPrefs().targetRole || profile?.target_roles?.[0];
       if (role) prefetchJobs(role);
 
       if (summary?.recommended_jobs) setRecommendedJobs(summary.recommended_jobs);
@@ -139,6 +141,12 @@ export default function Dashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Fallback: if activeResume loads after the profile fetch, ensure prefetch still fires
+  useEffect(() => {
+    const role = activeResume?.targetJobRole || notificationService.getPrefs().targetRole;
+    if (role) prefetchJobs(role);
+  }, [activeResume?.targetJobRole]);
 
   useEffect(() => {
     setManualDailyTaskIds(readDailyMissionManualTaskIds());

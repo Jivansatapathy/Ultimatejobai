@@ -40,6 +40,8 @@ import {
   fetchJobFilterOptions,
   fetchJobLocationOptions,
   fetchJobById,
+  fetchLeverJobDetails,
+  fetchGreenhouseJobDetails,
   Job,
   JobSearchFilters,
   ApifySearchStatus,
@@ -229,6 +231,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [jobs, setJobs] = useState<Job[]>([]);
   const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const targetRole = activeResume?.targetJobRole || notificationService.getPrefs().targetRole || "";
   const [savedJobs, setSavedJobs] = useState<(string | number)[]>([]);
@@ -320,7 +323,16 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   }, [isSerpApiLoadingMore, serpApiHasMore, serpApiJobs.length, searchQuery, filters, serpApiStart]);
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [dismissedJobIds, setDismissedJobIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("dismissed_bot_jobs");
+      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
   const [appliedHistoryItems, setAppliedHistoryItems] = useState<import("@/services/autoApplyService").ApplicationHistoryItem[]>([]);
+  const [appliedResolvedJobs, setAppliedResolvedJobs] = useState<Map<string, Job>>(new Map());
   const [feedTab, setFeedTab] = useState<"discover" | "applied">("discover");
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
   const apifyPollTimerRef = useRef<number | null>(null);
@@ -338,15 +350,15 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       const items: import("@/services/autoApplyService").ApplicationHistoryItem[] = [];
       if (emailData.status === "fulfilled" && emailData.value?.applications) {
         emailData.value.applications.forEach(a => {
-          // always show in history; only add to filter set when we have a real job_id
           items.push(a);
-          if (a.job_id) ids.add(String(a.job_id));
+          // Add job_id if present, otherwise use task id so alreadyApplied renders correctly
+          ids.add(a.job_id ? String(a.job_id) : String(a.id));
         });
       }
       if (botData.status === "fulfilled" && botData.value?.applications) {
         botData.value.applications.forEach(a => {
           items.push(a);
-          if (a.job_id) ids.add(String(a.job_id));
+          ids.add(a.job_id ? String(a.job_id) : String(a.id));
         });
       }
       setAppliedJobIds(ids);
@@ -355,6 +367,89 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       // non-fatal
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (feedTab !== "applied" || appliedHistoryItems.length === 0) return;
+
+    const toResolve = appliedHistoryItems.filter(item => !appliedResolvedJobs.has(String(item.id)));
+    if (toResolve.length === 0) return;
+
+    Promise.allSettled(
+      toResolve.map(async (item): Promise<{ itemId: string; job: Job } | null> => {
+        // 1. Try DB lookup by job_id
+        if (item.job_id) {
+          const id = String(item.job_id);
+          const fromDisplay = displayJobs.find(j => String(j.id) === id);
+          if (fromDisplay) return { itemId: String(item.id), job: fromDisplay };
+          const fetched = await fetchJobById(id);
+          if (fetched) return { itemId: String(item.id), job: fetched };
+        }
+
+        // 2. Lever / Greenhouse public API fallback — gives us the real job title from the URL
+        if (item.job_url) {
+          const leverMatch = item.job_url.match(/jobs\.lever\.co\/([^/]+)\/([^/?#\s]+)/);
+          if (leverMatch) {
+            const details = await fetchLeverJobDetails(leverMatch[1], leverMatch[2]);
+            if (details?.text) {
+              return {
+                itemId: String(item.id),
+                job: {
+                  id: item.job_id || item.id,
+                  title: details.text,
+                  company: item.company || leverMatch[1],
+                  location: "",
+                  salary: "",
+                  posted: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Applied",
+                  match: 0,
+                  tags: [],
+                  saved: false,
+                  hasEmail: false,
+                  apply_url: item.job_url,
+                  url: item.job_url,
+                  source: "external",
+                },
+              };
+            }
+          }
+
+          const ghMatch = item.job_url.match(/greenhouse\.io\/([^/]+)\/jobs\/(\d+)/);
+          if (ghMatch) {
+            const details = await fetchGreenhouseJobDetails(ghMatch[1], ghMatch[2]);
+            if (details?.title) {
+              return {
+                itemId: String(item.id),
+                job: {
+                  id: item.job_id || item.id,
+                  title: details.title,
+                  company: item.company || ghMatch[1],
+                  location: details.location?.name || "",
+                  salary: "",
+                  posted: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Applied",
+                  match: 0,
+                  tags: [],
+                  saved: false,
+                  hasEmail: false,
+                  apply_url: item.job_url,
+                  url: item.job_url,
+                  source: "external",
+                },
+              };
+            }
+          }
+        }
+
+        return null;
+      })
+    ).then(results => {
+      setAppliedResolvedJobs(prev => {
+        const next = new Map(prev);
+        results.forEach(r => {
+          if (r.status === "fulfilled" && r.value) next.set(r.value.itemId, r.value.job);
+        });
+        return next;
+      });
+    });
+  }, [feedTab, appliedHistoryItems]);
 
   const loadSavedJobs = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -645,6 +740,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setIsRefreshing(false);
       setIsLoadingMore(false);
       setIsLoadingFilterOptions(false);
+      setIsInitialLoad(false);
     }
   }, [filters, isLandingMode, sortBy, startApifySearch, serpApiEnabled]);
 
@@ -677,7 +773,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   // Apply All logic: Only pick jobs that are NOT applied yet
   const autoApplyJobs = toShow.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id)));
   const regularJobs = toShow.filter(j => !j.hasEmail);
-  const displayJobs = showAutoApplyOnly ? autoApplyJobs : [...toShow];
+  const displayJobs = (showAutoApplyOnly ? autoApplyJobs : [...toShow])
+    .filter(j => !dismissedJobIds.has(String(j.id)));
   const isApifySearching = apifyStatus === "pending" || apifyStatus === "processing";
 
   useEffect(() => {
@@ -991,9 +1088,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
             <p className="text-sm font-bold text-slate-400">{job.company}</p>
           )}
           <div className="mt-2 flex flex-wrap gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-            <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-600" />{job.location}</div>
-            <div className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-slate-600" />{job.salary}</div>
-            <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-slate-600" />{job.posted}</div>
+            {job.location && <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-600" />{job.location}</div>}
+            {job.salary && <div className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-slate-600" />{job.salary}</div>}
+            {job.posted && <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-slate-600" />{job.posted}</div>}
           </div>
           {isAuthenticated && job.match_reason ? (
             <p className="mt-1.5 text-[13px] font-medium text-slate-500 leading-relaxed">{job.match_reason}</p>
@@ -1020,6 +1117,11 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     return [...prev, { id, job_id: id, job_title: job.title, company: job.company, status: "submitted", delivery_method: "bot", job_url: job.apply_url, created_at: new Date().toISOString() }];
                   });
                 }}
+                onDismiss={() => setDismissedJobIds(prev => {
+                  const next = new Set(prev).add(String(job.id));
+                  try { localStorage.setItem("dismissed_bot_jobs", JSON.stringify([...next])); } catch {}
+                  return next;
+                })}
               />
             )}
             <Button variant="outline" size="sm" className="h-10 rounded-xl px-5 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
@@ -1640,7 +1742,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     AI tools, resume scoring &<br className="hidden sm:block" /> smart matching — all free.
                   </h3>
                   <p className="text-slate-500 text-sm mb-8 max-w-md mx-auto">
-                    Join 50,000+ professionals who found their next role faster with Hozorex.
+                    Join 50,000+ professionals who found their next role faster with CareerAI.
                   </p>
                   <div className="flex flex-wrap justify-center gap-3">
                     <Button
@@ -1762,20 +1864,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   {/* Queue bar — always visible above results */}
                   <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => setAppliedJobIds(prev => new Set(prev).add(jobId))} />
 
-                  {(isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0 ? (
-                    <div className="space-y-6">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-8 animate-pulse">
-                          <div className="flex gap-6">
-                            <div className="h-14 w-14 rounded-2xl bg-white/[0.04]" />
-                            <div className="flex-1 space-y-4">
-                              <div className="h-4 w-1/3 bg-white/[0.04] rounded" />
-                              <div className="h-3 w-1/4 bg-white/[0.04] rounded" />
-                              <div className="flex gap-2">
-                                <div className="h-6 w-20 rounded-full bg-white/[0.04]" />
-                                <div className="h-6 w-24 rounded-full bg-white/[0.04]" />
+                  {(isInitialLoad || (isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0) ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className={`rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-6 animate-pulse [animation-delay:${i * 80}ms]`}>
+                          <div className="flex gap-4 items-start">
+                            <div className="h-12 w-12 rounded-2xl bg-white/[0.05] shrink-0" />
+                            <div className="flex-1 space-y-3 pt-1">
+                              <div className="h-4 w-2/5 bg-white/[0.05] rounded-lg" />
+                              <div className="h-3 w-1/4 bg-white/[0.04] rounded-lg" />
+                              <div className="flex gap-2 pt-1">
+                                <div className="h-5 w-16 rounded-full bg-white/[0.04]" />
+                                <div className="h-5 w-20 rounded-full bg-white/[0.04]" />
+                                <div className="h-5 w-14 rounded-full bg-white/[0.04]" />
                               </div>
                             </div>
+                            <div className="h-8 w-24 rounded-full bg-white/[0.04] shrink-0" />
                           </div>
                         </div>
                       ))}
@@ -1830,51 +1934,29 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           ) : (
                             <div className="space-y-4">
-                              {appliedHistoryItems.map((item) => {
-                                const matchedJob = displayJobs.find(j => String(j.id) === String(item.job_id));
-                                if (matchedJob) return renderJobCard(matchedJob, 0);
-                                return (
-                                  <div key={item.id} className="flex items-start justify-between gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 hover:border-teal-500/30 transition-all">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <CheckCircle2 className="h-4 w-4 text-teal-400 shrink-0" />
-                                        <p className="font-black text-white truncate">{item.job_title || "Job Application"}</p>
-                                      </div>
-                                      <p className="text-sm text-slate-400 mb-2">{item.company}</p>
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400">
-                                          {item.delivery_method === "bot" ? "Bot Apply" : item.delivery_method === "employer_portal" ? "Employer Portal" : "Email"}
-                                        </span>
-                                        {item.created_at && (
-                                          <span className="text-[10px] text-slate-500">
-                                            {new Date(item.created_at).toLocaleDateString()}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2 shrink-0">
-                                      {item.job_id && (
-                                        <button
-                                          type="button"
-                                          className="text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border border-white/10 text-slate-400 hover:border-teal-500/30 hover:text-teal-400 transition-all"
-                                          onClick={async () => {
-                                            const job = await fetchJobById(String(item.job_id));
-                                            if (job) openJobDetails(job);
-                                            else if (item.job_url) window.open(item.job_url, "_blank");
-                                          }}
-                                        >
-                                          View Details
-                                        </button>
-                                      )}
-                                      {item.job_url && (
-                                        <a href={item.job_url} target="_blank" rel="noopener noreferrer"
-                                          className="text-center text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border border-white/10 text-slate-400 hover:border-white/20 hover:text-white transition-all">
-                                          Open URL
-                                        </a>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
+                              {appliedHistoryItems.map((item, index) => {
+                                // Prefer: display job match → resolved via fetch/lever → synthetic fallback
+                                const jid = item.job_id ? String(item.job_id) : null;
+                                const fromDisplay = jid ? displayJobs.find(j => String(j.id) === jid) : undefined;
+                                const resolved = appliedResolvedJobs.get(String(item.id));
+                                const rawTitle = item.job_title || "";
+                                const isUrlTitle = /^https?:\/\//.test(rawTitle);
+                                const jobToRender: Job = fromDisplay ?? resolved ?? {
+                                  id: item.job_id || item.id,
+                                  title: rawTitle && !isUrlTitle ? rawTitle : "Applied Job",
+                                  company: item.company || "",
+                                  location: "",
+                                  salary: "",
+                                  posted: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Applied",
+                                  match: 0,
+                                  tags: [],
+                                  saved: false,
+                                  hasEmail: false,
+                                  apply_url: item.job_url || undefined,
+                                  url: item.job_url || undefined,
+                                  source: "external",
+                                };
+                                return renderJobCard(jobToRender, index);
                               })}
                             </div>
                           )}

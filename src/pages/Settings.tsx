@@ -52,6 +52,8 @@ interface BotProfile {
   current_salary: string; notice_period: string; willing_to_relocate: string;
   languages: string; degree: string; university: string;
   graduation_year: string; gpa: string; cover_letter: string;
+  answer_why_us: string; answer_about_me: string; answer_strengths: string;
+  answer_why_hire: string; answer_work_style: string;
 }
 
 const EMPTY_BOT: BotProfile = {
@@ -60,6 +62,8 @@ const EMPTY_BOT: BotProfile = {
   current_title: "", years_experience: "", expected_salary: "", current_salary: "",
   notice_period: "", willing_to_relocate: "", languages: "", degree: "",
   university: "", graduation_year: "", gpa: "", cover_letter: "",
+  answer_why_us: "", answer_about_me: "", answer_strengths: "",
+  answer_why_hire: "", answer_work_style: "",
 };
 
 export default function Settings() {
@@ -705,6 +709,30 @@ export default function Settings() {
                         rows={5} placeholder="Write a default cover letter the bot will use when a cover letter field is detected..."
                         className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all resize-none"
                       />
+                    </div>
+
+                    {/* Pre-written Q&A answers */}
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-teal-500 mb-1">Common Application Questions</p>
+                      <p className="text-xs text-slate-500 mb-4">Save your answers here — the bot uses them instantly without calling AI, making applications much faster.</p>
+                      <div className="space-y-4">
+                        {([
+                          { key: "answer_about_me", label: "Tell us about yourself / About me", placeholder: "Write a 2-3 sentence professional summary about yourself, your background, and what you bring to a role..." },
+                          { key: "answer_why_us", label: "Why do you want to work here / Why are you interested?", placeholder: "Explain your motivation for applying — tie your skills and goals to the company's mission..." },
+                          { key: "answer_why_hire", label: "Why should we hire you?", placeholder: "Highlight your unique value, key skills, and how you'll make an impact..." },
+                          { key: "answer_strengths", label: "What are your greatest strengths?", placeholder: "List 3 strengths with brief context — e.g. problem-solving, communication, adaptability..." },
+                          { key: "answer_work_style", label: "Describe your work style", placeholder: "How do you approach work, collaboration, and challenges? E.g. detail-oriented, async-friendly, data-driven..." },
+                        ] as { key: keyof BotProfile; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
+                          <div key={key}>
+                            <p className="text-xs text-slate-400 mb-1.5 font-medium">{label}</p>
+                            <textarea
+                              value={bp(key)} onChange={setBp(key)}
+                              rows={3} placeholder={placeholder}
+                              className="w-full rounded-2xl border border-white/10 bg-white/[0.05] text-slate-100 placeholder:text-slate-500 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500/40 transition-all resize-none"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <Button type="button" onClick={handleSaveBotProfile} disabled={isSavingBot}

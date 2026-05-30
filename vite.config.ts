@@ -1,28 +1,38 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const proxyTarget = env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000";
+
+  // For local dev, always route WebSocket directly to local backend
+  const wsTarget = env.VITE_API_PROXY_TARGET?.includes("railway.app")
+    ? "http://127.0.0.1:8000"
+    : proxyTarget;
+
+  return {
   server: {
     host: "0.0.0.0",
     port: 8080,
     proxy: {
       "/api": {
-        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
+        target: proxyTarget,
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, "/api"),
       },
-      // D-ID streaming proxy
       "/did": {
-        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
+        target: proxyTarget,
         changeOrigin: true,
+        secure: false,
       },
-      // Bot Apply WebSocket proxy
       "/ws": {
-        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
+        target: wsTarget,
         changeOrigin: true,
+        secure: false,
         ws: true,
       },
     },
@@ -64,4 +74,5 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-}));
+  };
+});

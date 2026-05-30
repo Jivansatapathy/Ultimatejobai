@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Sparkles, Github, Twitter, Linkedin } from "lucide-react";
+import { Github, Twitter, Linkedin } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -24,17 +24,28 @@ const footerLinks = {
 
 export const Footer = () => {
   return (
-    <footer className="border-t border-border bg-navy-900 dark:bg-background text-white dark:text-foreground" style={{ background: "hsl(222 47% 8%)" }}>
+    <footer className="border-t border-white/[0.06] bg-[#080c18] text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-700">
-                <Sparkles className="h-4 w-4 text-white" />
+            <Link to="/" className="flex items-center gap-2.5 mb-4 group">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-violet-600 shadow-md shadow-teal-500/20 group-hover:shadow-teal-500/40 transition-shadow">
+                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <polyline
+                    points="2,15 6,9 10,12 15,5"
+                    stroke="white" strokeWidth="2.2"
+                    strokeLinecap="round" strokeLinejoin="round"
+                    opacity="0.95"
+                  />
+                  <circle cx="15" cy="5" r="2.2" fill="white" />
+                </svg>
               </div>
-              <span className="text-lg font-bold">
-                Career<span className="gradient-text">AI</span>
+              <span className="text-lg font-extrabold tracking-tight text-white">
+                Career
+                <span className="bg-gradient-to-r from-teal-400 to-violet-400 bg-clip-text text-transparent">
+                  AI
+                </span>
               </span>
             </Link>
             <p className="text-sm text-white/60 mb-4">

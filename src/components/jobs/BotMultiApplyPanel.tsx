@@ -31,8 +31,8 @@ interface BotMultiApplyPanelProps {
 }
 
 function getWsUrl(taskId: string): string {
-  const base = import.meta.env.VITE_WS_BASE_URL as string | undefined;
-  if (base) return `${base}/ws/bot/${taskId}/`;
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  if (isLocal) return `ws://localhost:8000/ws/bot/${taskId}/`;
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}/ws/bot/${taskId}/`;
 }
@@ -127,13 +127,9 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
 
   const previewTask = tasks.find((t) => t.status === "preview_ready");
 
-  const handleConfirm = async (taskId: string) => {
+  // Modal handles the confirm POST itself — just update state
+  const handleConfirm = (taskId: string, _userAnswers?: Record<string, string>) => {
     updateTask(taskId, { status: "confirmed" });
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "confirm" });
-    } catch {
-      updateTask(taskId, { status: "failed", failReason: "Confirm failed" });
-    }
   };
 
   const handleCancel = async (taskId: string) => {
@@ -158,7 +154,7 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
           company={previewTask.company}
           filledFields={previewTask.filledFields}
           screenshotBase64={previewTask.screenshot}
-          onConfirm={() => handleConfirm(previewTask.taskId)}
+          onConfirm={(ans) => handleConfirm(previewTask.taskId, ans)}
           onCancel={() => handleCancel(previewTask.taskId)}
         />
       )}
@@ -174,6 +170,8 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
             Bot Apply — {doneCount}/{tasks.length} submitted
           </span>
           <button
+            type="button"
+            aria-label={expanded ? "Collapse" : "Expand"}
             onClick={() => setExpanded((e) => !e)}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -181,6 +179,8 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
           </button>
           {allDone && (
             <button
+              type="button"
+              aria-label="Close"
               onClick={onClose}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >

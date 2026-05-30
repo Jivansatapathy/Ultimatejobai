@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles,
   Menu,
   X,
   LayoutDashboard,
@@ -14,6 +13,7 @@ import {
   BrainCircuit,
   LogOut,
   Settings as SettingsIcon,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import NotificationBell from "@/components/NotificationBell";
@@ -47,11 +47,22 @@ export const Navbar = () => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-md">
-              <Sparkles className="h-[18px] w-[18px] text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-violet-600 shadow-lg shadow-teal-500/30 group-hover:shadow-teal-500/50 transition-shadow">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <polyline
+                  points="2,15 6,9 10,12 15,5"
+                  stroke="white" strokeWidth="2.2"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  opacity="0.95"
+                />
+                <circle cx="15" cy="5" r="2.2" fill="white" />
+              </svg>
             </div>
-            <span className="text-[1.2rem] font-extrabold tracking-tight text-white">
-              Career<span className="text-teal-400">AI</span>
+            <span className="text-[1.15rem] font-extrabold tracking-tight text-white">
+              Career
+              <span className="bg-gradient-to-r from-teal-400 to-violet-400 bg-clip-text text-transparent">
+                AI
+              </span>
             </span>
           </Link>
 

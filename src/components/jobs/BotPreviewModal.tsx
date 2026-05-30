@@ -20,7 +20,58 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, CheckCircle2, AlertTriangle, Paperclip } from "lucide-react";
 import api from "@/services/api";
 
+/**
+ * Convert raw bracket-notation / UUID field keys into a human-readable label.
+ * e.g. 'cards[e019c34e-242b-43b9-877b-88223fc12412][field0]' → 'Custom Question'
+ *      'consent[marketing]'                                   → 'Consent Marketing'
+ *      'question_50897318'                                    → 'Question'
+ *      'first_name'                                           → 'First Name'
+ */
+function cleanLabel(raw: string): string {
+  // Lever/ATS opaque bracket IDs — never human-readable
+  if (/^cards\[/i.test(raw)) return "Custom Question";
+  // Strip UUIDs
+  let s = raw.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, "");
+  const words = s.match(/[a-zA-Z][a-zA-Z0-9]*/g) ?? [];
+  if (words.length === 0) return "Field";
+  // Filter generic noise words and fieldN patterns (field0, field1, …)
+  const noise = new Set(["field", "input", "value", "item"]);
+  const meaningful = words.filter(w => {
+    const lower = w.toLowerCase();
+    if (/^field\d+$/.test(lower)) return false;
+    return !noise.has(lower) || words.length === 1;
+  });
+  if (meaningful.length === 0) return "Field";
+  return meaningful
+    .slice(0, 5)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+/** Display a label from the backend — handles raw field names, brackets, UUIDs. */
+function formatLabel(label: string, fieldName?: string): string {
+  if (!label) return cleanLabel(fieldName || "");
+  // Contains brackets or looks like a UUID → clean the field name instead
+  if (/[\[\]{}]/.test(label) || /^[a-f0-9-]{20,}/.test(label)) {
+    return cleanLabel(fieldName || label);
+  }
+  // Raw snake_case / lowercase field name (e.g. "location", "first_name") → Title Case
+  if (/^[a-z][a-z0-9_-]*$/.test(label)) {
+    return label.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+  return label;
+}
+
 type ModalState = "idle" | "confirming" | "submitting" | "submitted" | "cancelled";
+
+interface UnfilledField {
+  label: string;
+  required: boolean;
+  type?: string;
+  field_name?: string;
+  options?: string[];
+  values?: string[];
+}
 
 interface BotPreviewModalProps {
   isOpen: boolean;
@@ -28,8 +79,9 @@ interface BotPreviewModalProps {
   jobTitle: string;
   company: string;
   filledFields: Record<string, string>;
+  unfilledFields?: UnfilledField[];
   screenshotBase64: string;
-  onConfirm: () => void;
+  onConfirm: (userAnswers: Record<string, string>) => void;
   onCancel: () => void;
 }
 
@@ -39,36 +91,32 @@ export function BotPreviewModal({
   jobTitle,
   company,
   filledFields,
+  unfilledFields = [],
   screenshotBase64,
   onConfirm,
   onCancel,
 }: BotPreviewModalProps) {
   const [state, setState] = useState<ModalState>("idle");
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
 
-  // Reset state whenever a new task opens the modal
   useEffect(() => {
-    if (isOpen) setState("idle");
+    if (isOpen) { setState("idle"); setUserAnswers({}); }
   }, [isOpen, taskId]);
 
   const handleConfirm = async () => {
     setState("confirming");
     try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "confirm" });
+      await api.post("/api/bot/confirm/", { task_id: taskId, action: "confirm", user_answers: userAnswers });
       setState("submitting");
-      onConfirm();
-      // Auto-close after success signal arrives via WebSocket
+      onConfirm(userAnswers);
     } catch {
       setState("idle");
     }
   };
 
-  const handleCancel = async () => {
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
-    } catch {
-      // Best-effort
-    }
-    onCancel();
+  const handleCancel = () => {
+    onCancel(); // close immediately
+    api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" }).catch(() => {});
   };
 
   // When parent signals submitted, show success then close
@@ -148,6 +196,110 @@ export function BotPreviewModal({
                 </span>
               </div>
             )}
+            {unfilledFields.length > 0 && (
+              <div className="mx-4 mb-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2.5 text-xs shrink-0">
+                <div className="flex items-center gap-1.5 font-semibold text-orange-700 mb-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {unfilledFields.filter(f => f.required).length > 0
+                    ? "Please answer these required questions:"
+                    : "Fill in these optional fields if you'd like:"}
+                </div>
+                <div className="space-y-2">
+                  {unfilledFields.map((f, i) => {
+                    const key = f.field_name || f.label;
+                    return (
+                      <div key={i}>
+                        <label className="block text-orange-800 mb-0.5 font-medium">
+                          {formatLabel(f.label, f.field_name)}
+                          {f.required && <span className="text-red-500 font-bold ml-0.5">*</span>}
+                        </label>
+                        {f.type === "radio" && f.options && f.options.length > 0 ? (
+                          <div className="space-y-1 mt-1">
+                            {f.options.map((opt, oi) => {
+                              const optVal = f.values ? f.values[oi] : opt;
+                              const displayOpt = formatLabel(opt, optVal);
+                              return (
+                                <label key={oi} className="flex items-center gap-2 text-xs text-orange-900 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={key}
+                                    value={optVal}
+                                    checked={userAnswers[key] === optVal}
+                                    onChange={(e) => setUserAnswers(prev => ({ ...prev, [key]: e.target.value }))}
+                                    className="border-orange-300 text-emerald-600 focus:ring-emerald-500"
+                                  />
+                                  {displayOpt}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        ) : f.type === "checkbox" && f.options && f.options.length > 0 ? (
+                          <div className="space-y-1 mt-1">
+                            {f.options.map((opt, oi) => {
+                              const optVal = f.values ? f.values[oi] : opt;
+                              const currentVals = userAnswers[key] ? userAnswers[key].split(",") : [];
+                              const isChecked = currentVals.includes(optVal);
+                              const displayCheckOpt = formatLabel(opt, optVal);
+                              return (
+                                <label key={oi} className="flex items-center gap-2 text-xs text-orange-900 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    name={`${key}_${oi}`}
+                                    value={optVal}
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      let newVals;
+                                      if (e.target.checked) {
+                                        newVals = [...currentVals, optVal];
+                                      } else {
+                                        newVals = currentVals.filter(v => v !== optVal);
+                                      }
+                                      setUserAnswers(prev => ({ ...prev, [key]: newVals.join(",") }));
+                                    }}
+                                    className="border-orange-300 rounded text-emerald-600 focus:ring-emerald-500"
+                                  />
+                                  {displayCheckOpt}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        ) : f.type === "checkbox" ? (
+                          <div className="mt-1">
+                            <label className="flex items-center gap-2 text-xs text-orange-900 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={userAnswers[key] === "Yes" || userAnswers[key] === "True" || userAnswers[key] === "1"}
+                                onChange={(e) => setUserAnswers(prev => ({ ...prev, [key]: e.target.checked ? "Yes" : "" }))}
+                                className="border-orange-300 rounded text-emerald-600 focus:ring-emerald-500"
+                              />
+                              Yes
+                            </label>
+                          </div>
+                        ) : f.options && f.options.length > 0 ? (
+                          <select
+                            aria-label={formatLabel(f.label, f.field_name)}
+                            className="w-full border border-orange-300 rounded px-2 py-1 text-xs bg-white text-gray-800"
+                            value={userAnswers[key] || ""}
+                            onChange={e => setUserAnswers(prev => ({ ...prev, [key]: e.target.value }))}
+                          >
+                            <option value="">Select…</option>
+                            {f.options.map((opt, oi) => <option key={oi} value={f.values ? f.values[oi] : opt}>{opt}</option>)}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            className="w-full border border-orange-300 rounded px-2 py-1 text-xs bg-white text-gray-800"
+                            placeholder={`Enter ${formatLabel(f.label, f.field_name).toLowerCase()}…`}
+                            value={userAnswers[key] || ""}
+                            onChange={e => setUserAnswers(prev => ({ ...prev, [key]: e.target.value }))}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <ScrollArea className="flex-1 px-4 pb-4">
               <Table>
                 <TableHeader>
@@ -173,8 +325,11 @@ export function BotPreviewModal({
                             : ""
                         }
                       >
-                        <TableCell className="font-mono text-xs text-muted-foreground py-2 pr-2">
-                          {field}
+                        <TableCell className="font-medium text-xs text-foreground py-2 pr-2">
+                          {/* Clean up raw field name keys (e.g. question_50897318) for display */}
+                          {/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field) && !/^question_\d+$/.test(field)
+                            ? field.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+                            : cleanLabel(field)}
                         </TableCell>
                         <TableCell className="text-sm py-2 break-all">
                           {value || (
@@ -202,8 +357,12 @@ export function BotPreviewModal({
                   className="w-full rounded-lg border border-border shadow-sm"
                 />
               ) : (
-                <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
-                  No screenshot available
+                <div className="flex flex-col items-center justify-center h-64 border border-dashed rounded-lg border-border/80 bg-muted/10 p-6 text-center animate-pulse">
+                  <Loader2 className="h-8 w-8 animate-spin text-accent mb-3 shrink-0" />
+                  <p className="text-sm font-medium text-foreground">Generating live page preview...</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-[280px]">
+                    The browser is navigating and filling details in the background. The screenshot will load here automatically.
+                  </p>
                 </div>
               )}
             </ScrollArea>

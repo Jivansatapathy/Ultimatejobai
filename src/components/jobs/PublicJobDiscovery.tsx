@@ -696,7 +696,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       const cached = getPrefetchedSync(query);
       if (cached?.jobs?.length) {
         const cappedJobs = sortJobList(cached.jobs, sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
-        setJobs(cappedJobs);
+        // Skip setState if jobs haven't changed — prevents redundant re-render
+        setJobs(prev => (prev.length === cappedJobs.length && prev[0]?.id === cappedJobs[0]?.id) ? prev : cappedJobs);
         setTotalResults(Math.min(cached.totalResults, JOB_SEARCH_MAX_RESULTS));
         setHasNextPage(cached.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
         setPage(1);
@@ -959,6 +960,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const searchParam = params.get("search") || "";
     const initial = {
       title: params.get("title") || "",
       department: params.get("department") || "",
@@ -969,18 +971,20 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       city: params.get("city") || "",
       serpapi: params.get("serpapi") || "",
     };
-    setSearchQuery(params.get("search") || "");
-    setFilters(initial);
+
+    // Only call setters when values actually change to avoid spurious re-renders
+    setSearchQuery(prev => prev !== searchParam ? searchParam : prev);
+    setFilters(prev => JSON.stringify(prev) !== JSON.stringify(initial) ? initial : prev);
     const serpFromUrl = params.get("serpapi") === "true";
     setSerpApiEnabled(serpFromUrl);
 
     const isPrimary = params.get("primary_search") === "true";
     if (!isLandingMode) {
-      const searchParam = params.get("search") || "";
-      // If URL has no search param yet, Effect 897 is about to redirect to ?search=targetRole.
-      // Skip the empty-query fetch to avoid showing wrong results before the redirect fires.
+      // Skip if redirect is about to change the URL anyway
       const aboutToRedirect = !params.toString() && !!notificationService.getPrefs().targetRole;
-      if (!aboutToRedirect) {
+      // Skip if page-level cache already has fresh data for this exact query
+      const pageCacheHit = _isJobsCacheFresh() && _jobsPageCache?.searchQuery === searchParam;
+      if (!aboutToRedirect && !pageCacheHit) {
         fetchJobs(searchParam, { ...initial, primary_search: isPrimary ? "true" : "false", serpapi: serpFromUrl ? "true" : "false" }, 1, false);
       }
     }

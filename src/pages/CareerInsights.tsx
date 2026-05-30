@@ -34,7 +34,6 @@ import { searchJobs, Job } from "@/services/jobService";
 import { getCareerAdvice } from "@/services/aiService";
 import { activityService } from "@/services/activityService";
 import { careerService, CareerProfile, JobMatch, UserScore, CareerRoadmap, JobFair } from "@/services/careerService";
-import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 
 export default function CareerInsights() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,8 +54,6 @@ export default function CareerInsights() {
   const [advice, setAdvice] = useState("");
   const [isAdvising, setIsAdvising] = useState(false);
   const [gapAnalysis, setGapAnalysis] = useState<any>(null);
-  const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
-  const [autoApplyOpen, setAutoApplyOpen] = useState(false);
   const navigate = useNavigate();
 
 
@@ -800,11 +797,6 @@ export default function CareerInsights() {
         </main>
       </div>
 
-      <AutoApplyModal
-        job={autoApplyJob ? { id: String(autoApplyJob.id), title: autoApplyJob.title, company: autoApplyJob.company } : null}
-        open={autoApplyOpen}
-        onClose={() => { setAutoApplyOpen(false); setAutoApplyJob(null); }}
-      />
     </>
   );
 }

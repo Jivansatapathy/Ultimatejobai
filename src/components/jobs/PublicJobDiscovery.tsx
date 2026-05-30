@@ -57,14 +57,10 @@ import {
   subscribeApifySearch,
   serpApiSearch,
 } from "@/services/jobService";
-import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
-import { AutoApplyQueueBar } from "@/components/jobs/AutoApplyQueueBar";
 import { JobDetailsSheet } from "@/components/jobs/JobDetailsSheet";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
 import { BotMultiApplyPanel } from "@/components/jobs/BotMultiApplyPanel";
 import { LoginRequiredModal } from "@/components/auth/LoginRequiredModal";
-import { autoApplyQueueService } from "@/services/autoApplyQueueService";
-import { autoApplyService } from "@/services/autoApplyService";
 import { careerService } from "@/services/careerService";
 import api from "@/services/api";
 
@@ -267,14 +263,11 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const [searchQuery, setSearchQuery] = useState(_jpc?.searchQuery ?? (targetRole || ""));
   const [jobs, setJobs] = useState<Job[]>(_syncJobs.length ? sortJobList(_syncJobs, "Best Match").slice(0, JOB_SEARCH_MAX_RESULTS) : []);
-  const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(_syncJobs.length === 0);
   const [savedJobs, setSavedJobs] = useState<(string | number)[]>([]);
   const [sortBy] = useState("Best Match");
   const [totalResults, setTotalResults] = useState(_syncTotal);
-  const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
-  const [autoApplyOpen, setAutoApplyOpen] = useState(false);
   const [selectedDetailsJob, setSelectedDetailsJob] = useState<Job | null>(null);
   const [botMultiTasks, setBotMultiTasks] = useState<Array<{ taskId: string; jobTitle: string; company: string }> | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -302,7 +295,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
-  const [queueKey, setQueueKey] = useState(0);
   const [apifyStatus, setApifyStatus] = useState<ApifySearchStatus>("idle");
   const [apifyResultCount, setApifyResultCount] = useState(0);
 
@@ -358,7 +350,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       return new Set<string>();
     }
   });
-  const [appliedHistoryItems, setAppliedHistoryItems] = useState<import("@/services/autoApplyService").ApplicationHistoryItem[]>([]);
+  const [appliedHistoryItems, setAppliedHistoryItems] = useState<{ id: string | number; job_id?: string | number; job_title?: string; company?: string; job_url?: string; created_at?: string }[]>([]);
   const [appliedResolvedJobs, setAppliedResolvedJobs] = useState<Map<string, Job>>(new Map());
   const [feedTab, setFeedTab] = useState<"discover" | "applied">("discover");
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
@@ -369,25 +361,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const loadAppliedHistory = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const [emailData, botData] = await Promise.allSettled([
-        autoApplyService.getHistory(),
-        autoApplyService.getBotHistory(),
-      ]);
+      const res = await api.get('/api/bot/history/');
       const ids = new Set<string>();
-      const items: import("@/services/autoApplyService").ApplicationHistoryItem[] = [];
-      if (emailData.status === "fulfilled" && emailData.value?.applications) {
-        emailData.value.applications.forEach(a => {
-          items.push(a);
-          // Add job_id if present, otherwise use task id so alreadyApplied renders correctly
-          ids.add(a.job_id ? String(a.job_id) : String(a.id));
-        });
-      }
-      if (botData.status === "fulfilled" && botData.value?.applications) {
-        botData.value.applications.forEach(a => {
-          items.push(a);
-          ids.add(a.job_id ? String(a.job_id) : String(a.id));
-        });
-      }
+      const items: typeof appliedHistoryItems = [];
+      const applications = res.data?.applications ?? [];
+      applications.forEach((a: any) => {
+        items.push(a);
+        ids.add(a.job_id ? String(a.job_id) : String(a.id));
+      });
       setAppliedJobIds(ids);
       setAppliedHistoryItems(items);
     } catch {
@@ -834,25 +815,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     };
     setSearchQuery("");
     setFilters(cleared);
-    setShowAutoApplyOnly(false);
     navigateToJobs("", cleared);
   };
 
-  const toggleAutoApplyOnly = () => setShowAutoApplyOnly(prev => !prev);
 
 
 
-  // Visual list: Show everything (don't remove applied ones)
-  const toShow = jobs.filter((j) => {
-    if (showAutoApplyOnly && !j.hasEmail) return false;
-    return true;
-  });
-
-  // Apply All logic: Only pick jobs that are NOT applied yet
-  const autoApplyJobs = toShow.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id)));
-  const regularJobs = toShow.filter(j => !j.hasEmail);
-  const displayJobs = (showAutoApplyOnly ? autoApplyJobs : [...toShow])
-    .filter(j => !dismissedJobIds.has(String(j.id)));
+  const displayJobs = jobs.filter(j => !dismissedJobIds.has(String(j.id)));
   const isApifySearching = apifyStatus === "pending" || apifyStatus === "processing";
 
   // Client-side pagination — 10 jobs per page
@@ -1970,8 +1939,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     )}
                   </div>
 
-                  {/* Queue bar — always visible above results */}
-                  <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => setAppliedJobIds(prev => new Set(prev).add(jobId))} />
 
                   {(isInitialLoad || (isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0) ? (
                     <div className="space-y-4">
@@ -2084,7 +2051,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                             <div className="flex items-center gap-3">
                               <span className="text-[10px] font-black uppercase text-slate-500">
-                                {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length} quick apply
+                                {displayJobs.filter(j => !appliedJobIds.has(String(j.id))).length} jobs
                               </span>
                               {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !appliedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== '#' && j.source !== 'employer').length > 0 && (
                                 <button
@@ -2163,13 +2130,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       <Briefcase className="mx-auto mb-4 h-12 w-12 text-slate-600" />
                       <h3 className="text-xl font-semibold text-white">No jobs found</h3>
                       <p className="mt-2 text-sm text-slate-500">
-                        {showAutoApplyOnly ? "No quick-apply jobs match your search. Try disabling the Quick Apply filter." : "Try broadening your search or clearing some filters."}
+                        Try broadening your search or clearing some filters.
                       </p>
-                      {showAutoApplyOnly && (
-                        <Button variant="outline" className="mt-4 rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" onClick={toggleAutoApplyOnly}>
-                          <Zap className="mr-2 h-4 w-4" />Show All Jobs
-                        </Button>
-                      )}
                       <Button variant="outline" className="mt-3 rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" onClick={resetFilters}><X className="mr-2 h-4 w-4" />Reset All Filters</Button>
                     </div>
                   )}
@@ -2243,26 +2205,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           setAppliedJobIds(prev => new Set(prev).add(id));
           setAppliedHistoryItems(prev => prev.some(a => String(a.job_id) === id) ? prev : prev);
         }}
-      />
-      <AutoApplyModal job={autoApplyJob ? {
-        id: String(autoApplyJob.id),
-        title: autoApplyJob.title,
-        company: autoApplyJob.company,
-        isDemoJob: autoApplyJob.isDemoJob,
-        source: autoApplyJob.source,
-        quick_apply_enabled: autoApplyJob.quick_apply_enabled,
-        quick_apply_questions: autoApplyJob.quick_apply_questions,
-      } : null}
-      open={autoApplyOpen}
-      onClose={() => {
-        setAutoApplyOpen(false);
-        setAutoApplyJob(null);
-        loadAppliedHistory(); // Check for new applications
-      }}
-      onSuccess={(jobId) => {
-        setAppliedJobIds(prev => new Set(prev).add(String(jobId)));
-        setQueueKey(prev => prev + 1); // Refresh queue bar
-      }}
       />
 
       {/* Multi-apply progress panel */}

@@ -35,6 +35,22 @@ import { cn } from "@/lib/utils";
 
 const HEATMAP_DAYS = 31;
 
+// Module-level cache — survives route changes so Dashboard never re-spins on back-navigation
+const DASH_TTL = 5 * 60 * 1000;
+interface DashCache {
+  stats: typeof _DEFAULT_STATS;
+  recommendedJobs: unknown[];
+  chartData: number[];
+  ts: number;
+}
+const _DEFAULT_STATS = {
+  resume_score: 0, jobs_applied: 0, interviews: 0,
+  response_rate: '0%', daily_applied_count: 0,
+  daily_goal_target: 5, daily_goal_met: false,
+};
+let _dashCache: DashCache | null = null;
+const _isCacheFresh = () => !!_dashCache && Date.now() - _dashCache.ts < DASH_TTL;
+
 const StatCard = ({ label, value, subtext, icon: Icon, className }: {
   label: string;
   value: string | number;
@@ -81,52 +97,49 @@ export default function Dashboard() {
   const [showActivityDetails, setShowActivityDetails] = useState(false);
   const [showAutoApply, setShowAutoApply] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
+  // Initialize directly from cache — no loading flash on back-navigation
+  const [loading, setLoading] = useState(!_isCacheFresh());
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>(_dashCache?.recommendedJobs ?? []);
   const { summary: subscriptionSummary, hasFeature, loadingSummary } = useSubscription();
   const [manualDailyTaskIds, setManualDailyTaskIds] = useState<number[]>([]);
-  const [dashboardStats, setDashboardStats] = useState({
-    resume_score: 0,
-    jobs_applied: 0,
-    interviews: 0,
-    response_rate: '0%',
-    daily_applied_count: 0,
-    daily_goal_target: 5,
-    daily_goal_met: false,
-  });
-  const [chartData, setChartData] = useState<number[]>([]);
+  const [dashboardStats, setDashboardStats] = useState(_dashCache?.stats ?? _DEFAULT_STATS);
+  const [chartData, setChartData] = useState<number[]>(_dashCache?.chartData ?? []);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    // Only show spinner on cold load; re-navigate gets instant cache data
+    if (!_isCacheFresh()) setLoading(true);
     try {
       const [summary, profile] = await Promise.all([
         activityService.getDashboardSummary(),
         careerService.getProfile(),
       ]);
 
-      if (summary?.stats) {
-        setDashboardStats({
-          resume_score: summary.stats.resume_score ?? 0,
-          jobs_applied: summary.stats.jobs_applied ?? 0,
-          interviews: summary.stats.interviews ?? 0,
-          response_rate: summary.stats.response_rate ?? '0%',
-          daily_applied_count: summary.stats.daily_applied_count ?? 0,
-          daily_goal_target: summary.stats.daily_goal_target ?? 5,
-          daily_goal_met: summary.stats.daily_goal_met ?? false,
-        });
-      }
+      const newStats = summary?.stats ? {
+        resume_score: summary.stats.resume_score ?? 0,
+        jobs_applied: summary.stats.jobs_applied ?? 0,
+        interviews: summary.stats.interviews ?? 0,
+        response_rate: summary.stats.response_rate ?? '0%',
+        daily_applied_count: summary.stats.daily_applied_count ?? 0,
+        daily_goal_target: summary.stats.daily_goal_target ?? 5,
+        daily_goal_met: summary.stats.daily_goal_met ?? false,
+      } : _dashCache?.stats ?? _DEFAULT_STATS;
+
+      const newRecommended = summary?.recommended_jobs ?? _dashCache?.recommendedJobs ?? [];
+      const newChart = summary?.chart_data ?? _dashCache?.chartData ?? [];
+
+      setDashboardStats(newStats);
+      setRecommendedJobs(newRecommended);
+      setChartData(newChart);
+
+      // Update module-level cache
+      _dashCache = { stats: newStats, recommendedJobs: newRecommended, chartData: newChart, ts: Date.now() };
 
       if (!profile?.target_roles?.length || profile.target_roles[0] === "") {
         setShowOnboarding(true);
       }
 
-      // Silently prefetch jobs in background so /jobs loads instantly.
-      // Must use notificationService (localStorage) — same source Jobs uses for its query.
       const role = notificationService.getPrefs().targetRole || profile?.target_roles?.[0];
       if (role) prefetchJobsPage(role);
-
-      if (summary?.recommended_jobs) setRecommendedJobs(summary.recommended_jobs);
-      if (summary?.chart_data) setChartData(summary.chart_data);
     } catch (err) {
       console.error("Failed to load dashboard summary:", err);
     } finally {

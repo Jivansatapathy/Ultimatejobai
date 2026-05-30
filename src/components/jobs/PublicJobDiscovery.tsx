@@ -1925,7 +1925,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       </div>
                     </div>
 
-                    {isAuthenticated && targetRole && searchQuery === targetRole && (
+                    {isAuthenticated && targetRole && searchQuery === targetRole && !filters.title && !filters.department && !filters.country && !filters.city && (
                       <div className="flex items-center justify-between rounded-2xl border border-violet-500/25 bg-violet-500/10 px-4 py-2.5">
                         <div className="flex items-center gap-2.5">
                           <Sparkles className="h-4 w-4 text-violet-400 shrink-0" />

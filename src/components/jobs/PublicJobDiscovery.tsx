@@ -218,6 +218,30 @@ const curatedLandingSections: CuratedLandingSection[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Module-level Jobs page cache — survives route changes so back-navigation
+// never re-triggers a loading state.
+// ---------------------------------------------------------------------------
+const _JOBS_CACHE_TTL = 5 * 60 * 1000;
+interface JobsPageCache {
+  jobs: Job[];
+  totalResults: number;
+  hasNextPage: boolean;
+  searchQuery: string;
+  filters: JobSearchFilters;
+  page: number;
+  discoveryCountryOptions: string[];
+  filterCountryOptions: Array<{ value: string; label: string; count: number }>;
+  cityMap: Record<string, string[]>;
+  departmentOptions: Array<{ value: string; label: string; count: number }>;
+  employmentOptions: Array<{ value: string; label: string; count: number }>;
+  workplaceOptions: Array<{ value: string; label: string; count: number }>;
+  browseCards: DiscoveryCard[];
+  ts: number;
+}
+let _jobsPageCache: JobsPageCache | null = null;
+const _isJobsCacheFresh = () => !!_jobsPageCache && Date.now() - _jobsPageCache.ts < _JOBS_CACHE_TTL;
+
 interface PublicJobDiscoveryProps {
   mode?: DiscoveryMode;
 }
@@ -231,16 +255,24 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const targetRole = activeResume?.targetJobRole || notificationService.getPrefs().targetRole || "";
 
-  // Synchronously grab any prefetched jobs so first render already has data
-  const _syncCache = getPrefetchedSync(targetRole);
-  const [searchQuery, setSearchQuery] = useState(_syncCache ? targetRole : "");
-  const [jobs, setJobs] = useState<Job[]>(_syncCache ? sortJobList(_syncCache.jobs, "Best Match").slice(0, JOB_SEARCH_MAX_RESULTS) : []);
+  // Use page-level module cache first, then prefetch cache, then empty
+  const _jpc = _isJobsCacheFresh() ? _jobsPageCache! : null;
+  const _syncJobs = _jpc ? _jpc.jobs : (getPrefetchedSync(targetRole)?.jobs ?? []);
+  const _syncTotal = _jpc ? _jpc.totalResults : (getPrefetchedSync(targetRole) ? Math.min(getPrefetchedSync(targetRole)!.totalResults, JOB_SEARCH_MAX_RESULTS) : 0);
+
+  const CLEAN_FILTERS: JobSearchFilters = {
+    title: "", department: "", location: "", employment_type: "",
+    workplace_type: "", country: "", city: "",
+  };
+
+  const [searchQuery, setSearchQuery] = useState(_jpc?.searchQuery ?? (targetRole || ""));
+  const [jobs, setJobs] = useState<Job[]>(_syncJobs.length ? sortJobList(_syncJobs, "Best Match").slice(0, JOB_SEARCH_MAX_RESULTS) : []);
   const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(!_syncCache);
+  const [isInitialLoad, setIsInitialLoad] = useState(_syncJobs.length === 0);
   const [savedJobs, setSavedJobs] = useState<(string | number)[]>([]);
   const [sortBy] = useState("Best Match");
-  const [totalResults, setTotalResults] = useState(_syncCache ? Math.min(_syncCache.totalResults, JOB_SEARCH_MAX_RESULTS) : 0);
+  const [totalResults, setTotalResults] = useState(_syncTotal);
   const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
   const [autoApplyOpen, setAutoApplyOpen] = useState(false);
   const [selectedDetailsJob, setSelectedDetailsJob] = useState<Job | null>(null);
@@ -251,36 +283,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     title: "Login to continue",
     description: "Sign in to view full job details, save jobs, and start applying with confidence.",
   });
-  const CLEAN_FILTERS: JobSearchFilters = {
-    title: "",
-    department: "",
-    location: "",
-    employment_type: "",
-    workplace_type: "",
-    country: "",
-    city: "",
-  };
-  const [filters, setFilters] = useState<JobSearchFilters>(CLEAN_FILTERS);
-  const [page, setPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
+  const [filters, setFilters] = useState<JobSearchFilters>(_jpc?.filters ?? CLEAN_FILTERS);
+  const [page, setPage] = useState(_jpc?.page ?? 1);
+  const [hasNextPage, setHasNextPage] = useState(_jpc?.hasNextPage ?? false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [discoveryCountryOptions, setDiscoveryCountryOptions] = useState<string[]>([]);
-  const [filterCountryOptions, setFilterCountryOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
+  const [discoveryCountryOptions, setDiscoveryCountryOptions] = useState<string[]>(_jpc?.discoveryCountryOptions ?? []);
+  const [filterCountryOptions, setFilterCountryOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.filterCountryOptions ?? []);
   const [cityOptions, setCityOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [cityMap, setCityMap] = useState<Record<string, string[]>>({});
-  const [departmentOptions, setDepartmentOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [employmentOptions, setEmploymentOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [workplaceOptions, setWorkplaceOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [browseCards, setBrowseCards] = useState<DiscoveryCard[]>([]);
+  const [cityMap, setCityMap] = useState<Record<string, string[]>>(_jpc?.cityMap ?? {});
+  const [departmentOptions, setDepartmentOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.departmentOptions ?? []);
+  const [employmentOptions, setEmploymentOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.employmentOptions ?? []);
+  const [workplaceOptions, setWorkplaceOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.workplaceOptions ?? []);
+  const [browseCards, setBrowseCards] = useState<DiscoveryCard[]>(_jpc?.browseCards ?? []);
   const [curatedLandingJobs, setCuratedLandingJobs] = useState<Record<string, Job[]>>({});
   const [isLoadingCuratedLandingJobs, setIsLoadingCuratedLandingJobs] = useState(false);
-  // Skip loading flash when api.get cache already has these responses
-  const [isLoadingLocations, setIsLoadingLocations] = useState(
-    !hasCached('/api/search/locations/') || !hasCached('/api/search/countries/')
-  );
-  const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(
-    !hasCached('/api/search/filters/')
-  );
+  const [isLoadingLocations, setIsLoadingLocations] = useState(!_jpc && (!hasCached('/api/search/locations/') || !hasCached('/api/search/countries/')));
+  const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(!_jpc && !hasCached('/api/search/filters/'));
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
@@ -748,6 +766,23 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         const cappedJobs = nextJobs.slice(0, JOB_SEARCH_MAX_RESULTS);
         setJobs(cappedJobs);
         setHasNextPage(result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
+        // Save to page-level cache so back-navigation is instant
+        _jobsPageCache = {
+          jobs: cappedJobs,
+          totalResults: cappedTotalResults,
+          hasNextPage: result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS,
+          searchQuery: query,
+          filters: currentFilters,
+          page: p,
+          discoveryCountryOptions: [],
+          filterCountryOptions: [],
+          cityMap: {},
+          departmentOptions: [],
+          employmentOptions: [],
+          workplaceOptions: [],
+          browseCards: [],
+          ts: Date.now(),
+        };
       }
       setTotalResults(cappedTotalResults);
       setPage(p);
@@ -822,9 +857,11 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   useEffect(() => {
     let mounted = true;
-    // No debounce needed — api.get serves from cache instantly when prefetched
     (async () => {
-      setIsLoadingFilterOptions(true);
+      // Only show spinner if we have nothing cached for this query
+      if (!hasCached('/api/search/filters/', { search: searchQuery, ...filters })) {
+        setIsLoadingFilterOptions(true);
+      }
       try {
         const options = await fetchJobFilterOptions(searchQuery, filters);
         if (!mounted) return;
@@ -834,6 +871,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         setFilterCountryOptions(options.countries);
         setCityOptions(options.cities);
         setBrowseCards(options.defaultFilters);
+        // Persist to page cache so back-navigation skips loading
+        if (_jobsPageCache) {
+          _jobsPageCache.departmentOptions = options.departments;
+          _jobsPageCache.employmentOptions = options.employmentTypes;
+          _jobsPageCache.workplaceOptions = options.workplaceTypes;
+          _jobsPageCache.filterCountryOptions = options.countries;
+          _jobsPageCache.browseCards = options.defaultFilters;
+        }
       } finally {
         if (mounted) setIsLoadingFilterOptions(false);
       }
@@ -844,7 +889,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   useEffect(() => {
     let mounted = true;
     const run = async () => {
-      setIsLoadingLocations(true);
+      if (!hasCached('/api/search/locations/') || !hasCached('/api/search/countries/')) {
+        setIsLoadingLocations(true);
+      }
       try {
         const [options, fullCountries] = await Promise.all([
           fetchJobLocationOptions(),
@@ -856,19 +903,23 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           .map(c => c.name)
           .filter(name => !popularCountries.includes(name));
         
-        // Discovery: Show EVERYTHING
-        setDiscoveryCountryOptions(Array.from(new Set([...popularCountries, ...others])));
-        
-        // Filter Sidebar: ONLY show countries that have active jobs in the DB
-        // (This is now redundant since useEffect above handles it, but keeping it for initial load)
+        const allCountries = Array.from(new Set([...popularCountries, ...others]));
+        setDiscoveryCountryOptions(allCountries);
+
         if (filterCountryOptions.length === 0) {
           const dbCountries = fullCountries
             .filter(c => c.has_jobs || c.job_count > 0)
             .map(c => ({ value: c.name, label: c.name, count: c.job_count }));
           setFilterCountryOptions(dbCountries);
+          if (_jobsPageCache) _jobsPageCache.filterCountryOptions = dbCountries;
         }
 
         setCityMap(options.cityMap);
+        // Persist location data to page cache
+        if (_jobsPageCache) {
+          _jobsPageCache.discoveryCountryOptions = allCountries;
+          _jobsPageCache.cityMap = options.cityMap;
+        }
       } finally {
         if (mounted) setIsLoadingLocations(false);
       }

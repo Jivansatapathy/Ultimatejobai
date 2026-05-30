@@ -2072,8 +2072,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         </div>
                       )}
 
-                      {/* 1. New Auto-Apply Opportunities Section — ALWAYS TOP */}
-                      {feedTab === "discover" && displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                      {/* All Jobs — single flat list, 10 per page */}
+                      {feedTab === "discover" && pagedJobs.length > 0 && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-teal-500/[0.06] py-3 rounded-2xl border border-teal-500/20">
                             <div className="flex items-center gap-2">
@@ -2084,7 +2084,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                             <div className="flex items-center gap-3">
                               <span className="text-[10px] font-black uppercase text-slate-500">
-                                {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length} new
+                                {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length} quick apply
                               </span>
                               {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !appliedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== '#' && j.source !== 'employer').length > 0 && (
                                 <button
@@ -2099,7 +2099,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           </div>
                           <div className="space-y-6">
-                            {pagedJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                            {pagedJobs.filter(j => !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
                           </div>
                         </div>
                       )}
@@ -2156,37 +2156,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         </div>
                       )}
 
-                      {/* 3. Other/External Jobs Section */}
-                      {feedTab === "discover" && !showAutoApplyOnly && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
-                        <div className="space-y-6">
-                          <div className="flex items-center justify-between px-4 bg-white/[0.03] py-3 rounded-2xl border border-white/[0.08]">
-                            <div className="flex items-center gap-3">
-                              <Globe2 className="h-4 w-4 text-slate-500" />
-                              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-300">
-                                Global Discovery <span className="mx-2 text-white/10">|</span> <span className="text-slate-500">External Sources</span>
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-[10px] font-black uppercase text-slate-500">
-                                {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length} Jobs
-                              </span>
-                              {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== "#" && j.source !== "employer").length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={enterBulkSelectMode}
-                                  className="flex items-center gap-2 rounded-full bg-teal-500 hover:bg-teal-400 shadow-lg shadow-teal-500/30 text-white text-sm font-black px-6 py-2.5 transition-all hover:-translate-y-0.5"
-                                >
-                                  <Bot className="h-4 w-4" />
-                                  Bot Apply All
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-6">
-                            {pagedJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
-                          </div>
-                        </div>
-                      )}
 
                     </div>
                   ) : (

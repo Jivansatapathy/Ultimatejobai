@@ -97,8 +97,8 @@ export default function Dashboard() {
   const [showActivityDetails, setShowActivityDetails] = useState(false);
   const [showAutoApply, setShowAutoApply] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  // Initialize directly from cache — no loading flash on back-navigation
-  const [loading, setLoading] = useState(!_isCacheFresh());
+  // Show skeleton only when we have zero cached data — never on back-navigation
+  const [loading, setLoading] = useState(!_dashCache?.stats);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>(_dashCache?.recommendedJobs ?? []);
   const { summary: subscriptionSummary, hasFeature, loadingSummary } = useSubscription();
   const [manualDailyTaskIds, setManualDailyTaskIds] = useState<number[]>([]);
@@ -106,8 +106,10 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<number[]>(_dashCache?.chartData ?? []);
 
   const loadData = useCallback(async () => {
-    // Only show spinner on cold load; re-navigate gets instant cache data
-    if (!_isCacheFresh()) setLoading(true);
+    // Never show skeleton on back-navigation — show stale data while refreshing silently.
+    // Only show spinner on true cold load (no cached data at all).
+    const hasCachedData = !!(_dashCache?.stats);
+    if (!hasCachedData) setLoading(true);
     try {
       const [summary, profile] = await Promise.all([
         activityService.getDashboardSummary(),

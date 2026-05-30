@@ -54,13 +54,20 @@ export function prefetchJobsPage(query: string, filters: JobSearchFilters = {}):
 }
 
 /**
- * Returns a Promise for the preloaded result if one is in-flight or already
- * cached. Returns null if no prefetch was started.
+ * Synchronously return cached jobs if fresh — no Promise, no loading state needed.
+ */
+export function getPrefetchedSync(query: string): JobSearchResponse | null {
+  if (_cache && _cache.query === query && Date.now() - _cache.timestamp < CACHE_TTL_MS) {
+    return _cache.result;
+  }
+  return null;
+}
+
+/**
+ * Returns a Promise for the preloaded result if one is in-flight.
+ * Returns null if nothing is in-flight (use getPrefetchedSync for cache hits).
  */
 export function waitForPrefetch(query: string): Promise<JobSearchResponse> | null {
-  if (_cache && _cache.query === query && Date.now() - _cache.timestamp < CACHE_TTL_MS) {
-    return Promise.resolve(_cache.result);
-  }
   if (_inflight) return _inflight;
   return null;
 }

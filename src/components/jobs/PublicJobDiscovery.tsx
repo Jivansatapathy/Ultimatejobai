@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { waitForPrefetch } from "@/services/jobsPreloadCache";
+import { getPrefetchedSync, waitForPrefetch } from "@/services/jobsPreloadCache";
+import { hasCached } from "@/services/api";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -228,16 +229,18 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const navigate = useNavigate();
   const isLandingMode = mode === "landing";
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const targetRole = activeResume?.targetJobRole || notificationService.getPrefs().targetRole || "";
+
+  // Synchronously grab any prefetched jobs so first render already has data
+  const _syncCache = getPrefetchedSync(targetRole);
+  const [searchQuery, setSearchQuery] = useState(_syncCache ? targetRole : "");
+  const [jobs, setJobs] = useState<Job[]>(_syncCache ? sortJobList(_syncCache.jobs, "Best Match").slice(0, JOB_SEARCH_MAX_RESULTS) : []);
   const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  const targetRole = activeResume?.targetJobRole || notificationService.getPrefs().targetRole || "";
+  const [isInitialLoad, setIsInitialLoad] = useState(!_syncCache);
   const [savedJobs, setSavedJobs] = useState<(string | number)[]>([]);
   const [sortBy] = useState("Best Match");
-  const [totalResults, setTotalResults] = useState(0);
+  const [totalResults, setTotalResults] = useState(_syncCache ? Math.min(_syncCache.totalResults, JOB_SEARCH_MAX_RESULTS) : 0);
   const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
   const [autoApplyOpen, setAutoApplyOpen] = useState(false);
   const [selectedDetailsJob, setSelectedDetailsJob] = useState<Job | null>(null);
@@ -271,8 +274,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [browseCards, setBrowseCards] = useState<DiscoveryCard[]>([]);
   const [curatedLandingJobs, setCuratedLandingJobs] = useState<Record<string, Job[]>>({});
   const [isLoadingCuratedLandingJobs, setIsLoadingCuratedLandingJobs] = useState(false);
-  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
-  const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(false);
+  // Skip loading flash when api.get cache already has these responses
+  const [isLoadingLocations, setIsLoadingLocations] = useState(
+    !hasCached('/api/search/locations/') || !hasCached('/api/search/countries/')
+  );
+  const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(
+    !hasCached('/api/search/filters/')
+  );
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
@@ -684,13 +692,24 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     setApifyStatus("idle");
     setApifyResultCount(0);
 
-    // Use prefetched cache on initial page-1 load — avoids the 5s wait entirely
+    // Synchronous cache hit → set jobs with zero loading state
     if (!append && p === 1) {
-      const prefetched = waitForPrefetch(query);
-      if (prefetched) {
+      const cached = getPrefetchedSync(query);
+      if (cached?.jobs?.length) {
+        const cappedJobs = sortJobList(cached.jobs, sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
+        setJobs(cappedJobs);
+        setTotalResults(Math.min(cached.totalResults, JOB_SEARCH_MAX_RESULTS));
+        setHasNextPage(cached.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
+        setPage(1);
+        setIsRefreshing(false);
+        return;
+      }
+      // In-flight prefetch → wait for it (spinner only shown while fetch is still running)
+      const inflight = waitForPrefetch(query);
+      if (inflight) {
         setIsRefreshing(true);
         try {
-          const result = await prefetched;
+          const result = await inflight;
           if (result?.jobs?.length) {
             const cappedJobs = sortJobList(result.jobs, sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
             setJobs(cappedJobs);
@@ -700,7 +719,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
             return;
           }
         } catch {
-          // prefetch failed — fall through to normal fetch below
+          // fall through to normal fetch
         } finally {
           setIsRefreshing(false);
         }
@@ -924,7 +943,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
     const isPrimary = params.get("primary_search") === "true";
     if (!isLandingMode) {
-      fetchJobs(params.get("search") || "", { ...initial, primary_search: isPrimary ? "true" : "false", serpapi: serpFromUrl ? "true" : "false" }, 1, false);
+      const searchParam = params.get("search") || "";
+      // If URL has no search param yet, Effect 897 is about to redirect to ?search=targetRole.
+      // Skip the empty-query fetch to avoid showing wrong results before the redirect fires.
+      const aboutToRedirect = !params.toString() && !!notificationService.getPrefs().targetRole;
+      if (!aboutToRedirect) {
+        fetchJobs(searchParam, { ...initial, primary_search: isPrimary ? "true" : "false", serpapi: serpFromUrl ? "true" : "false" }, 1, false);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLandingMode, location.search]);

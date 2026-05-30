@@ -16,6 +16,13 @@ const NO_CACHE_PREFIXES = [
   '/ws/',
 ];
 
+/** Synchronously check if a GET URL is already in cache (no fetch needed). */
+export function hasCached(url: string, params?: object): boolean {
+  const key = url + '|' + JSON.stringify(params || {});
+  const hit = _cache.get(key);
+  return !!(hit && Date.now() - hit.ts < CACHE_TTL);
+}
+
 /** Call after a mutation to invalidate stale GET caches. */
 export function clearApiCache(urlSubstring?: string) {
   if (!urlSubstring) { _cache.clear(); return; }

@@ -2177,9 +2177,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         disabled={displayPage === totalDisplayPages}
                         onClick={() => {
                           setDisplayPage(p => Math.min(totalDisplayPages, p + 1));
-                          if (displayPage >= totalDisplayPages - 1 && hasNextPage) {
-                            fetchJobs(searchQuery, filters, page + 1, true);
-                          }
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         className="px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"

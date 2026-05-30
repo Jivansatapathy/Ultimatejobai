@@ -390,6 +390,7 @@ export const searchJobs = async (
             params: {
                 search: query,
                 page,
+                page_size: JOB_SEARCH_MAX_RESULTS,
                 primary_search: primary_search === 'true',
                 ...otherFilters,
             },

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { getPrefetchedSync, waitForPrefetch } from "@/services/jobsPreloadCache";
+import { hasCached } from "@/services/api";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -40,6 +42,8 @@ import {
   fetchJobFilterOptions,
   fetchJobLocationOptions,
   fetchJobById,
+  fetchLeverJobDetails,
+  fetchGreenhouseJobDetails,
   Job,
   JobSearchFilters,
   ApifySearchStatus,
@@ -53,14 +57,10 @@ import {
   subscribeApifySearch,
   serpApiSearch,
 } from "@/services/jobService";
-import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
-import { AutoApplyQueueBar } from "@/components/jobs/AutoApplyQueueBar";
 import { JobDetailsSheet } from "@/components/jobs/JobDetailsSheet";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
 import { BotMultiApplyPanel } from "@/components/jobs/BotMultiApplyPanel";
 import { LoginRequiredModal } from "@/components/auth/LoginRequiredModal";
-import { autoApplyQueueService } from "@/services/autoApplyQueueService";
-import { autoApplyService } from "@/services/autoApplyService";
 import { careerService } from "@/services/careerService";
 import api from "@/services/api";
 
@@ -214,6 +214,30 @@ const curatedLandingSections: CuratedLandingSection[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Module-level Jobs page cache — survives route changes so back-navigation
+// never re-triggers a loading state.
+// ---------------------------------------------------------------------------
+const _JOBS_CACHE_TTL = 5 * 60 * 1000;
+interface JobsPageCache {
+  jobs: Job[];
+  totalResults: number;
+  hasNextPage: boolean;
+  searchQuery: string;
+  filters: JobSearchFilters;
+  page: number;
+  discoveryCountryOptions: string[];
+  filterCountryOptions: Array<{ value: string; label: string; count: number }>;
+  cityMap: Record<string, string[]>;
+  departmentOptions: Array<{ value: string; label: string; count: number }>;
+  employmentOptions: Array<{ value: string; label: string; count: number }>;
+  workplaceOptions: Array<{ value: string; label: string; count: number }>;
+  browseCards: DiscoveryCard[];
+  ts: number;
+}
+let _jobsPageCache: JobsPageCache | null = null;
+const _isJobsCacheFresh = () => !!_jobsPageCache && Date.now() - _jobsPageCache.ts < _JOBS_CACHE_TTL;
+
 interface PublicJobDiscoveryProps {
   mode?: DiscoveryMode;
 }
@@ -225,17 +249,25 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const navigate = useNavigate();
   const isLandingMode = mode === "landing";
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
   const targetRole = activeResume?.targetJobRole || notificationService.getPrefs().targetRole || "";
+
+  // Use page-level module cache first, then prefetch cache, then empty
+  const _jpc = _isJobsCacheFresh() ? _jobsPageCache! : null;
+  const _syncJobs = _jpc ? _jpc.jobs : (getPrefetchedSync(targetRole)?.jobs ?? []);
+  const _syncTotal = _jpc ? _jpc.totalResults : (getPrefetchedSync(targetRole) ? Math.min(getPrefetchedSync(targetRole)!.totalResults, JOB_SEARCH_MAX_RESULTS) : 0);
+
+  const CLEAN_FILTERS: JobSearchFilters = {
+    title: "", department: "", location: "", employment_type: "",
+    workplace_type: "", country: "", city: "",
+  };
+
+  const [searchQuery, setSearchQuery] = useState(_jpc?.searchQuery ?? (targetRole || ""));
+  const [jobs, setJobs] = useState<Job[]>(_syncJobs.length ? sortJobList(_syncJobs, "Best Match").slice(0, JOB_SEARCH_MAX_RESULTS) : []);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(_syncJobs.length === 0);
   const [savedJobs, setSavedJobs] = useState<(string | number)[]>([]);
   const [sortBy] = useState("Best Match");
-  const [totalResults, setTotalResults] = useState(0);
-  const [autoApplyJob, setAutoApplyJob] = useState<Job | null>(null);
-  const [autoApplyOpen, setAutoApplyOpen] = useState(false);
+  const [totalResults, setTotalResults] = useState(_syncTotal);
   const [selectedDetailsJob, setSelectedDetailsJob] = useState<Job | null>(null);
   const [botMultiTasks, setBotMultiTasks] = useState<Array<{ taskId: string; jobTitle: string; company: string }> | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -244,35 +276,25 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     title: "Login to continue",
     description: "Sign in to view full job details, save jobs, and start applying with confidence.",
   });
-  const CLEAN_FILTERS: JobSearchFilters = {
-    title: "",
-    department: "",
-    location: "",
-    employment_type: "",
-    workplace_type: "",
-    country: "",
-    city: "",
-  };
-  const [filters, setFilters] = useState<JobSearchFilters>(CLEAN_FILTERS);
-  const [page, setPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
+  const [filters, setFilters] = useState<JobSearchFilters>(_jpc?.filters ?? CLEAN_FILTERS);
+  const [page, setPage] = useState(_jpc?.page ?? 1);
+  const [hasNextPage, setHasNextPage] = useState(_jpc?.hasNextPage ?? false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [discoveryCountryOptions, setDiscoveryCountryOptions] = useState<string[]>([]);
-  const [filterCountryOptions, setFilterCountryOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
+  const [discoveryCountryOptions, setDiscoveryCountryOptions] = useState<string[]>(_jpc?.discoveryCountryOptions ?? []);
+  const [filterCountryOptions, setFilterCountryOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.filterCountryOptions ?? []);
   const [cityOptions, setCityOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [cityMap, setCityMap] = useState<Record<string, string[]>>({});
-  const [departmentOptions, setDepartmentOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [employmentOptions, setEmploymentOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [workplaceOptions, setWorkplaceOptions] = useState<Array<{ value: string; label: string; count: number }>>([]);
-  const [browseCards, setBrowseCards] = useState<DiscoveryCard[]>([]);
+  const [cityMap, setCityMap] = useState<Record<string, string[]>>(_jpc?.cityMap ?? {});
+  const [departmentOptions, setDepartmentOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.departmentOptions ?? []);
+  const [employmentOptions, setEmploymentOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.employmentOptions ?? []);
+  const [workplaceOptions, setWorkplaceOptions] = useState<Array<{ value: string; label: string; count: number }>>(_jpc?.workplaceOptions ?? []);
+  const [browseCards, setBrowseCards] = useState<DiscoveryCard[]>(_jpc?.browseCards ?? []);
   const [curatedLandingJobs, setCuratedLandingJobs] = useState<Record<string, Job[]>>({});
   const [isLoadingCuratedLandingJobs, setIsLoadingCuratedLandingJobs] = useState(false);
-  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
-  const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(false);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(!_jpc && (!hasCached('/api/search/locations/') || !hasCached('/api/search/countries/')));
+  const [isLoadingFilterOptions, setIsLoadingFilterOptions] = useState(!_jpc && !hasCached('/api/search/filters/'));
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
-  const [queueKey, setQueueKey] = useState(0);
   const [apifyStatus, setApifyStatus] = useState<ApifySearchStatus>("idle");
   const [apifyResultCount, setApifyResultCount] = useState(0);
 
@@ -331,10 +353,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const loadAppliedHistory = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const [emailData, botData] = await Promise.allSettled([
-        autoApplyService.getHistory(),
-        autoApplyService.getBotHistory(),
-      ]);
+      const res = await api.get('/api/bot/history/');
       const ids = new Set<string>();
       const queuedIds = new Set<string>();
       const items: import("@/services/autoApplyService").ApplicationHistoryItem[] = [];
@@ -359,6 +378,89 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       // non-fatal
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (feedTab !== "applied" || appliedHistoryItems.length === 0) return;
+
+    const toResolve = appliedHistoryItems.filter(item => !appliedResolvedJobs.has(String(item.id)));
+    if (toResolve.length === 0) return;
+
+    Promise.allSettled(
+      toResolve.map(async (item): Promise<{ itemId: string; job: Job } | null> => {
+        // 1. Try DB lookup by job_id
+        if (item.job_id) {
+          const id = String(item.job_id);
+          const fromDisplay = displayJobs.find(j => String(j.id) === id);
+          if (fromDisplay) return { itemId: String(item.id), job: fromDisplay };
+          const fetched = await fetchJobById(id);
+          if (fetched) return { itemId: String(item.id), job: fetched };
+        }
+
+        // 2. Lever / Greenhouse public API fallback — gives us the real job title from the URL
+        if (item.job_url) {
+          const leverMatch = item.job_url.match(/jobs\.lever\.co\/([^/]+)\/([^/?#\s]+)/);
+          if (leverMatch) {
+            const details = await fetchLeverJobDetails(leverMatch[1], leverMatch[2]);
+            if (details?.text) {
+              return {
+                itemId: String(item.id),
+                job: {
+                  id: item.job_id || item.id,
+                  title: details.text,
+                  company: item.company || leverMatch[1],
+                  location: "",
+                  salary: "",
+                  posted: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Applied",
+                  match: 0,
+                  tags: [],
+                  saved: false,
+                  hasEmail: false,
+                  apply_url: item.job_url,
+                  url: item.job_url,
+                  source: "external",
+                },
+              };
+            }
+          }
+
+          const ghMatch = item.job_url.match(/greenhouse\.io\/([^/]+)\/jobs\/(\d+)/);
+          if (ghMatch) {
+            const details = await fetchGreenhouseJobDetails(ghMatch[1], ghMatch[2]);
+            if (details?.title) {
+              return {
+                itemId: String(item.id),
+                job: {
+                  id: item.job_id || item.id,
+                  title: details.title,
+                  company: item.company || ghMatch[1],
+                  location: details.location?.name || "",
+                  salary: "",
+                  posted: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Applied",
+                  match: 0,
+                  tags: [],
+                  saved: false,
+                  hasEmail: false,
+                  apply_url: item.job_url,
+                  url: item.job_url,
+                  source: "external",
+                },
+              };
+            }
+          }
+        }
+
+        return null;
+      })
+    ).then(results => {
+      setAppliedResolvedJobs(prev => {
+        const next = new Map(prev);
+        results.forEach(r => {
+          if (r.status === "fulfilled" && r.value) next.set(r.value.itemId, r.value.job);
+        });
+        return next;
+      });
+    });
+  }, [feedTab, appliedHistoryItems]);
 
   const loadSavedJobs = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -592,6 +694,41 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     setApifyStatus("idle");
     setApifyResultCount(0);
 
+    // Synchronous cache hit → set jobs with zero loading state
+    if (!append && p === 1) {
+      const cached = getPrefetchedSync(query);
+      if (cached?.jobs?.length) {
+        const cappedJobs = sortJobList(cached.jobs, sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
+        // Skip setState if jobs haven't changed — prevents redundant re-render
+        setJobs(prev => (prev.length === cappedJobs.length && prev[0]?.id === cappedJobs[0]?.id) ? prev : cappedJobs);
+        setTotalResults(Math.min(cached.totalResults, JOB_SEARCH_MAX_RESULTS));
+        setHasNextPage(cached.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
+        setPage(1);
+        setIsRefreshing(false);
+        return;
+      }
+      // In-flight prefetch → wait for it (spinner only shown while fetch is still running)
+      const inflight = waitForPrefetch(query);
+      if (inflight) {
+        setIsRefreshing(true);
+        try {
+          const result = await inflight;
+          if (result?.jobs?.length) {
+            const cappedJobs = sortJobList(result.jobs, sortBy).slice(0, JOB_SEARCH_MAX_RESULTS);
+            setJobs(cappedJobs);
+            setTotalResults(Math.min(result.totalResults, JOB_SEARCH_MAX_RESULTS));
+            setHasNextPage(result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
+            setPage(1);
+            return;
+          }
+        } catch {
+          // fall through to normal fetch
+        } finally {
+          setIsRefreshing(false);
+        }
+      }
+    }
+
     if (append || p > 1) {
       setIsLoadingMore(true);
     } else {
@@ -614,6 +751,23 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         const cappedJobs = nextJobs.slice(0, JOB_SEARCH_MAX_RESULTS);
         setJobs(cappedJobs);
         setHasNextPage(result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS);
+        // Save to page-level cache so back-navigation is instant
+        _jobsPageCache = {
+          jobs: cappedJobs,
+          totalResults: cappedTotalResults,
+          hasNextPage: result.hasNext && cappedJobs.length < JOB_SEARCH_MAX_RESULTS,
+          searchQuery: query,
+          filters: currentFilters,
+          page: p,
+          discoveryCountryOptions: [],
+          filterCountryOptions: [],
+          cityMap: {},
+          departmentOptions: [],
+          employmentOptions: [],
+          workplaceOptions: [],
+          browseCards: [],
+          ts: Date.now(),
+        };
       }
       setTotalResults(cappedTotalResults);
       setPage(p);
@@ -649,6 +803,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       setIsRefreshing(false);
       setIsLoadingMore(false);
       setIsLoadingFilterOptions(false);
+      setIsInitialLoad(false);
     }
   }, [filters, isLandingMode, sortBy, startApifySearch, serpApiEnabled]);
 
@@ -664,11 +819,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     };
     setSearchQuery("");
     setFilters(cleared);
-    setShowAutoApplyOnly(false);
     navigateToJobs("", cleared);
   };
 
-  const toggleAutoApplyOnly = () => setShowAutoApplyOnly(prev => !prev);
 
 
 
@@ -684,11 +837,26 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const displayJobs = showAutoApplyOnly ? autoApplyJobs : [...toShow];
   const isApifySearching = apifyStatus === "pending" || apifyStatus === "processing";
 
+  // Client-side pagination — 10 jobs per page
+  const JOBS_PER_PAGE = 10;
+  const [displayPage, setDisplayPage] = useState(1);
+  const totalDisplayPages = Math.max(1, Math.ceil(displayJobs.length / JOBS_PER_PAGE));
+  const pagedJobs = displayJobs.slice((displayPage - 1) * JOBS_PER_PAGE, displayPage * JOBS_PER_PAGE);
+
+  // Reset to page 1 whenever the jobs list changes (new search/filter)
+  const prevJobsLenRef = useRef(0);
+  if (prevJobsLenRef.current !== displayJobs.length) {
+    prevJobsLenRef.current = displayJobs.length;
+    if (displayPage !== 1) setDisplayPage(1);
+  }
+
   useEffect(() => {
     let mounted = true;
-
-    const timer = setTimeout(async () => {
-      setIsLoadingFilterOptions(true);
+    (async () => {
+      // Only show spinner if we have nothing cached for this query
+      if (!hasCached('/api/search/filters/', { search: searchQuery, ...filters })) {
+        setIsLoadingFilterOptions(true);
+      }
       try {
         const options = await fetchJobFilterOptions(searchQuery, filters);
         if (!mounted) return;
@@ -698,21 +866,27 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         setFilterCountryOptions(options.countries);
         setCityOptions(options.cities);
         setBrowseCards(options.defaultFilters);
+        // Persist to page cache so back-navigation skips loading
+        if (_jobsPageCache) {
+          _jobsPageCache.departmentOptions = options.departments;
+          _jobsPageCache.employmentOptions = options.employmentTypes;
+          _jobsPageCache.workplaceOptions = options.workplaceTypes;
+          _jobsPageCache.filterCountryOptions = options.countries;
+          _jobsPageCache.browseCards = options.defaultFilters;
+        }
       } finally {
         if (mounted) setIsLoadingFilterOptions(false);
       }
-    }, 500);
-
-    return () => { 
-      mounted = false; 
-      clearTimeout(timer);
-    };
+    })();
+    return () => { mounted = false; };
   }, [searchQuery, filters.country, filters.department, filters.employment_type, filters.workplace_type]);
 
   useEffect(() => {
     let mounted = true;
     const run = async () => {
-      setIsLoadingLocations(true);
+      if (!hasCached('/api/search/locations/') || !hasCached('/api/search/countries/')) {
+        setIsLoadingLocations(true);
+      }
       try {
         const [options, fullCountries] = await Promise.all([
           fetchJobLocationOptions(),
@@ -724,19 +898,23 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           .map(c => c.name)
           .filter(name => !popularCountries.includes(name));
         
-        // Discovery: Show EVERYTHING
-        setDiscoveryCountryOptions(Array.from(new Set([...popularCountries, ...others])));
-        
-        // Filter Sidebar: ONLY show countries that have active jobs in the DB
-        // (This is now redundant since useEffect above handles it, but keeping it for initial load)
+        const allCountries = Array.from(new Set([...popularCountries, ...others]));
+        setDiscoveryCountryOptions(allCountries);
+
         if (filterCountryOptions.length === 0) {
           const dbCountries = fullCountries
             .filter(c => c.has_jobs || c.job_count > 0)
             .map(c => ({ value: c.name, label: c.name, count: c.job_count }));
           setFilterCountryOptions(dbCountries);
+          if (_jobsPageCache) _jobsPageCache.filterCountryOptions = dbCountries;
         }
 
         setCityMap(options.cityMap);
+        // Persist location data to page cache
+        if (_jobsPageCache) {
+          _jobsPageCache.discoveryCountryOptions = allCountries;
+          _jobsPageCache.cityMap = options.cityMap;
+        }
       } finally {
         if (mounted) setIsLoadingLocations(false);
       }
@@ -794,6 +972,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const searchParam = params.get("search") || "";
     const initial = {
       title: params.get("title") || "",
       department: params.get("department") || "",
@@ -804,14 +983,24 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       city: params.get("city") || "",
       serpapi: params.get("serpapi") || "",
     };
-    setSearchQuery(params.get("search") || "");
-    setFilters(initial);
+
+    // Only call setters when values actually change to avoid spurious re-renders
+    setSearchQuery(prev => prev !== searchParam ? searchParam : prev);
+    setFilters(prev => JSON.stringify(prev) !== JSON.stringify(initial) ? initial : prev);
     const serpFromUrl = params.get("serpapi") === "true";
     setSerpApiEnabled(serpFromUrl);
 
     const isPrimary = params.get("primary_search") === "true";
     if (!isLandingMode) {
-      fetchJobs(params.get("search") || "", { ...initial, primary_search: isPrimary ? "true" : "false", serpapi: serpFromUrl ? "true" : "false" }, 1, false);
+      // Skip if redirect is about to change the URL anyway
+      const aboutToRedirect = !params.toString() && !!notificationService.getPrefs().targetRole;
+      // Skip only if cache has fresh data for the exact same query AND filters
+      const pageCacheHit = _isJobsCacheFresh()
+        && _jobsPageCache?.searchQuery === searchParam
+        && JSON.stringify(_jobsPageCache?.filters) === JSON.stringify(initial);
+      if (!aboutToRedirect && !pageCacheHit) {
+        fetchJobs(searchParam, { ...initial, primary_search: isPrimary ? "true" : "false", serpapi: serpFromUrl ? "true" : "false" }, 1, false);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLandingMode, location.search]);
@@ -1004,9 +1193,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           <div className="flex items-center gap-2 mb-0.5">
             <button type="button" className="text-left text-lg font-black text-white tracking-tight hover:text-teal-400 transition-colors leading-snug" onClick={() => openJobDetails(job)}>{job.title}</button>
             {isApplied && (
-              <div className="flex items-center gap-1 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
-                <CheckCircle2 className="h-3 w-3" />
-                Applied
+              <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                isQueued
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                  : "bg-teal-500/10 text-teal-400 border border-teal-500/20"
+              }`}>
+                {isQueued ? (
+                  <>
+                    <Clock className="h-3 w-3 animate-pulse" />
+                    Queued
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    Applied
+                  </>
+                )}
               </div>
             )}
             {isQueued && !isApplied && (
@@ -1028,9 +1230,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
             <p className="text-sm font-bold text-slate-400">{job.company}</p>
           )}
           <div className="mt-2 flex flex-wrap gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-            <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-600" />{job.location}</div>
-            <div className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-slate-600" />{job.salary}</div>
-            <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-slate-600" />{job.posted}</div>
+            {job.location && <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-600" />{job.location}</div>}
+            {job.salary && <div className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-slate-600" />{job.salary}</div>}
+            {job.posted && <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-slate-600" />{job.posted}</div>}
           </div>
           {isAuthenticated && job.match_reason ? (
             <p className="mt-1.5 text-[13px] font-medium text-slate-500 leading-relaxed">{job.match_reason}</p>
@@ -1072,6 +1274,11 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     return [...prev, { id, job_id: id, job_title: job.title, company: job.company, status: "submitted", delivery_method: "bot", job_url: job.apply_url, created_at: new Date().toISOString() }];
                   });
                 }}
+                onDismiss={() => setDismissedJobIds(prev => {
+                  const next = new Set(prev).add(String(job.id));
+                  try { localStorage.setItem("dismissed_bot_jobs", JSON.stringify([...next])); } catch {}
+                  return next;
+                })}
               />
             )}
             <Button variant="outline" size="sm" className="h-10 rounded-xl px-5 font-black uppercase tracking-widest text-[10px] border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white" onClick={() => openJobDetails(job)}>View Details</Button>
@@ -1082,96 +1289,133 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     );
   };
 
-  const renderFilters = () => (
-    <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-5 xl:sticky xl:top-24">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Search Engine</p>
-          <h3 className="mt-1 text-lg font-semibold text-white tracking-tight">Refine Results</h3>
-        </div>
-        <button type="button" onClick={resetFilters} className="text-[10px] font-black text-slate-500 hover:text-teal-400 transition-colors uppercase tracking-[0.15em]">Reset All</button>
-      </div>
+  const getFilteredCityOptions = () => {
+    if (!filters.country) {
+      return cityOptions || [];
+    }
 
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Search Keywords</label>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input
-              value={filters.title || ""}
-              onChange={(e) => setFilters((p) => ({ ...p, title: e.target.value }))}
-              placeholder="Design, Engineering, etc..."
-              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] py-4 pl-11 pr-4 text-sm font-bold text-slate-100 placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 focus:bg-white/10 transition-all"
-            />
+    const countryKey = Object.keys(cityMap).find(
+      (key) => key.toLowerCase() === filters.country!.toLowerCase()
+    );
+
+    if (!countryKey) {
+      return cityOptions || [];
+    }
+
+    const countryCities = cityMap[countryKey] || [];
+
+    const mapped = countryCities.map((cityName) => {
+      const found = (cityOptions || []).find(
+        (co) => co.value.toLowerCase() === cityName.toLowerCase()
+      );
+      return {
+        value: cityName,
+        label: cityName,
+        count: found ? found.count : 0,
+      };
+    });
+
+    return mapped.sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return a.label.localeCompare(b.label);
+    });
+  };
+
+  const renderFilters = () => {
+    const filteredCities = getFilteredCityOptions();
+    
+    return (
+      <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-5 xl:sticky xl:top-24">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Search Engine</p>
+            <h3 className="mt-1 text-lg font-semibold text-white tracking-tight">Refine Results</h3>
           </div>
+          <button type="button" onClick={resetFilters} className="text-[10px] font-black text-slate-500 hover:text-teal-400 transition-colors uppercase tracking-[0.15em]">Reset All</button>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="filter-department" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Department</label>
-          <select
-            id="filter-department"
-            value={filters.department || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
-          >
-            <option value="" className="bg-[#0a0f1e]">All Categories</option>
-            {departmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
-          </select>
-        </div>
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Search Keywords</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                value={filters.title || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, title: e.target.value }))}
+                placeholder="Design, Engineering, etc..."
+                className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] py-4 pl-11 pr-4 text-sm font-bold text-slate-100 placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 focus:bg-white/10 transition-all"
+              />
+            </div>
+          </div>
 
-        <div className="space-y-2">
-          <label htmlFor="filter-employment" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Engagement</label>
-          <select
-            id="filter-employment"
-            value={filters.employment_type || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, employment_type: e.target.value }))}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
-          >
-            <option value="" className="bg-[#0a0f1e]">Any Type</option>
-            {employmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
-          </select>
-        </div>
+          <div className="space-y-2">
+            <label htmlFor="filter-department" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Department</label>
+            <select
+              id="filter-department"
+              value={filters.department || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-[#0a0f1e]">All Categories</option>
+              {departmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
+            </select>
+          </div>
 
-        <div className="space-y-2">
-          <label htmlFor="filter-country" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Country</label>
-          <select
-            id="filter-country"
-            value={filters.country || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))}
-            disabled={isLoadingLocations}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
-          >
-            <option value="" className="bg-[#0a0f1e]">{isLoadingLocations ? "Loading..." : "Everywhere"}</option>
-            {(filterCountryOptions || []).map((country) => (
-              <option key={`country-${country.value}`} value={country.value} className="bg-[#0a0f1e]">
-                {country.label} ({country.count})
+          <div className="space-y-2">
+            <label htmlFor="filter-employment" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Engagement</label>
+            <select
+              id="filter-employment"
+              value={filters.employment_type || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, employment_type: e.target.value }))}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-[#0a0f1e]">Any Type</option>
+              {employmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="filter-country" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Country</label>
+            <select
+              id="filter-country"
+              value={filters.country || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))}
+              disabled={isLoadingLocations}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-[#0a0f1e]">{isLoadingLocations ? "Loading..." : "Everywhere"}</option>
+              {(filterCountryOptions || []).map((country) => (
+                <option key={`country-${country.value}`} value={country.value} className="bg-[#0a0f1e]">
+                  {country.label} ({country.count})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="filter-city" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">City</label>
+            <select
+              id="filter-city"
+              value={filters.city || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, city: e.target.value }))}
+              disabled={isLoadingFilterOptions || filteredCities.length === 0}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <option value="" className="bg-[#0a0f1e]">
+                {isLoadingFilterOptions ? "Loading cities..." : filters.country ? "All Cities" : "All Cities Worldwide"}
               </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="filter-city" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">City</label>
-          <select
-            id="filter-city"
-            value={filters.city || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, city: e.target.value }))}
-            disabled={isLoadingFilterOptions || cityOptions.length === 0}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <option value="" className="bg-[#0a0f1e]">
-              {isLoadingFilterOptions ? "Loading cities..." : filters.country ? "All Cities" : "All Cities Worldwide"}
-            </option>
-            {(cityOptions || []).map((city) => (
-              <option key={`city-${city.value}`} value={city.value} className="bg-[#0a0f1e]">
-                {city.label} ({city.count})
-              </option>
-            ))}
-          </select>
-          <p className="ml-1 text-[11px] font-semibold text-slate-600">
-            {filters.country ? `Showing cities with jobs in ${filters.country}.` : "Choose a country to narrow city counts."}
-          </p>
-        </div>
+              {filteredCities.map((city) => (
+                <option key={`city-${city.value}`} value={city.value} className="bg-[#0a0f1e]">
+                  {city.label} ({city.count})
+                </option>
+              ))}
+            </select>
+            <p className="ml-1 text-[11px] font-semibold text-slate-600">
+              {filters.country ? `Showing cities with jobs in ${filters.country}.` : "Choose a country to narrow city counts."}
+            </p>
+          </div>
 
         <Button
           type="button"
@@ -1183,6 +1427,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       </div>
     </div>
   );
+};
 
   const activeCards = browseCards.length ? browseCards : fallbackBrowseCards;
   const resolvedCards = browseCards.length
@@ -1696,7 +1941,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     AI tools, resume scoring &<br className="hidden sm:block" /> smart matching — all free.
                   </h3>
                   <p className="text-slate-500 text-sm mb-8 max-w-md mx-auto">
-                    Join 50,000+ professionals who found their next role faster with Hozorex.
+                    Join 50,000+ professionals who found their next role faster with CareerAI.
                   </p>
                   <div className="flex flex-wrap justify-center gap-3">
                     <Button
@@ -1797,7 +2042,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       </div>
                     </div>
 
-                    {isAuthenticated && targetRole && searchQuery === targetRole && (
+                    {isAuthenticated && targetRole && searchQuery === targetRole && !filters.title && !filters.department && !filters.country && !filters.city && (
                       <div className="flex items-center justify-between rounded-2xl border border-violet-500/25 bg-violet-500/10 px-4 py-2.5">
                         <div className="flex items-center gap-2.5">
                           <Sparkles className="h-4 w-4 text-violet-400 shrink-0" />
@@ -1825,20 +2070,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                     setAppliedJobIds(prev => new Set(prev).add(jobId));
                   }} />
 
-                  {(isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0 ? (
-                    <div className="space-y-6">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-8 animate-pulse">
-                          <div className="flex gap-6">
-                            <div className="h-14 w-14 rounded-2xl bg-white/[0.04]" />
-                            <div className="flex-1 space-y-4">
-                              <div className="h-4 w-1/3 bg-white/[0.04] rounded" />
-                              <div className="h-3 w-1/4 bg-white/[0.04] rounded" />
-                              <div className="flex gap-2">
-                                <div className="h-6 w-20 rounded-full bg-white/[0.04]" />
-                                <div className="h-6 w-24 rounded-full bg-white/[0.04]" />
+                  {(isInitialLoad || (isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0) ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className={`rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-6 animate-pulse [animation-delay:${i * 80}ms]`}>
+                          <div className="flex gap-4 items-start">
+                            <div className="h-12 w-12 rounded-2xl bg-white/[0.05] shrink-0" />
+                            <div className="flex-1 space-y-3 pt-1">
+                              <div className="h-4 w-2/5 bg-white/[0.05] rounded-lg" />
+                              <div className="h-3 w-1/4 bg-white/[0.04] rounded-lg" />
+                              <div className="flex gap-2 pt-1">
+                                <div className="h-5 w-16 rounded-full bg-white/[0.04]" />
+                                <div className="h-5 w-20 rounded-full bg-white/[0.04]" />
+                                <div className="h-5 w-14 rounded-full bg-white/[0.04]" />
                               </div>
                             </div>
+                            <div className="h-8 w-24 rounded-full bg-white/[0.04] shrink-0" />
                           </div>
                         </div>
                       ))}
@@ -2124,20 +2371,58 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       <Briefcase className="mx-auto mb-4 h-12 w-12 text-slate-600" />
                       <h3 className="text-xl font-semibold text-white">No jobs found</h3>
                       <p className="mt-2 text-sm text-slate-500">
-                        {showAutoApplyOnly ? "No quick-apply jobs match your search. Try disabling the Quick Apply filter." : "Try broadening your search or clearing some filters."}
+                        Try broadening your search or clearing some filters.
                       </p>
-                      {showAutoApplyOnly && (
-                        <Button variant="outline" className="mt-4 rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" onClick={toggleAutoApplyOnly}>
-                          <Zap className="mr-2 h-4 w-4" />Show All Jobs
-                        </Button>
-                      )}
                       <Button variant="outline" className="mt-3 rounded-full border-white/10 bg-white/5 text-slate-300 hover:bg-white/10" onClick={resetFilters}><X className="mr-2 h-4 w-4" />Reset All Filters</Button>
                     </div>
                   )}
 
-                  <div ref={observerTarget} className="flex w-full justify-center py-8">
-                    {hasNextPage ? <div className="flex flex-col items-center gap-3"><div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin text-teal-400" />Loading more opportunities...</div><button onClick={() => fetchJobs(searchQuery, filters, page + 1, true)} className="text-xs font-medium text-teal-400 underline underline-offset-2">Click here if it doesn't load automatically</button></div> : displayJobs.length > 0 ? <div className="text-sm italic text-slate-600">You&apos;ve reached the end of the current results.</div> : null}
-                  </div>
+                  {/* Numbered pagination */}
+                  {displayJobs.length > JOBS_PER_PAGE && (
+                    <div className="flex items-center justify-center gap-1.5 py-6">
+                      <button
+                        type="button"
+                        disabled={displayPage === 1}
+                        onClick={() => { setDisplayPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        ‹ Prev
+                      </button>
+                      {Array.from({ length: Math.min(totalDisplayPages, 7) }, (_, i) => {
+                        let p: number;
+                        if (totalDisplayPages <= 7) { p = i + 1; }
+                        else if (i === 0) { p = 1; }
+                        else if (i === 6) { p = totalDisplayPages; }
+                        else if (displayPage <= 4) { p = i + 1; }
+                        else if (displayPage >= totalDisplayPages - 3) { p = totalDisplayPages - 6 + i; }
+                        else { p = displayPage - 3 + i; }
+                        const isEllipsis = totalDisplayPages > 7 && ((i === 1 && p > 2) || (i === 5 && p < totalDisplayPages - 1));
+                        if (isEllipsis) return <span key={i} className="text-slate-600 px-1">…</span>;
+                        return (
+                          <button
+                            type="button"
+                            key={p}
+                            onClick={() => { setDisplayPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                            className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${displayPage === p ? 'bg-teal-500 text-white' : 'border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                          >
+                            {p}
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        disabled={displayPage === totalDisplayPages}
+                        onClick={() => {
+                          setDisplayPage(p => Math.min(totalDisplayPages, p + 1));
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next ›
+                      </button>
+                    </div>
+                  )}
+                  <div ref={observerTarget} />
                 </div>
                 <aside className="hidden xl:block">
                   {renderCuratedShortcutBox()}
@@ -2158,26 +2443,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           setAppliedJobIds(prev => new Set(prev).add(id));
           setAppliedHistoryItems(prev => prev.some(a => String(a.job_id) === id) ? prev : prev);
         }}
-      />
-      <AutoApplyModal job={autoApplyJob ? {
-        id: String(autoApplyJob.id),
-        title: autoApplyJob.title,
-        company: autoApplyJob.company,
-        isDemoJob: autoApplyJob.isDemoJob,
-        source: autoApplyJob.source,
-        quick_apply_enabled: autoApplyJob.quick_apply_enabled,
-        quick_apply_questions: autoApplyJob.quick_apply_questions,
-      } : null}
-      open={autoApplyOpen}
-      onClose={() => {
-        setAutoApplyOpen(false);
-        setAutoApplyJob(null);
-        loadAppliedHistory(); // Check for new applications
-      }}
-      onSuccess={(jobId) => {
-        setAppliedJobIds(prev => new Set(prev).add(String(jobId)));
-        setQueueKey(prev => prev + 1); // Refresh queue bar
-      }}
       />
 
       {/* Multi-apply progress panel */}

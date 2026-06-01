@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useResume } from "@/hooks/useResume";
-import { autoApplyService } from "@/services/autoApplyService";
+import api from "@/services/api";
 import { activityService } from "@/services/activityService";
 import { useAuth } from "@/context/AuthContext";
 
@@ -98,8 +98,8 @@ export default function GettingStartedPopup() {
     // Fetch auto-tracked data
     useEffect(() => {
         if (!isAuthenticated) return;
-        autoApplyService.getHistory()
-            .then(data => setAppCount((data as any)?.applications?.length ?? 0))
+        api.get('/api/bot/history/')
+            .then((res: any) => setAppCount(res.data?.applications?.length ?? 0))
             .catch(() => {});
         activityService.getUserHistory()
             .then(logs => setInterviewDone(logs.some(l => l.activity_type === "INTERVIEW")))

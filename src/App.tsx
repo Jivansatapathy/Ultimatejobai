@@ -94,9 +94,9 @@ function AppChecklist() {
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
-    import("./services/autoApplyService").then(({ autoApplyService }) =>
-      autoApplyService.getHistory()
-        .then((data: any) => setAppCount(data?.applications?.length ?? 0))
+    import("./services/api").then(({ default: api }) =>
+      api.get('/api/bot/history/')
+        .then((res: any) => setAppCount(res.data?.applications?.length ?? 0))
         .catch(() => {})
     );
     import("./services/activityService").then(({ activityService }) =>

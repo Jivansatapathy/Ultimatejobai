@@ -5,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { activityService } from "@/services/activityService";
-import { AutoApplyModal } from "@/components/jobs/AutoApplyModal";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
 import { CareerResume, careerService } from "@/services/careerService";
 import { useJobReadiness } from "@/hooks/useJobReadiness";
@@ -28,7 +27,6 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
   const [isIframeLoading, setIsIframeLoading] = useState(true);
   const [leverDetails, setLeverDetails] = useState<LeverJobDetails | null>(null);
   const [isLoadingLever, setIsLoadingLever] = useState(false);
-  const [autoApplyOpen, setAutoApplyOpen] = useState(false);
   const [resumes, setResumes] = useState<CareerResume[]>([]);
   const [resumesLoading, setResumesLoading] = useState(false);
   const [selectedResumeId, setSelectedResumeId] = useState("");
@@ -150,60 +148,6 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
                                       job.apply_url?.includes('lever.co') || 
                                       job.apply_url?.includes('greenhouse.io');
 
-                  if (job.source === "employer") {
-                    return (
-                      <div className="flex flex-col items-center justify-center h-full p-12 bg-secondary/5 space-y-6">
-                        <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center">
-                          <Send className="h-10 w-10 text-accent" />
-                        </div>
-                        <div className="text-center space-y-2 max-w-lg">
-                          <h3 className="text-xl font-bold">Employer quick apply</h3>
-                          <p className="text-muted-foreground">
-                            Apply directly inside JOBAI. This employer can either accept the normal resume flow or ask for additional details before submission.
-                          </p>
-                          <div className="rounded-2xl border border-border bg-background p-4 text-left">
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Earlier uploaded resumes</p>
-                            {resumesLoading ? (
-                              <p className="mt-3 text-sm text-muted-foreground">Loading your saved resumes...</p>
-                            ) : resumes.length ? (
-                              <label className="mt-3 block">
-                                <span className="mb-2 block text-sm font-medium text-foreground">Select a resume before continuing</span>
-                                <select
-                                  value={selectedResumeId}
-                                  onChange={(event) => setSelectedResumeId(event.target.value)}
-                                  className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                                >
-                                  {resumes.map((resume) => (
-                                    <option key={resume.id} value={resume.id}>
-                                      {getResumeLabel(resume)}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                            ) : (
-                              <p className="mt-3 text-sm text-muted-foreground">No uploaded resumes found yet. You can upload one in the next step.</p>
-                            )}
-                          </div>
-                          {job.quick_apply_questions?.length ? (
-                            <div className="rounded-2xl border border-border bg-background p-4 text-left">
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Requested details</p>
-                              <ul className="mt-3 space-y-2 text-sm text-foreground">
-                                {job.quick_apply_questions.map((question) => (
-                                  <li key={question}>{question}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
-                        </div>
-                        <Button
-                          className="w-full max-w-xs h-12 text-lg font-bold gap-2 shadow-xl hover:shadow-accent/20 transition-all"
-                          onClick={() => { if (checkReady()) setAutoApplyOpen(true); }}
-                        >
-                          Continue with Quick Apply
-                        </Button>
-                      </div>
-                    );
-                  }
 
                   if (!job.apply_url || job.apply_url === '#') {
                     return (
@@ -325,21 +269,6 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
           </div>
         </ScrollArea>
       </SheetContent>
-      <AutoApplyModal
-        job={{
-          id: String(job.id),
-          title: job.title,
-          company: job.company,
-          isDemoJob: job.isDemoJob,
-          source: job.source,
-          quick_apply_enabled: job.quick_apply_enabled,
-          quick_apply_questions: job.quick_apply_questions,
-        }}
-        open={autoApplyOpen}
-        onClose={() => setAutoApplyOpen(false)}
-        onSuccess={() => onOpenChange(false)} // Close the sheet on success
-        initialSelectedResumeId={selectedResumeId}
-      />
     </Sheet>
   );
 }

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
 
 type BotStatus =
+  | "queued"
   | "pending"
   | "opening"
   | "filling"
@@ -29,19 +30,20 @@ interface BotMultiApplyPanelProps {
 }
 
 function getWsUrl(taskId: string): string {
-  const base = import.meta.env.VITE_WS_BASE_URL as string | undefined;
-  if (base) return `${base}/ws/bot/${taskId}/`;
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  if (isLocal) return `ws://localhost:8000/ws/bot/${taskId}/`;
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}/ws/bot/${taskId}/`;
 }
 
 const STATUS_LABELS: Record<BotStatus, string> = {
-  pending: "Waiting…",
+  queued: "Queued…",
+  pending: "Starting…",
   opening: "Opening page…",
   filling: "Filling form…",
   solving_captcha: "Solving CAPTCHA…",
-  preview_ready: "Needs review",
-  confirmed: "Confirming…",
+  preview_ready: "Applying…",
+  confirmed: "Submitting…",
   submitted: "Submitted ✓",
   cancelled: "Cancelled",
   failed: "Failed",
@@ -143,6 +145,8 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
             Bot Apply — {doneCount}/{tasks.length} submitted
           </span>
           <button
+            type="button"
+            aria-label={expanded ? "Collapse" : "Expand"}
             onClick={() => setExpanded((e) => !e)}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -150,6 +154,8 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
           </button>
           {allDone && (
             <button
+              type="button"
+              aria-label="Close"
               onClick={onClose}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -175,6 +181,8 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
                       <XCircle className="h-4 w-4 text-slate-400 shrink-0" />
                     ) : t.status === "failed" ? (
                       <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                    ) : t.status === "queued" ? (
+                      <Clock className="h-4 w-4 text-amber-400 shrink-0" />
                     ) : (
                       <Loader2 className="h-4 w-4 animate-spin text-teal-400 shrink-0" />
                     )}

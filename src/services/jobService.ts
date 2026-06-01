@@ -24,6 +24,25 @@ export const fetchLeverJobDetails = async (
     }
 };
 
+export interface GreenhouseJobDetails {
+    title: string;
+    location: { name: string };
+}
+
+export const fetchGreenhouseJobDetails = async (
+    boardToken: string,
+    jobId: string
+): Promise<GreenhouseJobDetails | null> => {
+    try {
+        const response = await axios.get(
+            `https://boards-api.greenhouse.io/v1/boards/${boardToken}/jobs/${jobId}`
+        );
+        return response.data;
+    } catch {
+        return null;
+    }
+};
+
 export const fetchJobById = async (jobId: string): Promise<Job | null> => {
     try {
         const response = await api.get(`/api/search/${jobId}/`);
@@ -502,6 +521,7 @@ export const searchJobs = async (
             params: {
                 search: query,
                 page,
+                page_size: JOB_SEARCH_MAX_RESULTS,
                 primary_search: primary_search === 'true',
                 ...otherFilters,
             },

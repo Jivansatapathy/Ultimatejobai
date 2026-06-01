@@ -27,6 +27,7 @@ interface ApplyBotButtonProps {
   alreadyQueued?: boolean;
   onQueued?: (jobId: string) => void;
   onApplied?: (jobId: string) => void;
+  onDismiss?: () => void;
 }
 
 function getWsUrl(taskId: string): string {
@@ -63,18 +64,35 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
   const [failReason, setFailReason] = useState("");
 
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const optimisticTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const taskIdRef = useRef<string>("");
 
   const closeWs = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
       wsRef.current.close();
       wsRef.current = null;
     }
   }, []);
 
-  useEffect(() => () => closeWs(), [closeWs]);
+  useEffect(() => () => {
+    closeWs();
+    if (optimisticTimerRef.current) clearTimeout(optimisticTimerRef.current);
+  }, [closeWs]);
 
   const connectWs = useCallback((id: string) => {
+    taskIdRef.current = id;
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+
     const token = localStorage.getItem("access_token");
     const wsUrl = token ? `${getWsUrl(id)}?token=${encodeURIComponent(token)}` : getWsUrl(id);
     const ws = new WebSocket(wsUrl);
@@ -84,8 +102,6 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
       try {
         const data = JSON.parse(event.data as string) as {
           status: BotStatus;
-          filled_fields?: Record<string, string>;
-          screenshot_base64?: string;
           reason?: string;
         };
 
@@ -106,6 +122,11 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
 
         if (data.status === "submitted") {
           closeWs();
+          if (optimisticTimerRef.current) {
+            clearTimeout(optimisticTimerRef.current);
+            optimisticTimerRef.current = null;
+          }
+          setOptimisticApplied(true);
           if (jobId) onApplied?.(jobId);
           toast.success("Bot Apply submitted the application.");
         }
@@ -118,13 +139,10 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
       }
     };
 
-    ws.onerror = () => {
-      setStatus("failed");
-      setFailReason("WebSocket connection error");
-      closeWs();
-    };
+    ws.onerror = () => {};
 
     ws.onclose = () => {
+      wsRef.current = null;
       setStatus((prev) => {
         if (prev !== "submitted" && prev !== "cancelled" && prev !== "failed" && prev !== "idle") {
           api.get<{ status: string; error_reason: string }>(`/api/bot/status/${id}/`)
@@ -146,10 +164,10 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
         return prev;
       });
     };
-  }, [closeWs, jobId, onApplied]);
+  }, [closeWs, jobId, onApplied, optimisticApplied]);
 
-  const handleStart = async () => {
-    if (alreadyApplied) return;
+  const handleButtonClick = async () => {
+    if (alreadyApplied || optimisticApplied) return;
     if (status !== "idle" && status !== "submitted" && status !== "cancelled" && status !== "failed") return;
 
     setStatus("starting");
@@ -162,7 +180,9 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
         job_id: jobId ?? "",
         job_title: jobTitle,
         job_company: company,
+        auto_submit: true,
       });
+
       const id = res.data.task_id;
       if (jobId && res.data.status === "submitted") {
         setStatus("submitted");
@@ -182,12 +202,12 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
   };
 
   const isRunning =
+    status === "pending" ||
     status === "starting" ||
     status === "queued" ||
     status === "opening" ||
     status === "filling" ||
     status === "solving_captcha" ||
-    status === "preview_ready" ||
     status === "confirmed";
 
   const isApplied = alreadyApplied || status === "submitted";
@@ -216,7 +236,7 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
       <Button
         variant="outline"
         className="w-full max-w-xs h-11 gap-2 border-accent/40 hover:border-accent hover:bg-accent/5 transition-all"
-        onClick={handleStart}
+        onClick={handleButtonClick}
         disabled={isRunning}
       >
         {isRunning ? (
@@ -224,7 +244,7 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
         ) : (
           <Bot className="h-4 w-4" />
         )}
-        {isRunning ? "Bot running…" : "Apply with Bot"}
+        {isRunning ? "Applying…" : "Apply with Bot"}
       </Button>
 
       {status !== "idle" && (

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BotPreviewModal } from "@/components/jobs/BotPreviewModal";
 import { Bot, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import api from "@/services/api";
 import { API_BASE_URL } from "@/config";
+import { toast } from "sonner";
 
 type BotStatus =
   | "idle"
+  | "queued"
   | "starting"
   | "opening"
   | "filling"
@@ -23,6 +24,8 @@ interface ApplyBotButtonProps {
   company: string;
   jobId?: string;
   alreadyApplied?: boolean;
+  alreadyQueued?: boolean;
+  onQueued?: (jobId: string) => void;
   onApplied?: (jobId: string) => void;
 }
 
@@ -30,22 +33,20 @@ function getWsUrl(taskId: string): string {
   const base = import.meta.env.VITE_WS_BASE_URL as string | undefined;
   if (base) return `${base}/ws/bot/${taskId}/`;
 
+  // If API_BASE_URL is a full URL (e.g. http://35.226.234.130/), derive ws from it
   if (API_BASE_URL && (API_BASE_URL.startsWith("http://") || API_BASE_URL.startsWith("https://"))) {
-    const wsBase = API_BASE_URL.replace(/^http/, "ws");
+    const wsBase = API_BASE_URL.replace(/\/$/, "").replace(/^http/, "ws");
     return `${wsBase}/ws/bot/${taskId}/`;
   }
 
-  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  if (isLocal) {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return `${protocol}//${window.location.host}/ws/bot/${taskId}/`;
-  } else {
-    return `wss://jobai-production-7672.up.railway.app/ws/bot/${taskId}/`;
-  }
+  // Fallback: derive WebSocket URL from the current page's host (works for local proxy)
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.host}/ws/bot/${taskId}/`;
 }
 
 const STATUS_LABELS: Record<BotStatus, string> = {
   idle: "",
+  queued: "Queued for Bot Apply",
   starting: "Starting bot…",
   opening: "Opening job page…",
   filling: "Filling your details…",
@@ -57,13 +58,9 @@ const STATUS_LABELS: Record<BotStatus, string> = {
   failed: "Bot failed",
 };
 
-export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplied, onApplied }: ApplyBotButtonProps) {
+export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplied, alreadyQueued, onQueued, onApplied }: ApplyBotButtonProps) {
   const [status, setStatus] = useState<BotStatus>("idle");
   const [failReason, setFailReason] = useState("");
-  const [taskId, setTaskId] = useState("");
-  const [filledFields, setFilledFields] = useState<Record<string, string>>({});
-  const [screenshot, setScreenshot] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -95,25 +92,25 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
         setStatus(data.status);
 
         if (data.status === "preview_ready") {
-          setFilledFields(data.filled_fields ?? {});
-          setScreenshot(data.screenshot_base64 ?? "");
-          setModalOpen(true);
+          setStatus("confirmed");
+          api.post("/api/bot/confirm/", { task_id: id, action: "confirm" }).catch(() => {
+            setStatus("failed");
+            setFailReason("Could not submit the prepared application.");
+          });
         }
 
         if (data.status === "failed") {
           setFailReason(data.reason ?? "Unknown error");
-          setModalOpen(false);
           closeWs();
         }
 
         if (data.status === "submitted") {
-          setModalOpen(false);
           closeWs();
           if (jobId) onApplied?.(jobId);
+          toast.success("Bot Apply submitted the application.");
         }
 
         if (data.status === "cancelled") {
-          setModalOpen(false);
           closeWs();
         }
       } catch {
@@ -132,10 +129,19 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
         if (prev !== "submitted" && prev !== "cancelled" && prev !== "failed" && prev !== "idle") {
           api.get<{ status: string; error_reason: string }>(`/api/bot/status/${id}/`)
             .then(r => {
+              if (r.data.status === "pending") {
+                setStatus("queued");
+                return;
+              }
+              if (r.data.status === "submitted" && jobId) {
+                setStatus("submitted");
+                onApplied?.(jobId);
+                return;
+              }
               if (r.data.error_reason) setFailReason(r.data.error_reason);
             })
             .catch(() => {});
-          return "failed";
+          return prev === "queued" || prev === "starting" ? "queued" : "failed";
         }
         return prev;
       });
@@ -148,51 +154,36 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
 
     setStatus("starting");
     setFailReason("");
-    setTaskId("");
-    setFilledFields({});
-    setScreenshot("");
-    setModalOpen(false);
     closeWs();
 
     try {
-      const res = await api.post<{ task_id: string }>("/api/bot/apply/", {
+      const res = await api.post<{ task_id: string; status?: BotStatus }>("/api/bot/apply/", {
         job_url: jobUrl,
         job_id: jobId ?? "",
         job_title: jobTitle,
         job_company: company,
       });
       const id = res.data.task_id;
-      setTaskId(id);
+      if (jobId && res.data.status === "submitted") {
+        setStatus("submitted");
+        onApplied?.(jobId);
+        toast.success("Bot Apply already submitted this job.");
+        return;
+      }
+      setStatus("queued");
+      if (jobId) onQueued?.(jobId);
+      toast.success("Moved to Queued. Bot Apply will handle it in the background.");
       connectWs(id);
     } catch {
       setStatus("failed");
       setFailReason("Could not start bot. Please try again.");
+      toast.error("Could not queue Bot Apply. Please try again.");
     }
-  };
-
-  const handleConfirm = async () => {
-    setStatus("confirmed");
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "confirm" });
-    } catch {
-      setStatus("failed");
-      setFailReason("Could not confirm. Please try again.");
-    }
-  };
-
-  const handleCancel = async () => {
-    setModalOpen(false);
-    setStatus("cancelled");
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
-    } catch {
-      // cancel is best-effort
-    }
-    closeWs();
   };
 
   const isRunning =
     status === "starting" ||
+    status === "queued" ||
     status === "opening" ||
     status === "filling" ||
     status === "solving_captcha" ||
@@ -200,12 +191,22 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
     status === "confirmed";
 
   const isApplied = alreadyApplied || status === "submitted";
+  const isQueued = alreadyQueued || (status !== "idle" && status !== "submitted" && status !== "cancelled" && status !== "failed");
 
   if (isApplied) {
     return (
       <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium py-2">
         <CheckCircle2 className="h-4 w-4 shrink-0" />
         Applied via Bot
+      </div>
+    );
+  }
+
+  if (isQueued && (status === "idle" || status === "queued")) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-amber-500 font-medium py-2">
+        <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+        Queued for Bot Apply
       </div>
     );
   }
@@ -250,17 +251,6 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, alreadyApplie
           </span>
         </div>
       )}
-
-      <BotPreviewModal
-        isOpen={modalOpen}
-        taskId={taskId}
-        jobTitle={jobTitle}
-        company={company}
-        filledFields={filledFields}
-        screenshotBase64={screenshot}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
     </div>
   );
 }

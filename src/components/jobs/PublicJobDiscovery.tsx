@@ -320,8 +320,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   }, [isSerpApiLoadingMore, serpApiHasMore, serpApiJobs.length, searchQuery, filters, serpApiStart]);
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [queuedJobIds, setQueuedJobIds] = useState<Set<string>>(new Set());
   const [appliedHistoryItems, setAppliedHistoryItems] = useState<import("@/services/autoApplyService").ApplicationHistoryItem[]>([]);
-  const [feedTab, setFeedTab] = useState<"discover" | "applied">("discover");
+  const [feedTab, setFeedTab] = useState<"all" | "queued" | "applied">("all");
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
   const apifyPollTimerRef = useRef<number | null>(null);
   const activeApifyDocIdRef = useRef<string | null>(null);
@@ -335,21 +336,24 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
         autoApplyService.getBotHistory(),
       ]);
       const ids = new Set<string>();
+      const queuedIds = new Set<string>();
       const items: import("@/services/autoApplyService").ApplicationHistoryItem[] = [];
       if (emailData.status === "fulfilled" && emailData.value?.applications) {
         emailData.value.applications.forEach(a => {
-          // always show in history; only add to filter set when we have a real job_id
           items.push(a);
-          if (a.job_id) ids.add(String(a.job_id));
+          if (a.job_id && (a.status === "sent" || a.status === "submitted")) ids.add(String(a.job_id));
+          if (a.job_id && a.status === "queued") queuedIds.add(String(a.job_id));
         });
       }
       if (botData.status === "fulfilled" && botData.value?.applications) {
         botData.value.applications.forEach(a => {
           items.push(a);
-          if (a.job_id) ids.add(String(a.job_id));
+          if (a.job_id && (a.status === "sent" || a.status === "submitted")) ids.add(String(a.job_id));
+          if (a.job_id && a.status === "queued") queuedIds.add(String(a.job_id));
         });
       }
       setAppliedJobIds(ids);
+      setQueuedJobIds(queuedIds);
       setAppliedHistoryItems(items);
     } catch {
       // non-fatal
@@ -675,7 +679,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   });
 
   // Apply All logic: Only pick jobs that are NOT applied yet
-  const autoApplyJobs = toShow.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id)));
+  const autoApplyJobs = toShow.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id)) && !queuedJobIds.has(String(j.id)));
   const regularJobs = toShow.filter(j => !j.hasEmail);
   const displayJobs = showAutoApplyOnly ? autoApplyJobs : [...toShow];
   const isApifySearching = apifyStatus === "pending" || apifyStatus === "processing";
@@ -897,7 +901,33 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
     try {
       const res = await api.post<{ task_ids: string[] }>("/api/bot/apply/bulk/", {
-        job_urls: botJobs.map((j) => j.apply_url),
+        jobs: botJobs.map((j) => ({
+          job_url: j.apply_url,
+          job_id: String(j.id),
+          job_title: j.title,
+          job_company: j.company,
+        })),
+      });
+      setQueuedJobIds(prev => {
+        const next = new Set(prev);
+        botJobs.forEach((job) => next.add(String(job.id)));
+        return next;
+      });
+      setAppliedHistoryItems(prev => {
+        const existing = new Set(prev.map((item) => String(item.job_id)));
+        const queuedItems = botJobs
+          .filter((job) => !existing.has(String(job.id)))
+          .map((job) => ({
+            id: String(job.id),
+            job_id: String(job.id),
+            job_title: job.title,
+            company: job.company,
+            status: "queued" as const,
+            delivery_method: "bot" as const,
+            job_url: job.apply_url,
+            created_at: new Date().toISOString(),
+          }));
+        return [...queuedItems, ...prev];
       });
       setBotMultiTasks(
         res.data.task_ids.map((taskId, i) => ({
@@ -943,6 +973,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const renderJobCard = (job: Job, index: number) => {
     const isApplied = appliedJobIds.has(String(job.id));
+    const isQueued = queuedJobIds.has(String(job.id));
     const isSaved = savedJobs.includes(job.id);
     const isSelectable = bulkSelectMode && job.apply_url && job.apply_url !== '#' && job.source !== 'employer';
     const isSelected = selectedJobIds.has(String(job.id));
@@ -954,7 +985,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.03 * (index % 10) }}
       onClick={isSelectable ? () => toggleJobSelection(String(job.id)) : undefined}
-      className={`group relative rounded-[28px] border bg-white/[0.03] backdrop-blur-md p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] ${isSelectable ? 'cursor-pointer' : ''} ${isSelected ? 'border-teal-500/60 bg-teal-500/[0.07] ring-1 ring-teal-500/30' : job.source === 'employer' ? 'border-teal-500/25 hover:border-teal-500/40' : 'border-white/[0.08] hover:border-white/[0.15]'} ${isApplied && !bulkSelectMode ? 'opacity-60' : ''}`}
+      className={`group relative rounded-[28px] border bg-white/[0.03] backdrop-blur-md p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] ${isSelectable ? 'cursor-pointer' : ''} ${isSelected ? 'border-teal-500/60 bg-teal-500/[0.07] ring-1 ring-teal-500/30' : job.source === 'employer' ? 'border-teal-500/25 hover:border-teal-500/40' : 'border-white/[0.08] hover:border-white/[0.15]'} ${(isApplied || isQueued) && !bulkSelectMode ? 'opacity-60' : ''}`}
     >
       {/* Selection checkbox */}
       {isSelectable && (
@@ -976,6 +1007,12 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
               <div className="flex items-center gap-1 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
                 <CheckCircle2 className="h-3 w-3" />
                 Applied
+              </div>
+            )}
+            {isQueued && !isApplied && (
+              <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 border border-amber-500/20">
+                <Clock className="h-3 w-3" />
+                Queued
               </div>
             )}
             {job.source === 'employer' && (
@@ -1013,10 +1050,25 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                 company={job.company}
                 jobId={String(job.id)}
                 alreadyApplied={appliedJobIds.has(String(job.id))}
-                onApplied={(id) => {
-                  setAppliedJobIds(prev => new Set(prev).add(id));
+                alreadyQueued={queuedJobIds.has(String(job.id))}
+                onQueued={(id) => {
+                  setQueuedJobIds(prev => new Set(prev).add(id));
                   setAppliedHistoryItems(prev => {
                     if (prev.some(a => String(a.job_id) === id)) return prev;
+                    return [{ id, job_id: id, job_title: job.title, company: job.company, status: "queued", delivery_method: "bot", job_url: job.apply_url, created_at: new Date().toISOString() }, ...prev];
+                  });
+                }}
+                onApplied={(id) => {
+                  setQueuedJobIds(prev => {
+                    const next = new Set(prev);
+                    next.delete(id);
+                    return next;
+                  });
+                  setAppliedJobIds(prev => new Set(prev).add(id));
+                  setAppliedHistoryItems(prev => {
+                    if (prev.some(a => String(a.job_id) === id)) {
+                      return prev.map((item) => String(item.job_id) === id ? { ...item, status: "submitted", sent_at: new Date().toISOString() } : item);
+                    }
                     return [...prev, { id, job_id: id, job_title: job.title, company: job.company, status: "submitted", delivery_method: "bot", job_url: job.apply_url, created_at: new Date().toISOString() }];
                   });
                 }}
@@ -1194,6 +1246,10 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       </div>
     </div>
   );
+
+  const queuedHistoryItems = appliedHistoryItems.filter((item) => item.status === "queued");
+  const submittedHistoryItems = appliedHistoryItems.filter((item) => item.status === "sent" || item.status === "submitted");
+  const trackedJobIds = new Set([...appliedJobIds, ...queuedJobIds]);
 
   return (
     <>
@@ -1760,7 +1816,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   </div>
 
                   {/* Queue bar — always visible above results */}
-                  <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => setAppliedJobIds(prev => new Set(prev).add(jobId))} />
+                  <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => {
+                    setQueuedJobIds(prev => {
+                      const next = new Set(prev);
+                      next.delete(String(jobId));
+                      return next;
+                    });
+                    setAppliedJobIds(prev => new Set(prev).add(jobId));
+                  }} />
 
                   {(isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0 ? (
                     <div className="space-y-6">
@@ -1786,18 +1849,36 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       <div className="pb-3 border-b border-white/[0.08] mb-8 flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={() => setFeedTab("discover")}
+                          onClick={() => setFeedTab("all")}
                           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${
-                            feedTab === "discover"
+                            feedTab === "all"
                               ? "bg-white/[0.08] text-white border border-white/20"
                               : "text-slate-500 hover:text-slate-300"
                           }`}
                         >
                           <LayoutDashboard className="h-4 w-4" />
-                          Discover
+                          All Jobs
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10">
-                            {serpApiJobs.length + displayJobs.filter(j => !appliedJobIds.has(String(j.id))).length}
+                            {serpApiJobs.length + displayJobs.filter(j => !trackedJobIds.has(String(j.id))).length}
                           </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setFeedTab("queued"); loadAppliedHistory(); }}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${
+                            feedTab === "queued"
+                              ? "bg-amber-500/10 text-amber-300 border border-amber-500/30"
+                              : "text-slate-500 hover:text-amber-400"
+                          }`}
+                        >
+                          <Clock className="h-4 w-4" />
+                          Queued
+                          {queuedJobIds.size > 0 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                              {queuedJobIds.size}
+                            </span>
+                          )}
                         </button>
 
                         <button
@@ -1819,10 +1900,50 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                         </button>
                       </div>
 
+                      {/* Queued tab view */}
+                      {feedTab === "queued" && (
+                        <div className="space-y-4">
+                          {queuedHistoryItems.length === 0 ? (
+                            <div className="text-center py-20 text-slate-500">
+                              <Clock className="h-10 w-10 mx-auto mb-4 opacity-30" />
+                              <p className="font-bold uppercase tracking-widest text-sm">No queued jobs</p>
+                              <p className="text-xs mt-2">Bot Apply jobs will wait here while the backend submits them</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {queuedHistoryItems.map((item) => {
+                                const matchedJob = displayJobs.find(j => String(j.id) === String(item.job_id));
+                                if (matchedJob) return renderJobCard(matchedJob, 0);
+                                return (
+                                  <div key={item.id} className="flex items-start justify-between gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-5">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Clock className="h-4 w-4 text-amber-400 shrink-0" />
+                                        <p className="font-black text-white truncate">{item.job_title || "Queued Application"}</p>
+                                      </div>
+                                      <p className="text-sm text-slate-400 mb-2">{item.company}</p>
+                                      <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                                        Bot Apply queued
+                                      </span>
+                                    </div>
+                                    {item.job_url && (
+                                      <a href={item.job_url} target="_blank" rel="noopener noreferrer"
+                                        className="text-center text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border border-white/10 text-slate-400 hover:border-white/20 hover:text-white transition-all">
+                                        Open URL
+                                      </a>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Applied tab view */}
                       {feedTab === "applied" && (
                         <div className="space-y-4">
-                          {appliedHistoryItems.length === 0 ? (
+                          {submittedHistoryItems.length === 0 ? (
                             <div className="text-center py-20 text-slate-500">
                               <CheckCircle2 className="h-10 w-10 mx-auto mb-4 opacity-30" />
                               <p className="font-bold uppercase tracking-widest text-sm">No applied jobs yet</p>
@@ -1830,7 +1951,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           ) : (
                             <div className="space-y-4">
-                              {appliedHistoryItems.map((item) => {
+                              {submittedHistoryItems.map((item) => {
                                 const matchedJob = displayJobs.find(j => String(j.id) === String(item.job_id));
                                 if (matchedJob) return renderJobCard(matchedJob, 0);
                                 return (
@@ -1882,7 +2003,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       )}
 
                       {/* 1. New Auto-Apply Opportunities Section — ALWAYS TOP */}
-                      {feedTab === "discover" && displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                      {feedTab === "all" && displayJobs.filter(j => j.hasEmail && !trackedJobIds.has(String(j.id))).length > 0 && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-teal-500/[0.06] py-3 rounded-2xl border border-teal-500/20">
                             <div className="flex items-center gap-2">
@@ -1893,9 +2014,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                             <div className="flex items-center gap-3">
                               <span className="text-[10px] font-black uppercase text-slate-500">
-                                {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).length} new
+                                {displayJobs.filter(j => j.hasEmail && !trackedJobIds.has(String(j.id))).length} new
                               </span>
-                              {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !appliedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== '#' && j.source !== 'employer').length > 0 && (
+                              {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !trackedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== '#' && j.source !== 'employer').length > 0 && (
                                 <button
                                   type="button"
                                   onClick={enterBulkSelectMode}
@@ -1908,13 +2029,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           </div>
                           <div className="space-y-6">
-                            {displayJobs.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                            {displayJobs.filter(j => j.hasEmail && !trackedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
                           </div>
                         </div>
                       )}
 
                       {/* 2. SerpAPI Google Jobs Section */}
-                      {feedTab === "discover" && (serpApiJobs.length > 0 || serpApiLoading) && (
+                      {feedTab === "all" && (serpApiJobs.length > 0 || serpApiLoading) && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-gradient-to-r from-orange-500/[0.08] to-amber-500/[0.04] py-3 rounded-2xl border border-orange-500/20">
                             <div className="flex items-center gap-3">
@@ -1966,7 +2087,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       )}
 
                       {/* 3. Other/External Jobs Section */}
-                      {feedTab === "discover" && !showAutoApplyOnly && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length > 0 && (
+                      {feedTab === "all" && !showAutoApplyOnly && displayJobs.filter(j => !j.hasEmail && !trackedJobIds.has(String(j.id))).length > 0 && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between px-4 bg-white/[0.03] py-3 rounded-2xl border border-white/[0.08]">
                             <div className="flex items-center gap-3">
@@ -1977,9 +2098,9 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                             <div className="flex items-center gap-3">
                               <span className="text-[10px] font-black uppercase text-slate-500">
-                                {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).length} Jobs
+                                {displayJobs.filter(j => !j.hasEmail && !trackedJobIds.has(String(j.id))).length} Jobs
                               </span>
-                              {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== "#" && j.source !== "employer").length > 0 && (
+                              {isAuthenticated && !botMultiTasks && !bulkSelectMode && displayJobs.filter(j => !j.hasEmail && !trackedJobIds.has(String(j.id)) && j.apply_url && j.apply_url !== "#" && j.source !== "employer").length > 0 && (
                                 <button
                                   type="button"
                                   onClick={enterBulkSelectMode}
@@ -1992,7 +2113,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           </div>
                           <div className="space-y-6">
-                            {displayJobs.filter(j => !j.hasEmail && !appliedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
+                            {displayJobs.filter(j => !j.hasEmail && !trackedJobIds.has(String(j.id))).map((job, index) => renderJobCard(job, index))}
                           </div>
                         </div>
                       )}

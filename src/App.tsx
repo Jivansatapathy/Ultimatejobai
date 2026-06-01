@@ -55,6 +55,7 @@ const PublicLinkedInJob = lazy(() => import("./pages/PublicLinkedInJob"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
+const SeniorJobs = lazy(() => import("./pages/SeniorJobs"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -169,6 +170,7 @@ const App = () => (
                     </CandidateRoute>
                   } />
                   <Route path="/jobs" element={<CandidateRoute><Jobs /></CandidateRoute>} />
+                  <Route path="/senior-jobs" element={<CandidateRoute><SeniorJobs /></CandidateRoute>} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
                   <Route path="/applications" element={

@@ -5,7 +5,7 @@ export interface ApplicationHistoryItem {
     job_id: string;
     job_title: string;
     company: string;
-    status: "queued" | "sent" | "failed" | "submitted";
+    status: "queued" | "sent" | "failed" | "submitted" | "cancelled";
     delivery_method: "email" | "employer_portal" | "test" | "bot";
     job_url?: string | null;
     job_source?: string | null;

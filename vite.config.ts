@@ -1,35 +1,39 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "0.0.0.0",
-    port: 8080,
-    proxy: {
-      "/api": {
-        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, "/api"),
-      },
-      // D-ID streaming proxy
-      "/did": {
-        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
-        changeOrigin: true,
-      },
-      // Bot Apply WebSocket proxy
-      "/ws": {
-        target: process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",
-        changeOrigin: true,
-        ws: true,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const apiTarget = env.VITE_API_PROXY_TARGET || process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000";
+
+  return {
+    server: {
+      host: "0.0.0.0",
+      port: 8080,
+      proxy: {
+        "/api": {
+          target: apiTarget,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, "/api"),
+        },
+        // D-ID streaming proxy
+        "/did": {
+          target: apiTarget,
+          changeOrigin: true,
+        },
+        // Bot Apply WebSocket proxy
+        "/ws": {
+          target: apiTarget,
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
-  },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
-  resolve: {
-    alias: {
+    plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+    resolve: {
+      alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
@@ -64,4 +68,5 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-}));
+  };
+});

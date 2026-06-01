@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -44,10 +44,15 @@ export function BotPreviewModal({
   onCancel,
 }: BotPreviewModalProps) {
   const [state, setState] = useState<ModalState>("idle");
+  // Track whether the modal was previously open so we don't fire cancel on initial mount
+  const wasOpenRef = useRef(false);
 
   // Reset state whenever a new task opens the modal
   useEffect(() => {
-    if (isOpen) setState("idle");
+    if (isOpen) {
+      setState("idle");
+      wasOpenRef.current = true;
+    }
   }, [isOpen, taskId]);
 
   const handleConfirm = async () => {
@@ -63,10 +68,13 @@ export function BotPreviewModal({
   };
 
   const handleCancel = async () => {
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
-    } catch {
-      // Best-effort
+    // Skip cancel API call if no active task (avoids spurious 400 when bot already failed)
+    if (taskId) {
+      try {
+        await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
+      } catch {
+        // Best-effort
+      }
     }
     onCancel();
   };
@@ -88,7 +96,13 @@ export function BotPreviewModal({
   const isCancelDisabled = state === "confirming" || state === "submitting";
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCancel(); }}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      // Only fire cancel if the modal was actually open before (not on initial false → false)
+      if (!open && wasOpenRef.current) {
+        wasOpenRef.current = false;
+        handleCancel();
+      }
+    }}>
       <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col p-0 gap-0">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">

@@ -312,6 +312,89 @@ export const subscribeApifySearch = (
     );
 };
 
+const PLATFORM_LABELS: Record<string, string> = {
+    lever: 'Lever',
+    greenhouse: 'Greenhouse',
+    ashby: 'Ashby',
+    smartrecruiters: 'SmartRecruiters',
+    teamtailor: 'Teamtailor',
+};
+
+const mapJobFinderJob = (job: any, page: number): Job => {
+    const applyUrl = job.apply_url || job.url || '#';
+    const platform = (job.platform || 'lever').toLowerCase();
+    const platformLabel = PLATFORM_LABELS[platform] || platform;
+    const tags = [platformLabel, job.commitment || job.team].filter(Boolean) as string[];
+    const jobId = `${platform}:${job.company}:${job.apply_url || page}`;
+    return {
+        id: jobId,
+        title: job.title || 'Untitled Role',
+        company: job.company || 'Unknown Company',
+        company_slug: job.company || undefined,
+        quick_apply_enabled: false,
+        quick_apply_questions: [],
+        hasEmail: false,
+        location: job.location || 'View details',
+        salary: job.commitment || 'Competitive',
+        posted: job.created_at ? new Date(job.created_at).toLocaleDateString() : 'Recently',
+        match: stableMatch(jobId),
+        match_reason: '',
+        tags,
+        saved: false,
+        description: '',
+        url: applyUrl,
+        apply_url: applyUrl,
+        platform,
+        source: 'jobfinder',
+    };
+};
+
+// Map a JOBAI DB result to the common Job shape
+const mapDbJob = (job: any): Job => {
+    const company = job.company || {};
+    const companyName = typeof company === 'string' ? company : (company.name || 'Unknown Company');
+    return {
+        id: job.id,
+        title: job.title || 'Untitled Role',
+        company: companyName,
+        company_slug: job.source === 'employer' ? (company.slug || undefined) : undefined,
+        quick_apply_enabled: job.quick_apply_enabled ?? true,
+        quick_apply_questions: Array.isArray(job.quick_apply_questions) ? job.quick_apply_questions : [],
+        hasEmail: Boolean(company.has_email || company.email || job.source === 'employer'),
+        location: flatten(job.location) || job.city || job.country || 'Remote',
+        salary: job.salary || flatten(job.employment_type) || 'Competitive',
+        posted: job.posted_at ? new Date(job.posted_at).toLocaleDateString() : 'Recently',
+        match: job.match_score || stableMatch(job.id),
+        match_reason: '',
+        tags: [flatten(job.department), flatten(job.employment_type)].filter(Boolean) as string[],
+        saved: false,
+        description: job.description || '',
+        url: job.apply_url || '#',
+        apply_url: job.apply_url || '#',
+        platform: job.platform || 'other',
+        source: job.source || 'scraped',
+    };
+};
+
+// Detect "medical writer in canada" → { role: "medical writer", country: "canada" }
+const extractLocationFromText = (q: string): { role: string; country: string } => {
+    const m = q.match(/^(.+?)\s+(?:in|at|for)\s+([a-zA-Z\s]{2,})$/i);
+    if (m) return { role: m[1].trim(), country: m[2].trim() };
+    return { role: q, country: '' };
+};
+
+// Merge DB (priority) + Serper results, dedup by apply_url
+const mergeJobLists = (primary: Job[], secondary: Job[]): Job[] => {
+    const seen = new Set(
+        primary.map(j => (j.apply_url || '').toLowerCase().replace(/\/$/, ''))
+    );
+    const unique = secondary.filter(j => {
+        const url = (j.apply_url || '').toLowerCase().replace(/\/$/, '');
+        return url && url !== '#' && !seen.has(url);
+    });
+    return [...primary, ...unique];
+};
+
 export const searchJobs = async (
     query: string = '',
     page: number = 1,
@@ -319,44 +402,92 @@ export const searchJobs = async (
 ): Promise<JobSearchResponse> => {
     try {
         if (isJobFinderSearchEnabled()) {
+            // Step 1 — lift location out of query text if no explicit geo filter set
+            // e.g. "medical writer in canada" → role="medical writer", country="canada"
+            let effectiveQuery = query;
+            let effectiveFilters = { ...filters };
+            if (!filters.country && !filters.city && !filters.location && query) {
+                const { role, country } = extractLocationFromText(query);
+                if (country) {
+                    effectiveQuery = role;
+                    effectiveFilters = { ...filters, country };
+                }
+            }
+
+            const hasGeoFilter   = !!(effectiveFilters.country || effectiveFilters.city);
+            const hasAnyFilters  = !!(
+                effectiveFilters.department || effectiveFilters.employment_type ||
+                effectiveFilters.workplace_type || hasGeoFilter || effectiveFilters.location
+            );
+
+            // Step 2 — if any filter is active: DB via /api/filter (always)
+            //           + Serper with country-scoped query when geo filter + keyword present
+            if (hasAnyFilters) {
+                const dbPromise = axios.get(`${JOBFINDER_API_BASE_URL}/api/filter`, {
+                    params: {
+                        search:           effectiveQuery || undefined,
+                        department:       effectiveFilters.department       || undefined,
+                        employment_type:  effectiveFilters.employment_type  || undefined,
+                        workplace_type:   effectiveFilters.workplace_type   || undefined,
+                        country:          effectiveFilters.country          || undefined,
+                        city:             effectiveFilters.city             || undefined,
+                        page,
+                        page_size: 20,
+                    },
+                });
+
+                // Serper: pass role as query + country/city as separate param
+                // jobFinder /api/search formats: site:... "role" Country  (country unquoted)
+                const serperPromise = effectiveQuery
+                    ? axios.get(`${JOBFINDER_API_BASE_URL}/api/search`, {
+                          params: {
+                              query:   effectiveQuery,
+                              page,
+                              country: effectiveFilters.country  || undefined,
+                              city:    effectiveFilters.city     || undefined,
+                          },
+                      }).catch(() => null)
+                    : Promise.resolve(null);
+
+                const [dbResp, serperResp] = await Promise.all([dbPromise, serperPromise]);
+
+                const dbResults = Array.isArray(dbResp.data.results) ? dbResp.data.results : [];
+                const dbJobs    = dbResults.map(mapDbJob);
+
+                // Serper results — loosely filter by country name if geo filter is active
+                const serperJobs: Job[] = [];
+                if (serperResp && Array.isArray(serperResp.data?.jobs)) {
+                    const countryLower = (effectiveFilters.country || '').toLowerCase();
+                    serperResp.data.jobs.forEach((raw: any) => {
+                        const mapped = mapJobFinderJob(raw, page);
+                        if (!countryLower ||
+                            (mapped.location || '').toLowerCase().includes(countryLower) ||
+                            (raw.location   || '').toLowerCase().includes(countryLower)) {
+                            serperJobs.push(mapped);
+                        }
+                    });
+                }
+
+                const merged      = mergeJobLists(dbJobs, serperJobs);
+                const dbTotal     = Number(dbResp.data.meta?.total_results || 0);
+                const hasNext     = Boolean(dbResp.data.meta?.has_next);
+                const totalResults = dbTotal + serperJobs.length;
+
+                return { jobs: merged, hasNext, totalResults };
+            }
+
+            // Step 3 — pure keyword (no geo/dept filter): Serper + DB merge via /api/search
             const response = await axios.get(`${JOBFINDER_API_BASE_URL}/api/search`, {
                 params: {
-                    query: query || filters.title || filters.department || 'jobs',
+                    query: effectiveQuery || filters.title || filters.department || 'jobs',
                     page,
                 },
             });
 
-            const data = response.data;
+            const data    = response.data;
             const rawJobs = Array.isArray(data.jobs) ? data.jobs : [];
             const remainingSlots = Math.max(0, JOB_SEARCH_MAX_RESULTS - ((page - 1) * 10));
-            const visibleJobs = rawJobs.slice(0, remainingSlots);
-
-            const mappedJobs = visibleJobs.map((job: any) => {
-                const applyUrl = job.apply_url || job.url || '#';
-
-                return {
-                    id: job.id,
-                    title: job.title || 'Untitled Role',
-                    company: job.company || 'Unknown Company',
-                    company_slug: job.company || undefined,
-                    quick_apply_enabled: false,
-                    quick_apply_questions: [],
-                    hasEmail: false,
-                    location: 'View details',
-                    salary: 'Competitive',
-                    posted: 'Recently',
-                    match: stableMatch(job.id),
-                    match_reason: '',
-                    tags: ['Lever'],
-                    saved: false,
-                    description: '',
-                    url: applyUrl,
-                    apply_url: applyUrl,
-                    platform: 'lever',
-                    source: 'jobfinder',
-                };
-            });
-
+            const mappedJobs = rawJobs.slice(0, remainingSlots).map((job: any) => mapJobFinderJob(job, page));
             const loadedCount = ((page - 1) * 10) + mappedJobs.length;
             const providerHasNext = Boolean(data.pagination?.has_next);
             return {

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BotPreviewModal } from "@/components/jobs/BotPreviewModal";
 import { CheckCircle2, XCircle, AlertCircle, Loader2, Bot, ChevronDown, ChevronUp, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
@@ -21,7 +20,6 @@ interface TaskState {
   company: string;
   status: BotStatus;
   filledFields: Record<string, string>;
-  screenshot: string;
   failReason: string;
 }
 
@@ -57,7 +55,6 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
       company: j.company,
       status: "pending",
       filledFields: {},
-      screenshot: "",
       failReason: "",
     }))
   );
@@ -86,9 +83,14 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
           updateTask(taskId, {
             status: data.status,
             ...(data.filled_fields ? { filledFields: data.filled_fields } : {}),
-            ...(data.screenshot_base64 ? { screenshot: data.screenshot_base64 } : {}),
             ...(data.reason ? { failReason: data.reason } : {}),
           });
+          if (data.status === "preview_ready") {
+            updateTask(taskId, { status: "confirmed" });
+            api.post("/api/bot/confirm/", { task_id: taskId, action: "confirm" }).catch(() => {
+              updateTask(taskId, { status: "failed", failReason: "Confirm failed" });
+            });
+          }
         } catch {
           // ignore parse errors
         }
@@ -125,44 +127,11 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
     };
   }, []); // intentionally only runs once on mount
 
-  const previewTask = tasks.find((t) => t.status === "preview_ready");
-
-  const handleConfirm = async (taskId: string) => {
-    updateTask(taskId, { status: "confirmed" });
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "confirm" });
-    } catch {
-      updateTask(taskId, { status: "failed", failReason: "Confirm failed" });
-    }
-  };
-
-  const handleCancel = async (taskId: string) => {
-    updateTask(taskId, { status: "cancelled" });
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
-    } catch {
-      // best-effort
-    }
-  };
-
   const doneCount = tasks.filter((t) => t.status === "submitted").length;
   const allDone = tasks.every((t) => ["submitted", "cancelled", "failed"].includes(t.status));
 
   return (
     <>
-      {previewTask && (
-        <BotPreviewModal
-          isOpen
-          taskId={previewTask.taskId}
-          jobTitle={previewTask.jobTitle}
-          company={previewTask.company}
-          filledFields={previewTask.filledFields}
-          screenshotBase64={previewTask.screenshot}
-          onConfirm={() => handleConfirm(previewTask.taskId)}
-          onCancel={() => handleCancel(previewTask.taskId)}
-        />
-      )}
-
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

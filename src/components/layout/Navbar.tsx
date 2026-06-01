@@ -14,23 +14,26 @@ import {
   BrainCircuit,
   LogOut,
   Settings as SettingsIcon,
+  Crown,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import NotificationBell from "@/components/NotificationBell";
 
 const navLinks = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Resume", href: "/resume", icon: FileText },
-  { name: "Jobs", href: "/jobs", icon: Briefcase },
-  { name: "Interview", href: "/interview", icon: Users },
-  { name: "AI Mentor", href: "/ai-mentor", icon: BrainCircuit },
-  { name: "Settings", href: "/settings", icon: SettingsIcon },
-  { name: "Plans", href: "/plans", icon: Sparkles },
+  { name: "Dashboard",    href: "/dashboard",   icon: LayoutDashboard },
+  { name: "Resume",       href: "/resume",       icon: FileText },
+  { name: "Jobs",         href: "/jobs",         icon: Briefcase },
+  { name: "Senior Jobs",  href: "/senior-jobs",  icon: Crown },
+  { name: "Interview",    href: "/interview",    icon: Users },
+  { name: "AI Mentor",    href: "/ai-mentor",    icon: BrainCircuit },
+  { name: "Settings",     href: "/settings",     icon: SettingsIcon },
+  { name: "Plans",        href: "/plans",        icon: Sparkles },
 ];
 
 const publicNavLinks = [
-  { name: "Browse Jobs", href: "/jobs" },
-  { name: "Plans", href: "/plans" },
+  { name: "Browse Jobs",  href: "/jobs" },
+  { name: "Senior Jobs",  href: "/senior-jobs" },
+  { name: "Plans",        href: "/plans" },
 ];
 
 export const Navbar = () => {

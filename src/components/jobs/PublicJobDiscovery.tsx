@@ -1124,6 +1124,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const renderJobCard = (job: Job, index: number) => {
     const isApplied = appliedJobIds.has(String(job.id));
+    const historyItem = appliedHistoryItems.find(item => String(item.job_id) === String(job.id));
+    const isQueued = historyItem ? historyItem.status === "queued" : false;
     const isSaved = savedJobs.includes(job.id);
     const isSelectable = bulkSelectMode && job.apply_url && job.apply_url !== '#' && job.source !== 'employer';
     const isSelected = selectedJobIds.has(String(job.id));
@@ -1154,9 +1156,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
           <div className="flex items-center gap-2 mb-0.5">
             <button type="button" className="text-left text-lg font-black text-white tracking-tight hover:text-teal-400 transition-colors leading-snug" onClick={() => openJobDetails(job)}>{job.title}</button>
             {isApplied && (
-              <div className="flex items-center gap-1 rounded-full bg-teal-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-400 border border-teal-500/20">
-                <CheckCircle2 className="h-3 w-3" />
-                Applied
+              <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                isQueued
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                  : "bg-teal-500/10 text-teal-400 border border-teal-500/20"
+              }`}>
+                {isQueued ? (
+                  <>
+                    <Clock className="h-3 w-3 animate-pulse" />
+                    Queued
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    Applied
+                  </>
+                )}
               </div>
             )}
             {job.source === 'employer' && (
@@ -1198,7 +1213,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                   setAppliedJobIds(prev => new Set(prev).add(id));
                   setAppliedHistoryItems(prev => {
                     if (prev.some(a => String(a.job_id) === id)) return prev;
-                    return [...prev, { id, job_id: id, job_title: job.title, company: job.company, status: "submitted", delivery_method: "bot", job_url: job.apply_url, created_at: new Date().toISOString() }];
+                    return [{ id, job_id: id, job_title: job.title, company: job.company, status: "submitted", delivery_method: "bot", job_url: job.apply_url, created_at: new Date().toISOString() }, ...prev];
                   });
                 }}
                 onDismiss={() => setDismissedJobIds(prev => {
@@ -1216,96 +1231,133 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
     );
   };
 
-  const renderFilters = () => (
-    <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-5 xl:sticky xl:top-24">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Search Engine</p>
-          <h3 className="mt-1 text-lg font-semibold text-white tracking-tight">Refine Results</h3>
-        </div>
-        <button type="button" onClick={resetFilters} className="text-[10px] font-black text-slate-500 hover:text-teal-400 transition-colors uppercase tracking-[0.15em]">Reset All</button>
-      </div>
+  const getFilteredCityOptions = () => {
+    if (!filters.country) {
+      return cityOptions || [];
+    }
 
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Search Keywords</label>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input
-              value={filters.title || ""}
-              onChange={(e) => setFilters((p) => ({ ...p, title: e.target.value }))}
-              placeholder="Design, Engineering, etc..."
-              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] py-4 pl-11 pr-4 text-sm font-bold text-slate-100 placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 focus:bg-white/10 transition-all"
-            />
+    const countryKey = Object.keys(cityMap).find(
+      (key) => key.toLowerCase() === filters.country!.toLowerCase()
+    );
+
+    if (!countryKey) {
+      return cityOptions || [];
+    }
+
+    const countryCities = cityMap[countryKey] || [];
+
+    const mapped = countryCities.map((cityName) => {
+      const found = (cityOptions || []).find(
+        (co) => co.value.toLowerCase() === cityName.toLowerCase()
+      );
+      return {
+        value: cityName,
+        label: cityName,
+        count: found ? found.count : 0,
+      };
+    });
+
+    return mapped.sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return a.label.localeCompare(b.label);
+    });
+  };
+
+  const renderFilters = () => {
+    const filteredCities = getFilteredCityOptions();
+    
+    return (
+      <div className="rounded-[28px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-5 xl:sticky xl:top-24">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Search Engine</p>
+            <h3 className="mt-1 text-lg font-semibold text-white tracking-tight">Refine Results</h3>
           </div>
+          <button type="button" onClick={resetFilters} className="text-[10px] font-black text-slate-500 hover:text-teal-400 transition-colors uppercase tracking-[0.15em]">Reset All</button>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="filter-department" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Department</label>
-          <select
-            id="filter-department"
-            value={filters.department || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
-          >
-            <option value="" className="bg-[#0a0f1e]">All Categories</option>
-            {departmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
-          </select>
-        </div>
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Search Keywords</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                value={filters.title || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, title: e.target.value }))}
+                placeholder="Design, Engineering, etc..."
+                className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] py-4 pl-11 pr-4 text-sm font-bold text-slate-100 placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 focus:bg-white/10 transition-all"
+              />
+            </div>
+          </div>
 
-        <div className="space-y-2">
-          <label htmlFor="filter-employment" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Engagement</label>
-          <select
-            id="filter-employment"
-            value={filters.employment_type || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, employment_type: e.target.value }))}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
-          >
-            <option value="" className="bg-[#0a0f1e]">Any Type</option>
-            {employmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
-          </select>
-        </div>
+          <div className="space-y-2">
+            <label htmlFor="filter-department" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Department</label>
+            <select
+              id="filter-department"
+              value={filters.department || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-[#0a0f1e]">All Categories</option>
+              {departmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
+            </select>
+          </div>
 
-        <div className="space-y-2">
-          <label htmlFor="filter-country" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Country</label>
-          <select
-            id="filter-country"
-            value={filters.country || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))}
-            disabled={isLoadingLocations}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
-          >
-            <option value="" className="bg-[#0a0f1e]">{isLoadingLocations ? "Loading..." : "Everywhere"}</option>
-            {(filterCountryOptions || []).map((country) => (
-              <option key={`country-${country.value}`} value={country.value} className="bg-[#0a0f1e]">
-                {country.label} ({country.count})
+          <div className="space-y-2">
+            <label htmlFor="filter-employment" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Engagement</label>
+            <select
+              id="filter-employment"
+              value={filters.employment_type || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, employment_type: e.target.value }))}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-[#0a0f1e]">Any Type</option>
+              {employmentOptions.map((choice) => <option key={choice.value} value={choice.value} className="bg-[#0a0f1e]">{choice.label}</option>)}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="filter-country" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Country</label>
+            <select
+              id="filter-country"
+              value={filters.country || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, country: e.target.value, city: "" }))}
+              disabled={isLoadingLocations}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-[#0a0f1e]">{isLoadingLocations ? "Loading..." : "Everywhere"}</option>
+              {(filterCountryOptions || []).map((country) => (
+                <option key={`country-${country.value}`} value={country.value} className="bg-[#0a0f1e]">
+                  {country.label} ({country.count})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="filter-city" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">City</label>
+            <select
+              id="filter-city"
+              value={filters.city || ""}
+              onChange={(e) => setFilters((p) => ({ ...p, city: e.target.value }))}
+              disabled={isLoadingFilterOptions || filteredCities.length === 0}
+              className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <option value="" className="bg-[#0a0f1e]">
+                {isLoadingFilterOptions ? "Loading cities..." : filters.country ? "All Cities" : "All Cities Worldwide"}
               </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="filter-city" className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">City</label>
-          <select
-            id="filter-city"
-            value={filters.city || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, city: e.target.value }))}
-            disabled={isLoadingFilterOptions || cityOptions.length === 0}
-            className="w-full rounded-[20px] border border-white/10 bg-white/[0.05] px-4 py-4 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40 transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <option value="" className="bg-[#0a0f1e]">
-              {isLoadingFilterOptions ? "Loading cities..." : filters.country ? "All Cities" : "All Cities Worldwide"}
-            </option>
-            {(cityOptions || []).map((city) => (
-              <option key={`city-${city.value}`} value={city.value} className="bg-[#0a0f1e]">
-                {city.label} ({city.count})
-              </option>
-            ))}
-          </select>
-          <p className="ml-1 text-[11px] font-semibold text-slate-600">
-            {filters.country ? `Showing cities with jobs in ${filters.country}.` : "Choose a country to narrow city counts."}
-          </p>
-        </div>
+              {filteredCities.map((city) => (
+                <option key={`city-${city.value}`} value={city.value} className="bg-[#0a0f1e]">
+                  {city.label} ({city.count})
+                </option>
+              ))}
+            </select>
+            <p className="ml-1 text-[11px] font-semibold text-slate-600">
+              {filters.country ? `Showing cities with jobs in ${filters.country}.` : "Choose a country to narrow city counts."}
+            </p>
+          </div>
 
         <Button
           type="button"
@@ -1317,6 +1369,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       </div>
     </div>
   );
+};
 
   const activeCards = browseCards.length ? browseCards : fallbackBrowseCards;
   const resolvedCards = browseCards.length
@@ -2016,7 +2069,13 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                             </div>
                           ) : (
                             <div className="space-y-4">
-                              {appliedHistoryItems.map((item, index) => {
+                              {[...appliedHistoryItems]
+                                .sort((a, b) => {
+                                  const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                                  const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                                  return dateB - dateA;
+                                })
+                                .map((item, index) => {
                                 // Prefer: display job match → resolved via fetch/lever → synthetic fallback
                                 const jid = item.job_id ? String(item.job_id) : null;
                                 const fromDisplay = jid ? displayJobs.find(j => String(j.id) === jid) : undefined;

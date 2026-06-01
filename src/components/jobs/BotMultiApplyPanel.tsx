@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BotPreviewModal } from "@/components/jobs/BotPreviewModal";
-import { CheckCircle2, XCircle, AlertCircle, Loader2, Bot, ChevronDown, ChevronUp, X } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, Loader2, Bot, ChevronDown, ChevronUp, X, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
 
 type BotStatus =
+  | "queued"
   | "pending"
   | "opening"
   | "filling"
@@ -38,12 +38,13 @@ function getWsUrl(taskId: string): string {
 }
 
 const STATUS_LABELS: Record<BotStatus, string> = {
-  pending: "Waiting…",
+  queued: "Queued…",
+  pending: "Starting…",
   opening: "Opening page…",
   filling: "Filling form…",
   solving_captcha: "Solving CAPTCHA…",
-  preview_ready: "Needs review",
-  confirmed: "Confirming…",
+  preview_ready: "Applying…",
+  confirmed: "Submitting…",
   submitted: "Submitted ✓",
   cancelled: "Cancelled",
   failed: "Failed",
@@ -125,39 +126,11 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
     };
   }, []); // intentionally only runs once on mount
 
-  const previewTask = tasks.find((t) => t.status === "preview_ready");
-
-  // Modal handles the confirm POST itself — just update state
-  const handleConfirm = (taskId: string, _userAnswers?: Record<string, string>) => {
-    updateTask(taskId, { status: "confirmed" });
-  };
-
-  const handleCancel = async (taskId: string) => {
-    updateTask(taskId, { status: "cancelled" });
-    try {
-      await api.post("/api/bot/confirm/", { task_id: taskId, action: "cancel" });
-    } catch {
-      // best-effort
-    }
-  };
-
   const doneCount = tasks.filter((t) => t.status === "submitted").length;
   const allDone = tasks.every((t) => ["submitted", "cancelled", "failed"].includes(t.status));
 
   return (
     <>
-      {previewTask && (
-        <BotPreviewModal
-          isOpen
-          taskId={previewTask.taskId}
-          jobTitle={previewTask.jobTitle}
-          company={previewTask.company}
-          filledFields={previewTask.filledFields}
-          screenshotBase64={previewTask.screenshot}
-          onConfirm={(ans) => handleConfirm(previewTask.taskId, ans)}
-          onCancel={() => handleCancel(previewTask.taskId)}
-        />
-      )}
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -206,6 +179,8 @@ export function BotMultiApplyPanel({ jobs, onClose }: BotMultiApplyPanelProps) {
                       <XCircle className="h-4 w-4 text-slate-400 shrink-0" />
                     ) : t.status === "failed" ? (
                       <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                    ) : t.status === "queued" ? (
+                      <Clock className="h-4 w-4 text-amber-400 shrink-0" />
                     ) : (
                       <Loader2 className="h-4 w-4 animate-spin text-teal-400 shrink-0" />
                     )}

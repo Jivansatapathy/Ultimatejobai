@@ -14,6 +14,8 @@ const NO_CACHE_PREFIXES = [
   '/api/auth/',
   '/api/token',
   '/ws/',
+  '/api/search/senior/',
+  '/api/search/senior/filters/',
 ];
 
 /** Synchronously check if a GET URL is already in cache (no fetch needed). */

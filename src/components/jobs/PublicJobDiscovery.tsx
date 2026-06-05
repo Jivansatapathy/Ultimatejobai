@@ -345,6 +345,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [queuedJobIds, setQueuedJobIds] = useState<Set<string>>(new Set());
   const [appliedHistoryItems, setAppliedHistoryItems] = useState<import("@/services/autoApplyService").ApplicationHistoryItem[]>([]);
   const [feedTab, setFeedTab] = useState<"all" | "queued" | "applied">("all");
+  const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
   const apifyPollTimerRef = useRef<number | null>(null);
   const activeApifyDocIdRef = useRef<string | null>(null);
@@ -1276,7 +1277,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                 }}
                 onDismiss={() => setDismissedJobIds(prev => {
                   const next = new Set(prev).add(String(job.id));
-                  try { localStorage.setItem("dismissed_bot_jobs", JSON.stringify([...next])); } catch {}
+                  try { localStorage.setItem("dismissed_bot_jobs", JSON.stringify([...next])); } catch (_e) { /* localStorage unavailable */ }
                   return next;
                 })}
               />

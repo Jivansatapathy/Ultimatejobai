@@ -31,7 +31,7 @@ function cleanLabel(raw: string): string {
   // Lever/ATS opaque bracket IDs — never human-readable
   if (/^cards\[/i.test(raw)) return "Custom Question";
   // Strip UUIDs
-  let s = raw.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, "");
+  const s = raw.replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, "");
   const words = s.match(/[a-zA-Z][a-zA-Z0-9]*/g) ?? [];
   if (words.length === 0) return "Field";
   // Filter generic noise words and fieldN patterns (field0, field1, …)
@@ -52,7 +52,7 @@ function cleanLabel(raw: string): string {
 function formatLabel(label: string, fieldName?: string): string {
   if (!label) return cleanLabel(fieldName || "");
   // Contains brackets or looks like a UUID → clean the field name instead
-  if (/[\[\]{}]/.test(label) || /^[a-f0-9-]{20,}/.test(label)) {
+  if (/[[\]{}]/.test(label) || /^[a-f0-9-]{20,}/.test(label)) {
     return cleanLabel(fieldName || label);
   }
   // Raw snake_case / lowercase field name (e.g. "location", "first_name") → Title Case

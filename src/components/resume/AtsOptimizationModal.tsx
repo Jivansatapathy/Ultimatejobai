@@ -159,16 +159,15 @@ export function AtsOptimizationModal({
             resume_text: JSON.stringify(activeResume)
         });
 
-        let fixedData: Resume;
         const rawText = response.data.advice;
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        
+
         if (!jsonMatch) {
             throw new Error("No JSON structure found in AI response");
         }
-        
+
         const cleanJson = jsonMatch[0].replace(/```json/g, '').replace(/```/g, '');
-        fixedData = JSON.parse(cleanJson);
+        const fixedData: Resume = JSON.parse(cleanJson);
 
         // Remove hallucinatory fields
         delete (fixedData as any).score;

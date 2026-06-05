@@ -40,12 +40,6 @@ export function ResumeBuilder() {
         return () => obs.disconnect();
     }, [updateScale]);
 
-    if (!activeResume) {
-        if (resumes.length === 0)
-            return <div className="h-screen flex items-center justify-center">Loading…</div>;
-        return <div className="h-screen flex items-center justify-center">Resume not found</div>;
-    }
-
     const handlePrint = useCallback(() => {
         const el = document.getElementById("resume-preview-content");
         if (!el) return;
@@ -147,6 +141,12 @@ export function ResumeBuilder() {
             win.close();
         }, 400);
     }, []);
+
+    if (!activeResume) {
+        if (resumes.length === 0)
+            return <div className="h-screen flex items-center justify-center">Loading…</div>;
+        return <div className="h-screen flex items-center justify-center">Resume not found</div>;
+    }
 
     return (
         <div className="h-screen flex flex-col bg-background">

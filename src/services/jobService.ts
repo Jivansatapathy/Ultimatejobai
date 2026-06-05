@@ -644,12 +644,8 @@ export const fetchJobLocationOptions = async (): Promise<JobLocationOptions> => 
 };
 
 export const ingestJob = async (payload: any) => {
-    try {
-        const response = await api.post('/api/ingest/ingest/', payload);
-        return response.data;
-    } catch (error: any) {
-        throw error;
-    }
+    const response = await api.post('/api/ingest/ingest/', payload);
+    return response.data;
 };
 
 export interface GoogleCSESearchResult {

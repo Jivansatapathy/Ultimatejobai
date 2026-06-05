@@ -45,7 +45,7 @@ export const autoApplyQueueService = {
                 const data = JSON.parse(raw) as DailyCount;
                 if (data.date === todayKey()) return data;
             }
-        } catch {}
+        } catch (_e) { /* localStorage unavailable */ }
         return { date: todayKey(), count: 0 };
     },
 

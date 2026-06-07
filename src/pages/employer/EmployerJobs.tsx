@@ -46,6 +46,7 @@ export default function EmployerJobs() {
   const [editingJob, setEditingJob] = useState<JobPosting | null>(null);
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [postingRequests, setPostingRequests] = useState<ExternalPostingRequest[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -56,12 +57,16 @@ export default function EmployerJobs() {
     const load = async () => {
       try {
         setLoading(true);
+        setError(null);
         const [items, requests] = await Promise.all([
           getEmployerJobs(deferredSearch),
-          getExternalPostingRequests(),
+          getExternalPostingRequests().catch(() => [] as ExternalPostingRequest[]),
         ]);
         setJobs(items);
         setPostingRequests(requests);
+      } catch (err: any) {
+        console.error("Jobs load failed:", err);
+        setError(err?.response?.data?.detail || err?.message || "Failed to load jobs.");
       } finally {
         setLoading(false);
       }
@@ -203,6 +208,24 @@ export default function EmployerJobs() {
 
   if (loading) {
     return <LoadingState label="Loading your jobs..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-8 max-w-md">
+          <p className="text-sm font-bold text-red-600 mb-2">Failed to load jobs</p>
+          <p className="text-sm text-red-500">{error}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-red-600 text-white text-sm font-bold px-4 py-2 hover:bg-red-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

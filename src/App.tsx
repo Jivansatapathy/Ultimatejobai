@@ -27,7 +27,6 @@ const Index2 = lazy(() => import("./pages/Index2"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Resume = lazy(() => import("./pages/Resume"));
 const Jobs = lazy(() => import("./pages/Jobs"));
-import Plans from "./pages/Plans";
 const Auth = lazy(() => import("./pages/Auth"));
 const Applications = lazy(() => import("./pages/Applications"));
 const CareerInsights = lazy(() => import("./pages/CareerInsights"));
@@ -137,7 +136,6 @@ const App = () => (
                   <Route path="/" element={<CandidateRoute><Index /></CandidateRoute>} />
                   <Route path="/v2" element={<Index2 />} />
                   <Route path="/auth" element={<CandidateRoute><Auth /></CandidateRoute>} />
-                  <Route path="/plans" element={<CandidateRoute><Plans /></CandidateRoute>} />
 
                   <Route path="/dashboard" element={
                     <CandidateRoute>

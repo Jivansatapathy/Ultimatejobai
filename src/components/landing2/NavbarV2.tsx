@@ -86,12 +86,12 @@ export const NavbarV2 = () => {
             >
               For Employers
             </Link>
-            <Link
-              to="/plans"
+            <a
+              href="/v2#pricing"
               className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
             >
               Pricing
-            </Link>
+            </a>
           </nav>
 
           {/* Desktop right */}
@@ -159,7 +159,7 @@ export const NavbarV2 = () => {
           {CATEGORIES.map(c => (
             <Link key={c.href} to={c.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 pl-6">{c.label}</Link>
           ))}
-          <Link to="/plans" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Pricing</Link>
+          <a href="/v2#pricing" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Pricing</a>
           <div className="pt-3 flex flex-col gap-2">
             <Link to="/auth" onClick={() => setMenuOpen(false)}>
               <button type="button" className="w-full h-11 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Sign In</button>

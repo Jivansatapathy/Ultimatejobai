@@ -247,7 +247,7 @@ export const PricingV2 = () => {
   };
 
   return (
-    <section className="relative bg-white py-28 px-6 overflow-hidden">
+    <section id="pricing" className="relative bg-white py-28 px-6 overflow-hidden">
       {/* Subtle background blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-blue-50 blur-3xl opacity-70" />

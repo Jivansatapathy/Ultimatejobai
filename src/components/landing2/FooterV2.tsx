@@ -12,7 +12,7 @@ const LINKS = {
   "Platform": [
     { label: "How It Works", href: "/v2#how-it-works" },
     { label: "Apex™ Bot", href: "/v2#features" },
-    { label: "Pricing", href: "/plans" },
+    { label: "Pricing", href: "/v2#pricing" },
     { label: "Dashboard", href: "/dashboard" },
   ],
   "Employers": [

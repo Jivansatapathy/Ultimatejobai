@@ -23,6 +23,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // High-Performance Route-based Code Splitting
 const Index = lazy(() => import("./pages/Index"));
+const Index2 = lazy(() => import("./pages/Index2"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Resume = lazy(() => import("./pages/Resume"));
 const Jobs = lazy(() => import("./pages/Jobs"));
@@ -37,6 +38,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const InterviewPanel = lazy(() => import("./pages/InterviewPanel"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const ResumeBuilder = lazy(() => import("./components/resume/ResumeBuilder"));
 const EmployerPanel = lazy(() => import("./pages/EmployerPanel"));
 const EmployerAuth = lazy(() => import("./pages/EmployerAuth"));
@@ -133,6 +135,7 @@ const App = () => (
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                   <Route path="/" element={<CandidateRoute><Index /></CandidateRoute>} />
+                  <Route path="/v2" element={<Index2 />} />
                   <Route path="/auth" element={<CandidateRoute><Auth /></CandidateRoute>} />
                   <Route path="/plans" element={<CandidateRoute><Plans /></CandidateRoute>} />
 
@@ -170,7 +173,7 @@ const App = () => (
                     </CandidateRoute>
                   } />
                   <Route path="/jobs" element={<CandidateRoute><Jobs /></CandidateRoute>} />
-                  <Route path="/senior-jobs" element={<CandidateRoute><SeniorJobs /></CandidateRoute>} />
+                  <Route path="/find-jobs" element={<CandidateRoute><SeniorJobs /></CandidateRoute>} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
                   <Route path="/applications" element={
@@ -242,6 +245,7 @@ const App = () => (
                       <AdminDashboard />
                     </ProtectedRoute>
                   } />
+                  <Route path="/superadmin" element={<SuperAdmin />} />
                   <Route element={<EmployerPublicRoute />}>
                     <Route path="/employer/auth" element={<EmployerAuth />} />
                   </Route>

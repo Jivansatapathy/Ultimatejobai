@@ -1,5 +1,20 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '@/config';
+
+let _isRefreshing = false;
+let _refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
+
+// Don't redirect to /auth from pages that have their own auth gate
+function _redirectToAuth() {
+  if (!window.location.pathname.startsWith('/superadmin')) {
+    window.location.href = '/auth';
+  }
+}
+
+function _drainQueue(err: unknown, token?: string) {
+  _refreshQueue.forEach(p => (err ? p.reject(err) : p.resolve(token!)));
+  _refreshQueue = [];
+}
 
 // ---------------------------------------------------------------------------
 // In-memory GET cache — survives React route changes (component unmount/remount)
@@ -124,7 +139,7 @@ api.interceptors.response.use(
 
         return response;
     },
-    (error) => {
+    async (error) => {
         const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
         const url = error.config?.url || 'unknown';
         console.group(`❌ API ERROR ${method}: ${url}`);
@@ -134,9 +149,62 @@ api.interceptors.response.use(
         console.groupEnd();
 
         if (error.response?.status === 401) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            window.location.href = '/auth';
+            const url: string = error.config?.url || '';
+
+            // Auth/token endpoints must bubble up so the calling code can handle them
+            // — intercepting them here causes the sign-in loop.
+            if (url.includes('/api/auth/') || url.includes('/api/token/')) {
+                return Promise.reject(error);
+            }
+
+            const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+            // If already retried, give up
+            if (originalRequest._retry) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                _redirectToAuth();
+                return Promise.reject(error);
+            }
+
+            // Queue parallel requests while refresh is in flight
+            if (_isRefreshing) {
+                return new Promise<string>((resolve, reject) => {
+                    _refreshQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${token}` };
+                    return api(originalRequest);
+                });
+            }
+
+            originalRequest._retry = true;
+            _isRefreshing = true;
+
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) {
+                _isRefreshing = false;
+                localStorage.removeItem('access_token');
+                _redirectToAuth();
+                return Promise.reject(error);
+            }
+
+            try {
+                const { data } = await axios.post(`${API_BASE_URL}/api/token/refresh/`, { refresh: refreshToken });
+                const newToken: string = data.access;
+                localStorage.setItem('access_token', newToken);
+                api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${newToken}` };
+                _drainQueue(null, newToken);
+                _isRefreshing = false;
+                return api(originalRequest);
+            } catch (refreshErr) {
+                _drainQueue(refreshErr);
+                _isRefreshing = false;
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                _redirectToAuth();
+                return Promise.reject(refreshErr);
+            }
         }
         return Promise.reject(error);
     }

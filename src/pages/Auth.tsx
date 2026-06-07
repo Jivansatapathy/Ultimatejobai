@@ -176,7 +176,11 @@ export default function Auth() {
       });
 
       const { access, refresh, is_new_user, is_admin } = response.data;
-      login(access, refresh, is_admin, response.data.email || formData.email);
+      login(access, refresh, is_admin, response.data.email || formData.email, response.data.role);
+
+      if (!is_new_user) {
+        localStorage.setItem("onboarding_completed", "1");
+      }
 
       if (!isSignUp) toast.success("Welcome back!");
 
@@ -189,13 +193,7 @@ export default function Auth() {
           window.location.href = url;
           return;
         }
-        navigate(
-          `/plans?select=1&plan=${encodeURIComponent(selectedPlanSlug)}`
-        );
-      } else if (selectedPlanSlug) {
-        navigate(
-          `/plans?welcome=1&plan=${encodeURIComponent(selectedPlanSlug)}`
-        );
+        navigate("/dashboard");
       } else if (is_new_user && !localStorage.getItem("onboarding_completed")) {
         navigate("/onboarding");
       } else {

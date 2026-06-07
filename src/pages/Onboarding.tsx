@@ -1,20 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { 
-  FileText, 
-  Target, 
-  CheckCircle2, 
-  ArrowRight, 
-  Upload, 
-  Loader2, 
-  Sparkles 
+import api from "@/services/api";
+import {
+  FileText,
+  Target,
+  ArrowRight,
+  Upload,
+  Loader2,
+  Sparkles,
+  CheckCircle2,
+  Bot,
 } from "lucide-react";
 import { useResume } from "@/hooks/useResume";
 import { parseResumeFromFile } from "@/services/aiService";
 import { activityService } from "@/services/activityService";
 import { toast } from "sonner";
+
+const QUICK_ROLES = ["CEO", "CFO", "CTO", "COO", "VP Engineering", "VP Finance", "Director", "CHRO"];
+
+const markOnboardingDone = () => {
+  localStorage.setItem("onboarding_completed", "1");
+  api.post("/api/auth/mark-onboarding-done/").catch(() => {});
+};
 
 export default function Onboarding() {
   const [step, setStep] = useState(1);
@@ -28,29 +36,20 @@ export default function Onboarding() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
     if (!uploadedFile) return;
-
     if (uploadedFile.type !== "application/pdf") {
       toast.error("Please upload a PDF file.");
       return;
     }
-
     setFile(uploadedFile);
     setLoading(true);
-
     try {
       const parsedData = await parseResumeFromFile(uploadedFile);
       const newResume = importResumeData(parsedData);
       setTempResume(newResume);
-      
-      // Pre-populate target role if derived or parsed
-      if (newResume.targetJobRole) {
-        setTargetRole(newResume.targetJobRole);
-      }
-      
+      if (newResume.targetJobRole) setTargetRole(newResume.targetJobRole);
       toast.success("Resume parsed successfully!");
       setStep(2);
-    } catch (error) {
-      console.error("Parsing failed:", error);
+    } catch {
       toast.error("Failed to parse resume. You can fill it manually later.");
       setStep(2);
     } finally {
@@ -63,26 +62,23 @@ export default function Onboarding() {
       toast.error("Please set a target job role.");
       return;
     }
-
     setLoading(true);
     try {
       updateTargetJobRole(targetRole);
-      
       if (file && tempResume) {
-        toast.info("Analyzing your resume for the first time...");
-        // Pass tempResume to ensure we analyze the right one even if state hasn't updated
+        toast.info("Analysing your resume…");
         await analyzeFileATS(file, { ...tempResume, targetJobRole: targetRole });
       }
-      
-      toast.success("Onboarding complete! Welcome to CareerAI.");
+      toast.success("All set! Welcome to JobAI.");
       activityService.logActivity({
-        activity_type: 'ONBOARDING',
+        activity_type: "ONBOARDING",
         description: `Completed onboarding with target role: ${targetRole}`,
-        metadata: { targetRole }
+        metadata: { targetRole },
       });
+      markOnboardingDone();
       navigate("/dashboard");
-    } catch (error) {
-      console.error("Analysis failed:", error);
+    } catch {
+      markOnboardingDone();
       navigate("/dashboard");
     } finally {
       setLoading(false);
@@ -90,16 +86,25 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-xl w-full">
-        {/* Progress Bar */}
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-lg">
+
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-10">
+          <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center">
+            <Bot className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-lg font-extrabold text-black tracking-tight">JobAI</span>
+        </div>
+
+        {/* Progress bar */}
         <div className="flex gap-2 mb-8">
           {[1, 2].map((s) => (
-            <div 
-              key={s} 
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                s <= step ? "bg-accent" : "bg-secondary"
-              }`} 
+            <div
+              key={s}
+              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                s <= step ? "bg-black" : "bg-zinc-200"
+              }`}
             />
           ))}
         </div>
@@ -108,107 +113,177 @@ export default function Onboarding() {
           {step === 1 ? (
             <motion.div
               key="step1"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="glass-card p-8 bg-secondary/30 border-white/5"
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.22 }}
+              className="bg-white border border-zinc-200 rounded-2xl shadow-xl shadow-black/[0.06] overflow-hidden"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 mb-6">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold mb-3">Upload Your Resume</h1>
-              <p className="text-muted-foreground mb-8">
-                We'll parse your skills and experience to provide personalized career insights. 
-                We don't store your document, only the insights.
-              </p>
-
-              <div className="relative group">
-                <input
-                  type="file"
-                  onChange={handleFileUpload}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  accept=".pdf"
-                />
-                <div className="border-2 border-dashed border-white/10 rounded-2xl p-12 text-center group-hover:border-accent/40 transition-colors">
-                  {loading ? (
-                    <div className="flex flex-col items-center gap-4">
-                      <Loader2 className="h-8 w-8 animate-spin text-accent" />
-                      <p className="text-sm font-medium">AI is reading your resume...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="h-12 w-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 text-accent">
-                        <Upload className="h-6 w-6" />
-                      </div>
-                      <p className="font-medium mb-1">Click or drag PDF here</p>
-                      <p className="text-xs text-muted-foreground">PDF resumes work best</p>
-                    </>
-                  )}
+              {/* Card header */}
+              <div className="px-8 pt-8 pb-6 border-b border-zinc-100">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black mb-5">
+                  <FileText className="h-5 w-5 text-white" />
                 </div>
+                <h1 className="text-2xl font-extrabold text-black tracking-tight mb-2">
+                  Upload your resume
+                </h1>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  AI will parse your skills and experience to personalise your career dashboard. We only store the insights, not the file.
+                </p>
               </div>
 
-              <Button 
-                variant="ghost" 
-                className="w-full mt-6"
-                onClick={() => setStep(2)}
-              >
-                Skip for now
-              </Button>
+              {/* Upload zone */}
+              <div className="px-8 py-7">
+                <div className="relative group">
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    accept=".pdf"
+                    aria-label="Upload resume PDF"
+                  />
+                  <div className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all ${
+                    loading
+                      ? "border-zinc-300 bg-zinc-50"
+                      : "border-zinc-200 group-hover:border-black group-hover:bg-zinc-50"
+                  }`}>
+                    {loading ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-8 w-8 animate-spin text-black" />
+                        <p className="text-sm font-semibold text-black">AI is reading your resume…</p>
+                        <p className="text-xs text-zinc-400">This takes a few seconds</p>
+                      </div>
+                    ) : file ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="h-12 w-12 rounded-xl bg-black flex items-center justify-center mx-auto">
+                          <CheckCircle2 className="h-6 w-6 text-white" />
+                        </div>
+                        <p className="text-sm font-bold text-black">{file.name}</p>
+                        <p className="text-xs text-zinc-400">Ready to process</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="h-12 w-12 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:border-black transition-colors">
+                          <Upload className="h-5 w-5 text-zinc-500 group-hover:text-white transition-colors" />
+                        </div>
+                        <p className="text-sm font-bold text-black mb-1">Click or drag PDF here</p>
+                        <p className="text-xs text-zinc-400">PDF resumes work best · max 10 MB</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { markOnboardingDone(); navigate("/dashboard"); }}
+                  className="w-full mt-5 h-11 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-sm font-semibold transition-all"
+                >
+                  Skip setup
+                </button>
+              </div>
             </motion.div>
           ) : (
             <motion.div
               key="step2"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="glass-card p-8 bg-secondary/30 border-white/5"
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.22 }}
+              className="bg-white border border-zinc-200 rounded-2xl shadow-xl shadow-black/[0.06] overflow-hidden"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/20 mb-6">
-                <Target className="h-6 w-6 text-accent" />
+              {/* Card header */}
+              <div className="px-8 pt-8 pb-6 border-b border-zinc-100">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black mb-5">
+                  <Target className="h-5 w-5 text-white" />
+                </div>
+                <h1 className="text-2xl font-extrabold text-black tracking-tight mb-2">
+                  What's your goal?
+                </h1>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  Tell us the role you're targeting so Apex™ can match you to the right executive opportunities.
+                </p>
               </div>
-              <h1 className="text-3xl font-bold mb-3">What's your goal?</h1>
-              <p className="text-muted-foreground mb-8">
-                Tell us the role you're targeting so we can find the best job matches and skill gaps for you.
-              </p>
 
-              <div className="space-y-4">
+              <div className="px-8 py-7 space-y-6">
+                {/* Quick-pick chips */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Target Job Role</label>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">
+                    Quick Select
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {QUICK_ROLES.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setTargetRole(r)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                          targetRole === r
+                            ? "bg-black border-black text-white"
+                            : "bg-zinc-50 border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:text-black"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Free text */}
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2 block">
+                    Or type your own
+                  </label>
                   <input
                     type="text"
-                    placeholder="e.g. Senior Frontend Engineer"
+                    placeholder="e.g. Chief Marketing Officer, VP of Product…"
                     value={targetRole}
                     onChange={(e) => setTargetRole(e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all font-medium"
+                    className="w-full h-12 px-4 rounded-xl border border-zinc-200 bg-white text-sm text-black placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all font-medium"
                   />
                 </div>
-              </div>
 
-              <div className="mt-12 flex items-center justify-between gap-4">
-                 <Button 
-                  variant="outline" 
-                  onClick={() => setStep(1)}
-                  disabled={loading}
-                 >
-                   Back
-                 </Button>
-                 <Button 
-                  variant="hero" 
-                  className="flex-1 gap-2"
-                  onClick={handleCompleteOnboarding}
-                  disabled={loading || !targetRole}
-                 >
-                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                   Finish & See Insights
-                   <ArrowRight className="h-4 w-4" />
-                 </Button>
+                {/* Actions */}
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    disabled={loading}
+                    className="h-11 px-5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-semibold transition-all disabled:opacity-40"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCompleteOnboarding}
+                    disabled={loading || !targetRole.trim()}
+                    className="flex-1 h-11 rounded-xl bg-black hover:bg-zinc-800 text-white text-sm font-bold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Finish &amp; See Dashboard
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <p className="text-center mt-12 text-xs text-muted-foreground">
-          Step {step} of 2. You can edit all this info later in your profile.
+        <button
+          type="button"
+          onClick={() => { markOnboardingDone(); navigate("/dashboard"); }}
+          className="w-full mt-3 text-xs text-zinc-400 hover:text-zinc-600 transition-colors font-medium"
+        >
+          Skip setup entirely → go to dashboard
+        </button>
+
+        <p className="text-center mt-3 text-xs text-zinc-400 font-medium">
+          Step {step} of 2 · You can edit all this info later in your profile.
         </p>
       </div>
     </div>

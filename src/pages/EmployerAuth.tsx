@@ -15,6 +15,7 @@ import {
   MailCheck,
   ShieldCheck,
   User2,
+  Users2,
 } from "lucide-react";
 import {
   createUserWithEmailAndPassword,
@@ -34,9 +35,9 @@ import { acceptEmployerInvite, completeEmployerLinkedInAuth, getEmployerInvitePr
 import { auth } from "@/lib/firebase";
 
 const features = [
-  "Realtime job and applicant updates",
-  "Analytics chart for applications by role",
-  "Protected employer-only routes with Django JWT auth",
+  { icon: BriefcaseBusiness, title: "Post & manage jobs", desc: "Publish roles and track applicants in one place." },
+  { icon: Users2,            title: "Candidate pipeline",  desc: "Review, shortlist, and message candidates fast." },
+  { icon: ShieldCheck,       title: "Verified workspace",  desc: "Email-verified onboarding keeps your data secure." },
 ];
 
 const steps = [
@@ -357,317 +358,350 @@ export default function EmployerAuth() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),_transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(249,250,251,1))] px-4 py-10 dark:bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.16),_transparent_24%),linear-gradient(180deg,rgba(10,10,10,1),rgba(18,18,18,1))]">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-        <motion.div initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
-          <Link to="/" className="inline-flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-              <BriefcaseBusiness className="h-6 w-6" />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 flex flex-col">
+
+      {/* Top nav bar */}
+      <header className="px-6 py-4 flex items-center justify-between max-w-7xl mx-auto w-full">
+        <Link to="/" className="inline-flex items-center gap-3 group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-md shadow-blue-200">
+            <BriefcaseBusiness className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Hiring Console</p>
+            <p className="text-base font-bold text-gray-900 leading-tight">JobAI Employers</p>
+          </div>
+        </Link>
+        <Link to="/" className="text-sm text-gray-400 hover:text-gray-700 font-medium transition-colors">
+          ← Back to site
+        </Link>
+      </header>
+
+      {/* Main content */}
+      <div className="flex-1 flex items-center">
+        <div className="mx-auto w-full max-w-6xl px-6 py-10 grid gap-14 lg:grid-cols-[1fr_480px] items-center">
+
+          {/* Left — branding */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-10"
+          >
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-accent">Hiring Console</p>
-              <p className="text-xl font-semibold">Employer Panel</p>
-            </div>
-          </Link>
-
-          <div className="max-w-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.26em] text-accent">Modern recruitment OS</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight lg:text-6xl">
-              Manage jobs, candidates, and hiring momentum from one workspace.
-            </h1>
-            <p className="mt-5 text-base text-muted-foreground lg:text-lg">
-              Employers stay inside a dedicated workspace, separate from job-seeker tools, with verified onboarding before access is granted.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            {features.map((feature) => (
-              <div key={feature} className="rounded-3xl border border-border/70 bg-card/80 p-5 shadow-sm">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <p className="text-sm font-medium leading-6">{feature}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="rounded-[2rem] border border-border/70 bg-card/90 p-8 shadow-sm">
-            <div className="flex rounded-2xl bg-secondary p-1">
-              <button
-                type="button"
-                onClick={() => setMode("login")}
-                className={`flex-1 rounded-xl px-4 py-3 text-sm font-medium ${mode === "login" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-              >
-                Employer login
-              </button>
-              <button
-                type="button"
-                onClick={resetRegisterFlow}
-                className={`flex-1 rounded-xl px-4 py-3 text-sm font-medium ${mode === "register" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-              >
-                Create access
-              </button>
-            </div>
-
-            <div className="mt-8">
-              <h2 className="text-2xl font-semibold">{mode === "login" ? "Welcome back" : "Create employer account"}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {mode === "login"
-                  ? "Only users with backend role `employer` or `admin` can access the employer dashboard."
-                  : "Step-by-step onboarding with Firebase email verification before the employer workspace is created."}
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-700 mb-5">
+                For Employers
+              </span>
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 tracking-tight leading-[1.08] mb-5">
+                Hire faster with{" "}
+                <span className="text-blue-600">AI-matched</span>{" "}
+                candidates
+              </h1>
+              <p className="text-gray-500 text-lg leading-relaxed max-w-lg">
+                Post roles, review applicants, and manage your entire hiring pipeline from a single verified workspace.
               </p>
             </div>
 
-            {mode === "login" ? (
-              <div className="mt-6 space-y-4">
-                <Button
-                  type="button"
-                  className="w-full rounded-2xl bg-[#0A66C2] text-white hover:bg-[#004182] h-12 text-base gap-3"
-                  onClick={handleLinkedInLogin}
-                  disabled={linkedInLoading || loading}
-                >
-                  {linkedInLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Linkedin className="h-5 w-5" />
-                  )}
-                  Sign in with LinkedIn
-                </Button>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
+            {/* Feature cards */}
+            <div className="grid sm:grid-cols-3 gap-4">
+              {features.map((f) => {
+                const Icon = f.icon;
+                return (
+                  <div key={f.title} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+                      <Icon className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-900 mb-1">{f.title}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
                   </div>
-                  <div className="relative flex justify-center">
-                    <span className="bg-card px-4 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                      or use email
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : null}
+                );
+              })}
+            </div>
 
-            {invitePreview ? (
-              <div className="mt-6 rounded-3xl border border-primary/20 bg-primary/5 p-5">
-                <p className="text-sm font-semibold text-primary">You&apos;ve been invited</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Join <span className="font-medium text-foreground">{invitePreview.company_name}</span> as {invitePreview.role.replace("_", " ")} using <span className="font-medium text-foreground">{invitePreview.email}</span>.
+            {/* Social proof */}
+            <div className="flex items-center gap-6 pt-2">
+              <div className="text-center">
+                <p className="text-2xl font-black text-gray-900">500+</p>
+                <p className="text-xs text-gray-400 font-medium">Companies hiring</p>
+              </div>
+              <div className="h-10 w-px bg-gray-200" />
+              <div className="text-center">
+                <p className="text-2xl font-black text-gray-900">100K+</p>
+                <p className="text-xs text-gray-400 font-medium">Executive candidates</p>
+              </div>
+              <div className="h-10 w-px bg-gray-200" />
+              <div className="text-center">
+                <p className="text-2xl font-black text-gray-900">3×</p>
+                <p className="text-xs text-gray-400 font-medium">Faster hiring</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right — form card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
+          >
+            <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-xl shadow-gray-100/80">
+
+              {/* Tab toggle */}
+              <div className="flex rounded-2xl bg-gray-100 p-1 mb-8">
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
+                    mode === "login" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={resetRegisterFlow}
+                  className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
+                    mode === "register" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Create account
+                </button>
+              </div>
+
+              {/* Heading */}
+              <div className="mb-6">
+                <h2 className="text-2xl font-black text-gray-900">
+                  {mode === "login" ? "Welcome back" : "Create your workspace"}
+                </h2>
+                <p className="mt-1.5 text-sm text-gray-500">
+                  {mode === "login"
+                    ? "Sign in to your employer dashboard."
+                    : "Get verified access in 3 quick steps."}
                 </p>
               </div>
-            ) : null}
 
-            {mode === "register" ? (
-              <div className="mt-6 flex items-center gap-3">
-                {steps.map((step) => {
-                  const active = registerStep === step.id;
-                  const complete = registerStep > step.id;
+              {/* LinkedIn — login only */}
+              {mode === "login" && (
+                <div className="space-y-4 mb-6">
+                  <button
+                    type="button"
+                    onClick={handleLinkedInLogin}
+                    disabled={linkedInLoading || loading}
+                    className="w-full flex items-center justify-center gap-3 h-12 rounded-2xl bg-[#0A66C2] hover:bg-[#004182] text-white font-bold text-sm transition-colors disabled:opacity-60"
+                  >
+                    {linkedInLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Linkedin className="h-5 w-5" />}
+                    Continue with LinkedIn
+                  </button>
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">or email</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+                </div>
+              )}
 
-                  return (
-                    <div key={step.id} className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold ${complete ? "border-primary bg-primary text-primary-foreground" : active ? "border-accent bg-accent/10 text-accent" : "border-border text-muted-foreground"}`}>
-                        {complete ? <CheckCircle2 className="h-4 w-4" /> : step.id}
+              {/* Invite banner */}
+              {invitePreview && (
+                <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                  <p className="text-sm font-bold text-blue-700 mb-1">You've been invited</p>
+                  <p className="text-sm text-blue-600">
+                    Join <span className="font-semibold">{invitePreview.company_name}</span> as{" "}
+                    {invitePreview.role.replace("_", " ")} using{" "}
+                    <span className="font-semibold">{invitePreview.email}</span>.
+                  </p>
+                </div>
+              )}
+
+              {/* Register step tracker */}
+              {mode === "register" && (
+                <div className="mb-6 flex items-center gap-2">
+                  {steps.map((step, idx) => {
+                    const active   = registerStep === step.id;
+                    const complete = registerStep > step.id;
+                    return (
+                      <div key={step.id} className="flex items-center gap-2 flex-1 last:flex-none">
+                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors ${
+                          complete ? "bg-blue-600 text-white" :
+                          active   ? "bg-blue-50 text-blue-600 border-2 border-blue-600" :
+                                     "bg-gray-100 text-gray-400"
+                        }`}>
+                          {complete ? <CheckCircle2 className="h-4 w-4" /> : step.id}
+                        </div>
+                        <span className={`text-xs font-bold hidden sm:block ${active ? "text-gray-900" : "text-gray-400"}`}>
+                          {step.label}
+                        </span>
+                        {idx < steps.length - 1 && (
+                          <div className={`flex-1 h-px mx-1 ${complete ? "bg-blue-300" : "bg-gray-200"}`} />
+                        )}
                       </div>
-                      <div className="hidden sm:block">
-                        <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${active ? "text-accent" : "text-muted-foreground"}`}>
-                          Step {step.id}
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+
+                {/* Step 1 extra fields */}
+                {mode === "register" && registerStep === 1 && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-gray-700">Full name</label>
+                      <div className="relative">
+                        <User2 className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input className="pl-10 h-11 rounded-xl border-gray-200" placeholder="Jordan Rivera"
+                          value={form.displayName}
+                          onChange={(e) => setForm(c => ({ ...c, displayName: e.target.value }))} required />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-gray-700">Company name</label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input className="pl-10 h-11 rounded-xl border-gray-200" placeholder="Northstar Labs"
+                          value={form.companyName}
+                          onChange={(e) => setForm(c => ({ ...c, companyName: e.target.value }))} required />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Step 2 — verify email */}
+                {mode === "register" && registerStep === 2 && (
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100">
+                        <MailCheck className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">Check your inbox</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          We sent a verification link to <span className="font-semibold text-gray-800">{form.email}</span>.
+                          Open it, then come back and click below.
                         </p>
-                        <p className="text-sm font-medium">{step.label}</p>
+                        {verificationEmailSent && (
+                          <p className="mt-2 text-xs font-bold text-blue-600 uppercase tracking-wider">Email sent ✓</p>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            ) : null}
-
-            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-              {mode === "register" && registerStep === 1 ? (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Full name</label>
-                    <div className="relative">
-                      <User2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        className="pl-10"
-                        placeholder="Jordan Rivera"
-                        value={form.displayName}
-                        onChange={(event) => setForm((current) => ({ ...current, displayName: event.target.value }))}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Company name</label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        className="pl-10"
-                        placeholder="Northstar Labs"
-                        value={form.companyName}
-                        onChange={(event) => setForm((current) => ({ ...current, companyName: event.target.value }))}
-                        required
-                      />
-                    </div>
-                  </div>
-                </>
-              ) : null}
-
-              {mode === "register" && registerStep === 2 ? (
-                <div className="rounded-3xl border border-accent/20 bg-accent/5 p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-                      <MailCheck className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">Step 2: Verify your email</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        We sent a Firebase verification email to <span className="font-medium text-foreground">{form.email}</span>.
-                        Open it, verify the email, and then return here.
-                      </p>
-                      {verificationEmailSent ? (
-                        <p className="mt-3 text-xs font-medium uppercase tracking-[0.2em] text-accent">Verification email sent</p>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={async () => {
-                        try {
-                          const firebaseUser =
-                            (await getFirebaseUserForFormEmail()) ||
-                            (await signInWithEmailAndPassword(auth, normalizedEmail, form.password)).user;
-                          await sendEmailVerification(firebaseUser);
-                          setVerificationEmailSent(true);
-                          toast.success("Verification email resent.");
-                        } catch (error: any) {
-                          toast.error(getErrorMessage(error, "Unable to resend verification email."));
-                        }
-                      }}
-                      disabled={loading}
-                    >
-                      Resend email
-                    </Button>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? "Checking..." : "I've verified"}
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-
-              {mode === "register" && registerStep === 3 ? (
-                <div className="rounded-3xl border border-primary/20 bg-primary/5 p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <ShieldCheck className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">Step 3: Create employer workspace</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Your Firebase email is verified. We'll now create the employer user, link the company, and open the employer dashboard.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 rounded-2xl bg-background/70 p-4 text-sm">
-                    <div className="flex justify-between gap-4">
-                      <span className="text-muted-foreground">Employer</span>
-                      <span className="font-medium">{form.displayName}</span>
-                    </div>
-                    <div className="mt-2 flex justify-between gap-4">
-                      <span className="text-muted-foreground">Company</span>
-                      <span className="font-medium">{form.companyName}</span>
-                    </div>
-                    <div className="mt-2 flex justify-between gap-4">
-                      <span className="text-muted-foreground">Email</span>
-                      <span className="font-medium">{form.email}</span>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {(mode === "login" || registerStep === 1) ? (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Email</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        type="email"
-                        className="pl-10"
-                        placeholder="team@company.com"
-                        value={form.email}
-                        onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        className="pl-10 pr-10"
-                        placeholder="Enter your password"
-                        value={form.password}
-                        onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                        onClick={() => setShowPassword((current) => !current)}
+                    <div className="flex gap-3">
+                      <button type="button" disabled={loading}
+                        onClick={async () => {
+                          try {
+                            const u = (await getFirebaseUserForFormEmail()) ||
+                              (await signInWithEmailAndPassword(auth, normalizedEmail, form.password)).user;
+                            await sendEmailVerification(u);
+                            setVerificationEmailSent(true);
+                            toast.success("Verification email resent.");
+                          } catch (err: any) {
+                            toast.error(getErrorMessage(err, "Unable to resend."));
+                          }
+                        }}
+                        className="flex-1 h-10 rounded-xl border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:border-gray-400 transition-colors disabled:opacity-50"
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        Resend email
+                      </button>
+                      <button type="submit" disabled={loading}
+                        className="flex-1 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors disabled:opacity-50"
+                      >
+                        {loading ? "Checking…" : "I've verified →"}
                       </button>
                     </div>
                   </div>
-                </>
-              ) : null}
+                )}
 
-              <div className="flex gap-3">
-                {mode === "register" && registerStep > 1 ? (
-                  <Button type="button" variant="outline" className="flex-1 rounded-2xl" onClick={() => setRegisterStep((current) => (current === 3 ? 2 : 1))}>
-                    Back
-                  </Button>
-                ) : null}
-                <Button type="submit" className="flex-1 rounded-2xl" size="lg" disabled={loading}>
-                  {loading ? (
-                    "Please wait..."
-                  ) : mode === "login" ? (
-                    "Open employer dashboard"
-                  ) : registerStep === 1 ? (
-                    "Continue to verification"
-                  ) : registerStep === 2 ? (
-                    "Confirm verification"
-                  ) : (
-                    "Create employer workspace"
-                  )}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </form>
+                {/* Step 3 — workspace summary */}
+                {mode === "register" && registerStep === 3 && (
+                  <div className="rounded-2xl border border-green-100 bg-green-50/60 p-5">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100">
+                        <ShieldCheck className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">Email verified — almost there!</p>
+                        <p className="text-sm text-gray-500 mt-1">We'll create your employer workspace now.</p>
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-white border border-gray-100 divide-y divide-gray-100 text-sm overflow-hidden">
+                      {[["Name", form.displayName], ["Company", form.companyName], ["Email", form.email]].map(([k, v]) => (
+                        <div key={k} className="flex items-center justify-between px-4 py-2.5">
+                          <span className="text-gray-400 font-medium">{k}</span>
+                          <span className="font-semibold text-gray-800">{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              {mode === "login" ? "New employer here?" : "Already have employer access?"}{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  if (mode === "login") {
-                    resetRegisterFlow();
-                  } else {
-                    setMode("login");
-                  }
-                }}
-                className="font-medium text-accent hover:underline"
-              >
-                {mode === "login" ? "Create workspace" : "Sign in"}
-              </button>
-            </p>
-          </div>
-        </motion.div>
+                {/* Email + password inputs */}
+                {(mode === "login" || registerStep === 1) && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-gray-700">Work email</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input type="email" className="pl-10 h-11 rounded-xl border-gray-200" placeholder="team@company.com"
+                          value={form.email}
+                          onChange={(e) => setForm(c => ({ ...c, email: e.target.value }))} required />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-gray-700">Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input type={showPassword ? "text" : "password"} className="pl-10 pr-11 h-11 rounded-xl border-gray-200"
+                          placeholder="Enter your password"
+                          value={form.password}
+                          onChange={(e) => setForm(c => ({ ...c, password: e.target.value }))} required />
+                        <button type="button"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          onClick={() => setShowPassword(v => !v)}>
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* CTA buttons */}
+                {registerStep !== 2 && (
+                  <div className="flex gap-3 pt-1">
+                    {mode === "register" && registerStep > 1 && (
+                      <button type="button"
+                        onClick={() => setRegisterStep(s => (s === 3 ? 2 : 1) as 1|2|3)}
+                        className="h-12 px-5 rounded-2xl border border-gray-200 text-sm font-bold text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all"
+                      >
+                        Back
+                      </button>
+                    )}
+                    <button type="submit" disabled={loading}
+                      className="flex-1 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-200 transition-all disabled:opacity-60"
+                    >
+                      {loading ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Please wait…</>
+                      ) : mode === "login" ? (
+                        <>Open dashboard <ArrowRight className="h-4 w-4" /></>
+                      ) : registerStep === 1 ? (
+                        <>Continue <ArrowRight className="h-4 w-4" /></>
+                      ) : (
+                        <>Create workspace <ArrowRight className="h-4 w-4" /></>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </form>
+
+              {/* Toggle link */}
+              <p className="mt-6 text-center text-sm text-gray-500">
+                {mode === "login" ? "New employer?" : "Already have access?"}{" "}
+                <button type="button"
+                  onClick={() => mode === "login" ? resetRegisterFlow() : setMode("login")}
+                  className="font-bold text-blue-600 hover:underline"
+                >
+                  {mode === "login" ? "Create workspace" : "Sign in"}
+                </button>
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

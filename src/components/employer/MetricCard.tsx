@@ -1,33 +1,41 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
 
 export function MetricCard({
   title,
   value,
   helper,
   icon,
+  trend,
 }: {
   title: string;
   value: string | number;
   helper: string;
   icon: ReactNode;
+  trend?: { value: number; label: string };
 }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className="overflow-hidden rounded-3xl border-border/70 bg-card/90 shadow-sm">
-        <CardContent className="relative p-6">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent via-orange-400 to-amber-300" />
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{title}</p>
-              <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
-              <p className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">{helper}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
+          <p className="mt-2 text-3xl font-black text-gray-900 tracking-tight leading-none">{value}</p>
+          <p className="mt-2 text-xs text-gray-400 font-medium">{helper}</p>
+          {trend && (
+            <div className={`mt-2 inline-flex items-center gap-1 text-xs font-bold ${trend.value >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+              <span>{trend.value >= 0 ? "↑" : "↓"} {Math.abs(trend.value)}%</span>
+              <span className="text-gray-400 font-normal">{trend.label}</span>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent">{icon}</div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </div>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+          {icon}
+        </div>
+      </div>
     </motion.div>
   );
 }

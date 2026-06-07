@@ -12,13 +12,15 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-accent">{eyebrow}</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight lg:text-4xl">{title}</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground lg:text-base">{description}</p>
+        <span className="inline-block rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-xs font-bold uppercase tracking-widest text-blue-600 mb-2">
+          {eyebrow}
+        </span>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight lg:text-3xl">{title}</h1>
+        <p className="mt-1.5 max-w-2xl text-sm text-gray-500 leading-relaxed">{description}</p>
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
+      {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
     </div>
   );
 }

@@ -164,10 +164,11 @@ export async function getEmployerBootstrap() {
 }
 
 export async function getEmployerJobs(search = "") {
-  const response = await api.get<JobPosting[]>("/api/employer/jobs/", {
+  const response = await api.get("/api/employer/jobs/", {
     params: search ? { search } : undefined,
   });
-  return response.data;
+  const data = response.data;
+  return (Array.isArray(data) ? data : (data?.results ?? [])) as JobPosting[];
 }
 
 export async function getEmployerJobOptions() {

@@ -98,9 +98,13 @@ api.interceptors.request.use(
             mutationAttempts[endpoint].push(now);
         }
 
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        const url = config.url || '';
+        const isAuthEndpoint = url.includes('/api/auth/') || url.includes('/api/token/');
+        if (!isAuthEndpoint) {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
         }
         return config;
     },

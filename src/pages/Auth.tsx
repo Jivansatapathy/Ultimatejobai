@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import {
-  Sparkles,
   Mail,
   Lock,
   User,
   Eye,
   EyeOff,
   ArrowRight,
-  CheckCircle2,
-  Building2
+  Check,
+  Building2,
+  Bot,
 } from "lucide-react";
 import api from "@/services/api";
 import { subscriptionService } from "@/services/subscriptionService";
@@ -19,14 +18,27 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { sanitizeString, sanitizeEmail } from "@/lib/sanitization";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 
-const features = [
-  "AI-powered resume optimization",
-  "Smart job matching algorithms",
-  "Automated application tracking",
-  "Enterprise-grade security",
+const EXEC_FEATURES = [
+  "100,000+ C-Suite & executive roles across US & Canada",
+  "Apex™ applies to roles on your behalf — hands-free",
+  "ATS-optimized executive resume in minutes",
+  "AI-matched jobs at the right seniority level",
 ];
+
+const TESTIMONIAL = {
+  quote:
+    "I landed my CFO role within 6 weeks. Apex™ handled every application while I focused on networking and prep. Genuinely game-changing.",
+  name: "Michael Torres",
+  title: "CFO, Brookfield Asset Management",
+  initials: "MT",
+};
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -35,20 +47,29 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
   const selectedPlanSlug = searchParams.get("plan") || "";
-  const shouldStartCheckout = searchParams.get("checkout") === "1" && Boolean(selectedPlanSlug);
+  const shouldStartCheckout =
+    searchParams.get("checkout") === "1" && Boolean(selectedPlanSlug);
 
   const [formData, setFormData] = useState({
     name: "",
-    email: !isSignUp && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_EMAIL || "") : "",
-    password: !isSignUp && isLocalhost ? (import.meta.env.VITE_DEV_ADMIN_PASSWORD || "") : "",
+    email:
+      !isSignUp && isLocalhost
+        ? (import.meta.env.VITE_DEV_ADMIN_EMAIL || "")
+        : "",
+    password:
+      !isSignUp && isLocalhost
+        ? (import.meta.env.VITE_DEV_ADMIN_PASSWORD || "")
+        : "",
     confirmPassword: "",
   });
 
-  // Redirect already-authenticated users away from login page
   useEffect(() => {
-    if (isAuthenticated && !selectedPlanSlug) navigate("/dashboard", { replace: true });
+    if (isAuthenticated && !selectedPlanSlug)
+      navigate("/dashboard", { replace: true });
   }, [isAuthenticated, navigate, selectedPlanSlug]);
 
   useEffect(() => {
@@ -58,21 +79,16 @@ export default function Auth() {
   const checkRateLimit = () => {
     const attemptsStr = localStorage.getItem("login_attempts");
     const now = Date.now();
-    const timeframe = 15 * 60 * 1000; // 15 minutes
-
+    const timeframe = 15 * 60 * 1000;
     if (!attemptsStr) return { allowed: true };
-
     let attempts: number[] = JSON.parse(attemptsStr);
-    // Filter out old attempts
-    attempts = attempts.filter((timestamp) => now - timestamp < timeframe);
+    attempts = attempts.filter((t) => now - t < timeframe);
     localStorage.setItem("login_attempts", JSON.stringify(attempts));
-
     if (attempts.length >= 5) {
       const oldest = attempts[0];
       const waitTime = Math.ceil((timeframe - (now - oldest)) / 60000);
       return { allowed: false, waitTime };
     }
-
     return { allowed: true };
   };
 
@@ -87,12 +103,16 @@ export default function Auth() {
   const handleForgotPassword = async () => {
     const sanitizedEmail = sanitizeEmail(formData.email);
     if (!sanitizedEmail) {
-      toast.error("Enter your email address above first, then click Forgot password.");
+      toast.error(
+        "Enter your email address above first, then click Forgot password."
+      );
       return;
     }
     try {
       await sendPasswordResetEmail(auth, sanitizedEmail);
-      toast.success(`Password reset email sent to ${sanitizedEmail}. Check your inbox.`);
+      toast.success(
+        `Password reset email sent to ${sanitizedEmail}. Check your inbox.`
+      );
     } catch (error: any) {
       if (error.code === "auth/user-not-found") {
         toast.error("No account found with that email address.");
@@ -131,20 +151,25 @@ export default function Auth() {
     try {
       let firebaseUser;
       if (isSignUp) {
-        // Sign Up with Firebase
         const sanitizedName = sanitizeString(formData.name, 100);
-        const userCredential = await createUserWithEmailAndPassword(auth, sanitizedEmail, formData.password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          sanitizedEmail,
+          formData.password
+        );
         firebaseUser = userCredential.user;
         await updateProfile(firebaseUser, { displayName: sanitizedName });
         toast.success("Account created successfully!");
       } else {
-        // Sign In with Firebase
-        const userCredential = await signInWithEmailAndPassword(auth, sanitizedEmail, formData.password);
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          sanitizedEmail,
+          formData.password
+        );
         firebaseUser = userCredential.user;
       }
 
-      // Exchange Firebase ID Token for Backend JWT
-      const token = await firebaseUser.getIdToken();
+      const token = await firebaseUser.getIdToken(true);
       const response = await api.post("/api/auth/firebase-login/", {
         token,
         selected_plan_slug: selectedPlanSlug,
@@ -152,20 +177,26 @@ export default function Auth() {
 
       const { access, refresh, is_new_user, is_admin } = response.data;
       login(access, refresh, is_admin, response.data.email || formData.email);
-      
+
       if (!isSignUp) toast.success("Welcome back!");
 
       if (shouldStartCheckout) {
         toast.success("Account ready. Taking you to secure checkout...");
-        const { url } = await subscriptionService.createCheckoutSession(selectedPlanSlug);
+        const { url } = await subscriptionService.createCheckoutSession(
+          selectedPlanSlug
+        );
         if (url) {
           window.location.href = url;
           return;
         }
-        navigate(`/plans?select=1&plan=${encodeURIComponent(selectedPlanSlug)}`);
+        navigate(
+          `/plans?select=1&plan=${encodeURIComponent(selectedPlanSlug)}`
+        );
       } else if (selectedPlanSlug) {
-        navigate(`/plans?welcome=1&plan=${encodeURIComponent(selectedPlanSlug)}`);
-      } else if (is_new_user) {
+        navigate(
+          `/plans?welcome=1&plan=${encodeURIComponent(selectedPlanSlug)}`
+        );
+      } else if (is_new_user && !localStorage.getItem("onboarding_completed")) {
         navigate("/onboarding");
       } else {
         navigate("/dashboard");
@@ -177,7 +208,8 @@ export default function Auth() {
       if (typeof error?.code === "string") {
         switch (error.code) {
           case "auth/network-request-failed":
-            errorMsg = "Can't reach the authentication server. If you have an ad blocker or privacy extension, disable it for this page and try again.";
+            errorMsg =
+              "Can't reach the authentication server. If you have an ad blocker or privacy extension, disable it for this page and try again.";
             break;
           case "auth/email-already-in-use":
             errorMsg = "This email is already registered. Try logging in instead.";
@@ -194,12 +226,17 @@ export default function Auth() {
             errorMsg = "Please enter a valid email address.";
             break;
           case "auth/too-many-requests":
-            errorMsg = "Too many failed attempts. Please wait a few minutes before trying again.";
+            errorMsg =
+              "Too many failed attempts. Please wait a few minutes before trying again.";
             break;
           default:
-            // Firebase socket/fetch errors fall here — give actionable message
-            if (error.message?.toLowerCase().includes("socket") || error.message?.toLowerCase().includes("fetch") || error.message?.toLowerCase().includes("network")) {
-              errorMsg = "Can't reach the authentication server. Disable any ad blockers or privacy extensions for this page, then try again.";
+            if (
+              error.message?.toLowerCase().includes("socket") ||
+              error.message?.toLowerCase().includes("fetch") ||
+              error.message?.toLowerCase().includes("network")
+            ) {
+              errorMsg =
+                "Can't reach the authentication server. Disable any ad blockers or privacy extensions for this page, then try again.";
             } else {
               errorMsg = error.message || errorMsg;
             }
@@ -210,13 +247,14 @@ export default function Auth() {
           errorMsg = data.detail;
         } else if (data.error) {
           errorMsg = data.error;
-        } else if (typeof data === 'object') {
-          // Flatten field-specific errors (e.g., { email: ["already exists"], username: ["too short"] })
+        } else if (typeof data === "object") {
           const fields = Object.keys(data);
           if (fields.length > 0) {
             const firstField = fields[0];
             const content = data[firstField];
-            errorMsg = Array.isArray(content) ? `${firstField}: ${content[0]}` : `${firstField}: ${content}`;
+            errorMsg = Array.isArray(content)
+              ? `${firstField}: ${content[0]}`
+              : `${firstField}: ${content}`;
           }
         }
       } else if (error.message) {
@@ -229,230 +267,317 @@ export default function Auth() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1e] flex relative overflow-hidden">
-      {/* Atmospheric glows */}
-      <div className="pointer-events-none absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-violet-600/20 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-teal-500/15 blur-[120px]" />
+  const inputClass =
+    "w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 text-black placeholder:text-zinc-400 rounded-xl text-sm focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all";
 
-      {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg shadow-teal-500/25">
-              <Sparkles className="h-5 w-5 text-white" />
+  return (
+    <div className="min-h-screen flex">
+
+      {/* ── Left: Form panel ─────────────────────────────────── */}
+      <div className="flex-1 flex flex-col bg-white">
+
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black">
+              <Bot className="h-4 w-4 text-white" />
             </div>
-            <span className="text-2xl font-bold text-white">
-              Career<span className="text-teal-400">AI</span>
+            <span className="text-[1rem] font-extrabold tracking-tight text-black">
+              Job<span className="text-black/30">AI</span>
             </span>
           </Link>
-
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2 text-white">
-              {isSignUp ? "Create your account" : "Welcome back"}
-            </h1>
-            <p className="text-slate-400">
-              {isSignUp
-                ? "Start your AI-powered career journey today"
-                : "Sign in to access your career dashboard"}
-            </p>
-          </div>
-
-          <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-white">
-                    {isSignUp ? "Signing up as an employer?" : "Need employer access?"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    Use the employer workspace to post jobs, manage candidates, and stay inside the hiring console.
-                  </p>
-                </div>
-                <Link to={`/employer/auth${isSignUp ? "" : ""}`}>
-                  <Button type="button" variant="outline" size="sm" className="gap-2 whitespace-nowrap border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white">
-                    <Building2 className="h-4 w-4" />
-                    {isSignUp ? "Employer Signup" : "Employer Login"}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 bg-white/[0.05] border border-white/10 text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            {isSignUp && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Confirm Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className={`w-full pl-10 pr-4 py-3 bg-white/[0.05] border text-slate-100 placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:bg-white/10 transition-all ${
-                      formData.confirmPassword && formData.confirmPassword !== formData.password
-                        ? "border-red-500/50"
-                        : "border-white/10"
-                    }`}
-                    required
-                  />
-                </div>
-                {formData.confirmPassword && formData.confirmPassword !== formData.password && (
-                  <p className="text-xs text-red-400">Passwords do not match</p>
-                )}
-              </div>
-            )}
-
-            {!isSignUp && (
-              <div className="flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-sm text-teal-400 hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
-            <Button type="submit" size="lg" className="w-full gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white shadow-lg shadow-teal-500/25 font-semibold" disabled={loading}>
-              {loading ? (
-                <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-                  {isSignUp ? "Creating Account..." : "Signing In..."}
-                </>
-              ) : (
-                <>
-                  {isSignUp ? "Create Account" : "Sign In"}
-                  <ArrowRight className="h-5 w-5" />
-                </>
-              )}
-            </Button>
-          </form>
-
-          {/* Toggle */}
-          <p className="text-center mt-6 text-slate-400">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          <p className="text-sm text-zinc-500">
+            {isSignUp ? "Already have an account?" : "New here?"}{" "}
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-teal-400 hover:underline font-medium"
+              className="font-bold text-black hover:underline underline-offset-2"
             >
-              {isSignUp ? "Sign in" : "Sign up"}
+              {isSignUp ? "Sign in" : "Create account"}
             </button>
           </p>
-        </motion.div>
+        </div>
+
+        {/* Form area */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12">
+          <motion.div
+            key={isSignUp ? "signup" : "signin"}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-[400px]"
+          >
+            {/* Heading */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-extrabold text-black tracking-tight mb-1.5">
+                {isSignUp ? "Create your account" : "Welcome back"}
+              </h1>
+              <p className="text-sm text-zinc-500">
+                {isSignUp
+                  ? "Join 10,000+ executives using JobAI to land C-Suite roles."
+                  : "Sign in to access your career dashboard."}
+              </p>
+            </div>
+
+            {/* Employer redirect */}
+            <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-black">
+                  {isSignUp ? "Signing up as an employer?" : "Need employer access?"}
+                </p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Post jobs and manage candidates in the employer workspace.
+                </p>
+              </div>
+              <Link to="/employer/auth" className="shrink-0">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-zinc-300 bg-white text-xs font-bold text-black hover:bg-zinc-50 transition-all"
+                >
+                  <Building2 className="h-3.5 w-3.5 text-zinc-500" />
+                  {isSignUp ? "Employer Signup" : "Employer Login"}
+                </button>
+              </Link>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+
+              {isSignUp && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className={inputClass}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    className={`${inputClass} pr-11`}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {isSignUp && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wide">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                      className={`${inputClass} ${
+                        formData.confirmPassword &&
+                        formData.confirmPassword !== formData.password
+                          ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                          : ""
+                      }`}
+                      required
+                    />
+                  </div>
+                  {formData.confirmPassword &&
+                    formData.confirmPassword !== formData.password && (
+                      <p className="text-xs text-red-500 font-medium">
+                        Passwords do not match
+                      </p>
+                    )}
+                </div>
+              )}
+
+              {!isSignUp && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors underline underline-offset-2"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-black hover:bg-zinc-800 text-white text-sm font-bold transition-all mt-2 disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    {isSignUp ? "Creating account…" : "Signing in…"}
+                  </>
+                ) : (
+                  <>
+                    {isSignUp ? "Create Account" : "Sign In"}
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-xs text-zinc-400">
+              By continuing, you agree to our{" "}
+              <Link
+                to="/terms"
+                className="text-black font-semibold hover:underline underline-offset-2"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                to="/privacy"
+                className="text-black font-semibold hover:underline underline-offset-2"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </motion.div>
+        </div>
       </div>
 
-      {/* Right Side - Features */}
-      <div className="hidden lg:flex flex-1 items-center justify-center p-8 relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="relative z-10 max-w-md"
-        >
-          <h2 className="text-3xl font-bold mb-4 text-white">
-            Accelerate Your{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-violet-400 to-rose-400">Career Growth</span>
-          </h2>
-          <p className="text-slate-400 mb-8">
-            Join thousands of professionals who have transformed their job search
-            with our AI-powered career intelligence platform.
-          </p>
+      {/* ── Right: Brand panel (hidden on mobile) ────────────── */}
+      <div className="hidden lg:flex w-[480px] xl:w-[540px] flex-col bg-black relative overflow-hidden">
 
-          <div className="space-y-4">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                className="flex items-center gap-3"
-              >
-                <div className="p-1 rounded-full bg-teal-500/10 border border-teal-500/20">
-                  <CheckCircle2 className="h-5 w-5 text-teal-400" />
-                </div>
-                <span className="text-slate-300">{feature}</span>
-              </motion.div>
-            ))}
-          </div>
+        {/* Subtle grid pattern */}
+        <div className="auth-grid-bg pointer-events-none absolute inset-0 opacity-[0.04]" />
 
-          <div className="mt-12 p-6 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08]">
-            <p className="text-sm text-slate-400 italic mb-4">
-              "CareerAI helped me land my dream job at a top tech company.
-              The ATS optimization alone increased my callback rate by 300%."
+        <div className="relative z-10 flex flex-col h-full px-12 py-14">
+
+          {/* Tag */}
+          <div className="mb-auto">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50 mb-8">
+              Executive Career Platform
+            </span>
+
+            <h2 className="text-[2rem] font-extrabold text-white leading-[1.15] tracking-tight mb-4">
+              The fastest way to your<br />
+              <span className="text-white/30">next C-Suite role.</span>
+            </h2>
+
+            <p className="text-sm text-white/40 leading-relaxed mb-10 max-w-sm">
+              Trusted by CEOs, CFOs, CTOs and VPs around the world.
+              Let Apex™ do the applying while you focus on what matters.
             </p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-violet-500" />
-              <div>
-                <p className="font-medium text-sm text-white">Sarah Chen</p>
-                <p className="text-xs text-slate-500">Senior Engineer at Meta</p>
-              </div>
+
+            {/* Feature list */}
+            <div className="space-y-3.5">
+              {EXEC_FEATURES.map((f, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + i * 0.08 }}
+                  className="flex items-start gap-3"
+                >
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10">
+                    <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                  </div>
+                  <span className="text-sm text-white/65 leading-snug">{f}</span>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </motion.div>
+
+          {/* Testimonial */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-12 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-6"
+          >
+            <p className="text-sm text-white/55 italic leading-relaxed mb-5">
+              "{TESTIMONIAL.quote}"
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 border border-white/10 text-xs font-black text-white/70 shrink-0">
+                {TESTIMONIAL.initials}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">{TESTIMONIAL.name}</p>
+                <p className="text-xs text-white/35">{TESTIMONIAL.title}</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bottom stats strip */}
+          <div className="mt-6 grid grid-cols-3 gap-4 pt-6 border-t border-white/[0.06]">
+            {[
+              { n: "100K+", label: "Executive Roles" },
+              { n: "10K+", label: "Senior Leaders" },
+              { n: "Apex™", label: "Auto-Apply Bot" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-lg font-extrabold text-white">{s.n}</p>
+                <p className="text-[10px] text-white/30 font-semibold">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

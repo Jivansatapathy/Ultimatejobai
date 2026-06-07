@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useMatch } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
@@ -40,8 +40,41 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
+type NavItemDef = typeof NAV[0];
+
+function NavItem({ item, unread, onNav }: { item: NavItemDef; unread: number; onNav?: () => void }) {
+  const match = useMatch({ path: item.href, end: !!item.exact });
+  const isActive = !!match;
+  const Icon = item.icon;
+  const isNotif = item.href === "/employer/notifications";
+
+  return (
+    <NavLink
+      to={item.href}
+      end={item.exact}
+      onClick={onNav}
+      className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+        isActive
+          ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
+          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+      }`}
+    >
+      <span className="flex items-center gap-3">
+        <Icon className="h-4 w-4 shrink-0" />
+        {item.label}
+      </span>
+      {isNotif && unread > 0 ? (
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      ) : (
+        <ChevronRight className={`h-3.5 w-3.5 transition-opacity ${isActive ? "opacity-60" : "opacity-0 group-hover:opacity-100"}`} />
+      )}
+    </NavLink>
+  );
+}
+
 function SidebarNav({ onNav }: { onNav?: () => void }) {
-  const location = useLocation();
   const { profile, bootstrap, logout } = useEmployerAuth();
 
   const visibleNav = NAV.filter(
@@ -65,41 +98,9 @@ function SidebarNav({ onNav }: { onNav?: () => void }) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {visibleNav.map(item => {
-          const Icon = item.icon;
-          const isNotif = item.href === "/employer/notifications";
-          return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              end={item.exact}
-              onClick={onNav}
-              className={({ isActive }) =>
-                `group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span className="flex items-center gap-3">
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {item.label}
-                  </span>
-                  {isNotif && unread > 0 ? (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">
-                      {unread > 9 ? "9+" : unread}
-                    </span>
-                  ) : (
-                    <ChevronRight className={`h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? "opacity-60" : ""}`} />
-                  )}
-                </>
-              )}
-            </NavLink>
-          );
-        })}
+        {visibleNav.map(item => (
+          <NavItem key={item.href} item={item} unread={unread} onNav={onNav} />
+        ))}
       </nav>
 
       {/* User footer */}

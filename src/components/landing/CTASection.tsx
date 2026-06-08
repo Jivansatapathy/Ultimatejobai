@@ -1,87 +1,71 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Crown } from "lucide-react";
 
-const benefits = [
+const BENEFITS = [
+  "Free to get started",
   "No credit card required",
-  "Free forever tier",
+  "Access 40,000+ executive roles",
   "Cancel anytime",
-  "Full feature access",
 ];
 
 export const CTASection = () => {
   return (
-    <section className="relative overflow-hidden bg-[#0a0f1e] py-28 px-6">
-      {/* Top border */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+    <section className="relative overflow-hidden bg-black py-24 px-6">
+      {/* Subtle blue glow top */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent" />
 
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[700px] rounded-full bg-teal-600/10 blur-[120px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-3xl">
+      <div className="relative mx-auto max-w-3xl text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
+          transition={{ duration: 0.55 }}
         >
-          {/* Badge */}
-          <span className="mb-8 inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-teal-400">
-            Get Started Today
+          {/* Blue-tinted badge */}
+          <span className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-400">
+            <Crown className="h-3 w-3" />
+            Join Top Executives
           </span>
 
-          {/* Heading */}
-          <h2 className="mb-6 text-5xl font-black tracking-tight leading-[1.05] sm:text-6xl md:text-7xl">
-            <span className="text-white">Ready to take your career</span>
-            <br />
-            <span className="bg-gradient-to-r from-teal-400 to-violet-400 bg-clip-text text-transparent">
-              to the next level?
-            </span>
+          <h2 className="mb-5 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.06] text-white">
+            Your Next C-Suite Role<br />
+            <span className="text-blue-400">Is Waiting For You</span>
           </h2>
 
-          {/* Subtitle */}
-          <p className="mx-auto mb-12 max-w-xl text-lg leading-relaxed text-slate-400">
-            Join 50,000+ professionals who use{" "}
-            <span className="text-white font-medium">CareerAI</span> to navigate
-            the modern job market with confidence.
+          <p className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-white/40">
+            Join thousands of senior leaders who use our platform to find exclusive CEO, CFO, CTO and VP roles —{" "}
+            and let <span className="text-white font-semibold">Apex™</span>, your personal apply delegate, handle every application for you.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="mb-14 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/auth?mode=signup" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto h-14 px-10 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-bold text-base shadow-lg shadow-teal-500/25 gap-2 group">
-                Get Started Free
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
+          <div className="mb-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {/* Blue primary CTA */}
+            <Link
+              to="/auth?mode=signup"
+              className="inline-flex items-center gap-2 px-9 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base transition-colors group"
+            >
+              Start For Free
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-            <Link to="/plans" className="w-full sm:w-auto">
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto h-14 px-10 rounded-xl border-white/15 bg-white/5 text-slate-200 hover:bg-white/10 hover:border-white/25 hover:text-white font-bold text-base backdrop-blur-sm"
-              >
-                View Plans
-              </Button>
+            <Link
+              to="/find-jobs"
+              className="inline-flex items-center gap-2 px-9 py-4 rounded-xl border border-white/20 text-white/70 hover:text-white hover:border-white/40 font-bold text-base transition-all"
+            >
+              Browse Jobs
             </Link>
           </div>
 
-          {/* Benefits */}
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
-            {benefits.map((benefit, i) => (
-              <div key={i} className="flex items-center gap-2 text-slate-300">
-                <CheckCircle2 className="h-4 w-4 text-teal-400 shrink-0" />
-                <span className="text-sm font-medium">{benefit}</span>
+          {/* Blue checkmarks */}
+          <div className="flex flex-wrap justify-center gap-x-7 gap-y-3">
+            {BENEFITS.map((b, i) => (
+              <div key={i} className="flex items-center gap-2 text-white/35">
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                <span className="text-sm">{b}</span>
               </div>
             ))}
           </div>
         </motion.div>
       </div>
-
-      {/* Bottom border */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </section>
   );
 };

@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Job, fetchLeverJobDetails, LeverJobDetails } from "@/services/jobService";
-import { Building2, MapPin, Globe, ArrowLeft, Send, ExternalLink, Loader2, Sparkles } from "lucide-react";
+import { Building2, MapPin, Globe, ArrowLeft, ExternalLink, Loader2, FileText, ChevronDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -68,7 +68,7 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
 
   useEffect(() => {
     const loadResumes = async () => {
-      if (!open || !job || job.source !== "employer") return;
+      if (!open || !job) return;
       try {
         setResumesLoading(true);
         const items = await careerService.getResumes();
@@ -88,7 +88,7 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
     };
 
     loadResumes();
-  }, [job, open]);
+  }, [job?.id, open]);
 
   if (!job) return null;
 
@@ -192,11 +192,33 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
                             <span className="mx-3 text-xs text-muted-foreground">or let the bot do it</span>
                             <div className="flex-1 border-t border-border" />
                           </div>
+                          {resumes.length > 1 && (
+                            <div className="w-full mb-2">
+                              <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1 font-medium">
+                                <FileText className="h-3 w-3" />
+                                Resume to apply with
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={selectedResumeId}
+                                  onChange={e => setSelectedResumeId(e.target.value)}
+                                  aria-label="Resume to apply with"
+                                  className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 pr-8 text-xs font-medium text-foreground outline-none focus:border-accent"
+                                >
+                                  {resumes.map(r => (
+                                    <option key={r.id} value={String(r.id)}>{getResumeLabel(r)}</option>
+                                  ))}
+                                </select>
+                                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                              </div>
+                            </div>
+                          )}
                           <ApplyBotButton
                             jobUrl={job.apply_url!}
                             jobTitle={job.title}
                             company={job.company}
                             jobId={String(job.id)}
+                            selectedResumeId={selectedResumeId ? parseInt(selectedResumeId, 10) : undefined}
                             alreadyApplied={appliedJobIds?.has(String(job.id))}
                             onApplied={onBotApplied}
                           />
@@ -208,14 +230,30 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
                   return (
                     <div className="flex flex-col h-full bg-white relative">
                         {/* Bot apply bar */}
-                        <div className="flex items-center gap-3 px-6 py-2 border-b border-border bg-secondary/5 shrink-0">
+                        <div className="flex items-center gap-3 px-6 py-2 border-b border-border bg-secondary/5 shrink-0 flex-wrap">
                           <span className="text-[10px] text-muted-foreground shrink-0">Prefer to auto-fill?</span>
+                          {resumes.length > 1 && (
+                            <div className="relative shrink-0">
+                              <select
+                                value={selectedResumeId}
+                                onChange={e => setSelectedResumeId(e.target.value)}
+                                aria-label="Resume to apply with"
+                                className="appearance-none rounded-lg border border-border bg-background pl-2 pr-6 py-1 text-[10px] font-medium text-foreground outline-none focus:border-accent"
+                              >
+                                {resumes.map(r => (
+                                  <option key={r.id} value={String(r.id)}>{getResumeLabel(r)}</option>
+                                ))}
+                              </select>
+                              <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                            </div>
+                          )}
                           <div className="shrink-0">
                             <ApplyBotButton
                               jobUrl={job.apply_url!}
                               jobTitle={job.title}
                               company={job.company}
                               jobId={String(job.id)}
+                              selectedResumeId={selectedResumeId ? parseInt(selectedResumeId, 10) : undefined}
                               alreadyApplied={appliedJobIds?.has(String(job.id))}
                               onApplied={onBotApplied}
                             />

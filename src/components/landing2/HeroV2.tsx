@@ -1,16 +1,35 @@
-import { motion } from "framer-motion";
+import { motion, useInView, animate } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Search, MapPin, Briefcase, TrendingUp, Users2, Crown, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, MapPin, Crown, ArrowRight } from "lucide-react";
 
 const QUICK_ROLES = ["CEO", "CFO", "CTO", "COO", "VP Engineering", "VP Sales", "CHRO", "Director"];
 
 const STATS = [
-  { value: "40,000+", label: "Executive Roles", icon: Briefcase },
-  { value: "500+",    label: "Hiring Companies", icon: TrendingUp },
-  { value: "Global", label: "Coverage", icon: MapPin },
-  { value: "Apex™",   label: "AI Apply Delegate", icon: Crown },
+  { num: 100, suffix: "K+", label: "Executive roles listed",          sub: "Updated daily" },
+  { num: 500, suffix: "+",  label: "Top hiring companies",            sub: "F500 to high-growth" },
+  { num: 3,   suffix: "×",  label: "Faster applications with Apex™", sub: "AI handles the paperwork" },
+  { num: 92,  suffix: "%",  label: "Profile match accuracy",          sub: "Powered by AI scoring" },
 ];
+
+function CountUp({ to, suffix }: { to: number; suffix: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+
+  useEffect(() => {
+    if (!inView || !ref.current) return;
+    const ctrl = animate(0, to, {
+      duration: 1.8,
+      ease: [0.16, 1, 0.3, 1], // expo-out feel
+      onUpdate(v) {
+        if (ref.current) ref.current.textContent = Math.round(v) + suffix;
+      },
+    });
+    return () => ctrl.stop();
+  }, [inView, to, suffix]);
+
+  return <span ref={ref}>0{suffix}</span>;
+}
 
 export const HeroV2 = () => {
   const navigate = useNavigate();
@@ -143,35 +162,41 @@ export const HeroV2 = () => {
 
       {/* Stats strip */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.36 }}
-        className="relative border-t border-gray-200 bg-white/80 backdrop-blur-sm"
+        transition={{ duration: 0.45, delay: 0.36 }}
+        className="relative bg-white border-t border-gray-100"
       >
-        <div className="mx-auto max-w-4xl px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {STATS.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <div key={i} className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                  <Icon className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-xl font-extrabold text-gray-900 leading-tight">{s.value}</p>
-                  <p className="text-xs text-gray-400 font-medium">{s.label}</p>
-                </div>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100">
+            {STATS.map((s, i) => (
+              <div
+                key={i}
+                className="flex flex-col items-center justify-center text-center px-6 py-8 gap-1"
+              >
+                <span className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-none tabular-nums">
+                  <CountUp to={s.num} suffix={s.suffix} />
+                </span>
+                <span className="text-sm font-bold text-gray-700 mt-2 leading-snug">
+                  {s.label}
+                </span>
+                <span className="text-xs text-gray-400 font-medium">{s.sub}</span>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        </div>
+
+        {/* Explore link */}
+        <div className="border-t border-gray-100 flex justify-center py-3">
+          <a
+            href="#categories"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors font-semibold"
+          >
+            Explore job categories
+            <ArrowRight className="h-4 w-4" />
+          </a>
         </div>
       </motion.div>
-
-      {/* Scroll cue */}
-      <div className="flex justify-center py-4 bg-white">
-        <a href="#categories" className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-blue-600 transition-colors font-medium">
-          Explore job categories <ArrowRight className="h-3.5 w-3.5" />
-        </a>
-      </div>
     </section>
   );
 };

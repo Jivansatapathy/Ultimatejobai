@@ -11,26 +11,23 @@ import { activityService } from "@/services/activityService";
 import { useAuth } from "@/context/AuthContext";
 
 const MANUAL_KEY = "gs_manual_checks";
-const OPEN_KEY = "gs_sidebar_open";
 
 interface Task {
     id: string;
     label: string;
     detail: string;
     icon: React.ElementType;
-    color: string;
-    iconBg: string;
     href: string;
     manual?: boolean;
 }
 
 const TASKS: Task[] = [
-    { id: "resume", label: "Upload your resume", detail: "AI parses and fills your profile.", icon: FileText, color: "text-violet-400", iconBg: "bg-violet-500/10", href: "/resume" },
-    { id: "profile", label: "Set your target role", detail: "Tell us what role you're aiming for.", icon: Target, color: "text-sky-400", iconBg: "bg-sky-500/10", href: "/resume", manual: true },
-    { id: "apply", label: "Apply to a job", detail: "Send your first application.", icon: Briefcase, color: "text-emerald-400", iconBg: "bg-emerald-500/10", href: "/jobs" },
-    { id: "interview", label: "Practice an interview", detail: "Run a mock session with AI feedback.", icon: Mic, color: "text-pink-400", iconBg: "bg-pink-500/10", href: "/interview" },
-    { id: "career_plan", label: "Start your career plan", detail: "Get a 12–24 month AI roadmap.", icon: TrendingUp, color: "text-amber-400", iconBg: "bg-amber-500/10", href: "/career-planner", manual: true },
-    { id: "mentor", label: "Explore AI Mentor", detail: "Job fairs, salary negotiator & more.", icon: Users, color: "text-teal-400", iconBg: "bg-teal-500/10", href: "/ai-mentor", manual: true },
+    { id: "resume",      label: "Upload your resume",     detail: "AI parses and fills your profile.",        icon: FileText,   href: "/resume" },
+    { id: "profile",     label: "Set your target role",   detail: "Tell us what role you're aiming for.",    icon: Target,     href: "/resume",          manual: true },
+    { id: "apply",       label: "Apply to a job",         detail: "Send your first application.",            icon: Briefcase,  href: "/jobs" },
+    { id: "interview",   label: "Practice an interview",  detail: "Run a mock session with AI feedback.",    icon: Mic,        href: "/interview" },
+    { id: "career_plan", label: "Start your career plan", detail: "Get a 12–24 month AI roadmap.",           icon: TrendingUp, href: "/career-planner",  manual: true },
+    { id: "mentor",      label: "Explore AI Mentor",      detail: "Job fairs, salary negotiator & more.",    icon: Users,      href: "/ai-mentor",       manual: true },
 ];
 
 interface ChecklistSidebarProps {
@@ -73,22 +70,20 @@ export default function ChecklistSidebar({ open, onClose }: ChecklistSidebarProp
 
     const completedCount = TASKS.filter(isChecked).length;
     const progress = Math.round((completedCount / TASKS.length) * 100);
+    const allDone = completedCount === TASKS.length;
 
-    const goTo = (href: string) => {
-        onClose();
-        navigate(href);
-    };
+    const goTo = (href: string) => { onClose(); navigate(href); };
 
     return (
         <AnimatePresence>
             {open && (
                 <>
-                    {/* Backdrop (mobile only) */}
+                    {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
                         onClick={onClose}
                     />
 
@@ -98,45 +93,49 @@ export default function ChecklistSidebar({ open, onClose }: ChecklistSidebarProp
                         animate={{ x: 0 }}
                         exit={{ x: "100%" }}
                         transition={{ type: "spring", stiffness: 320, damping: 32 }}
-                        className="fixed top-0 right-0 h-full w-80 z-50 flex flex-col bg-[#0e0e1a] border-l border-white/[0.08] shadow-2xl"
+                        className="fixed top-0 right-0 h-full w-80 z-50 flex flex-col bg-white border-l border-zinc-200 shadow-2xl"
                     >
-                        {/* Top accent */}
-                        <div className="h-0.5 w-full bg-gradient-to-r from-violet-500 via-sky-400 to-violet-500 shrink-0" />
+                        {/* Top accent bar */}
+                        <div className="h-1 w-full bg-black shrink-0" />
 
                         {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-4 shrink-0 border-b border-white/[0.06]">
+                        <div className="flex items-center justify-between px-6 py-5 shrink-0 border-b border-zinc-100">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
-                                    <ClipboardList className="h-4 w-4 text-violet-400" />
+                                <div className="h-9 w-9 rounded-xl bg-black flex items-center justify-center shrink-0">
+                                    <ClipboardList className="h-4 w-4 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-400">Getting Started</p>
-                                    <p className="text-sm font-bold text-white leading-tight">Setup Checklist</p>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-400">Getting Started</p>
+                                    <p className="text-sm font-extrabold text-black leading-tight">Setup Checklist</p>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
+                            <button
+                                onClick={onClose}
+                                aria-label="Close checklist"
+                                className="text-zinc-400 hover:text-black transition-colors"
+                            >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
                         {/* Progress */}
-                        <div className="px-5 py-4 shrink-0 border-b border-white/[0.06]">
+                        <div className="px-6 py-4 shrink-0 border-b border-zinc-100">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-slate-400">{completedCount} of {TASKS.length} complete</span>
-                                <span className="text-xs font-bold text-white">{progress}%</span>
+                                <span className="text-xs text-zinc-500 font-medium">{completedCount} of {TASKS.length} complete</span>
+                                <span className="text-xs font-extrabold text-black">{progress}%</span>
                             </div>
-                            <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                            <div className="h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
                                 <motion.div
-                                    className="h-full rounded-full bg-gradient-to-r from-violet-500 to-sky-400"
+                                    className="h-full rounded-full bg-black"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 0.5, ease: "easeOut" }}
                                 />
                             </div>
                             {appCount > 0 && (
-                                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1">
-                                    <Briefcase className="h-3 w-3 text-emerald-400" />
-                                    <span className="text-[11px] font-semibold text-emerald-400">
+                                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1">
+                                    <Briefcase className="h-3 w-3 text-zinc-500" />
+                                    <span className="text-[11px] font-semibold text-zinc-600">
                                         {appCount} application{appCount !== 1 ? "s" : ""} sent
                                     </span>
                                 </div>
@@ -144,40 +143,52 @@ export default function ChecklistSidebar({ open, onClose }: ChecklistSidebarProp
                         </div>
 
                         {/* Task list */}
-                        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+                        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
                             {TASKS.map(task => {
                                 const done = isChecked(task);
                                 const Icon = task.icon;
                                 return (
                                     <div
                                         key={task.id}
-                                        className={`flex items-center gap-3 rounded-2xl px-3 py-3 transition-all ${done ? "opacity-50" : "hover:bg-white/[0.04]"}`}
+                                        className={`flex items-center gap-3 rounded-xl px-3 py-3 transition-all ${
+                                            done ? "opacity-50" : "hover:bg-zinc-50"
+                                        }`}
                                     >
+                                        {/* Check */}
                                         <button
                                             onClick={() => task.manual && toggle(task.id)}
                                             className={task.manual ? "cursor-pointer shrink-0" : "cursor-default shrink-0"}
+                                            aria-label={task.manual ? `Toggle ${task.label}` : undefined}
                                         >
                                             {done
-                                                ? <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                                                : <Circle className="h-5 w-5 text-slate-600" />
+                                                ? <CheckCircle2 className="h-5 w-5 text-black" />
+                                                : <Circle className="h-5 w-5 text-zinc-300" />
                                             }
                                         </button>
 
-                                        <div className={`h-8 w-8 rounded-xl ${task.iconBg} flex items-center justify-center shrink-0`}>
-                                            <Icon className={`h-4 w-4 ${task.color}`} />
+                                        {/* Icon tile */}
+                                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                            done ? "bg-zinc-100" : "bg-zinc-100"
+                                        }`}>
+                                            <Icon className="h-4 w-4 text-zinc-500" />
                                         </div>
 
+                                        {/* Text */}
                                         <div className="flex-1 min-w-0">
-                                            <p className={`text-sm font-semibold leading-tight ${done ? "line-through text-slate-500" : "text-white"}`}>
+                                            <p className={`text-sm font-semibold leading-tight ${
+                                                done ? "line-through text-zinc-400" : "text-black"
+                                            }`}>
                                                 {task.label}
                                             </p>
-                                            <p className="text-[11px] text-slate-500 mt-0.5">{task.detail}</p>
+                                            <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">{task.detail}</p>
                                         </div>
 
+                                        {/* Arrow */}
                                         {!done && (
                                             <button
                                                 onClick={() => goTo(task.href)}
-                                                className="shrink-0 text-slate-600 hover:text-violet-400 transition-colors"
+                                                aria-label={`Go to ${task.label}`}
+                                                className="shrink-0 text-zinc-300 hover:text-black transition-colors"
                                             >
                                                 <ChevronRight className="h-4 w-4" />
                                             </button>
@@ -187,27 +198,27 @@ export default function ChecklistSidebar({ open, onClose }: ChecklistSidebarProp
                             })}
                         </div>
 
-                        {/* All done */}
-                        {completedCount === TASKS.length && (
-                            <div className="px-5 pb-4 shrink-0">
-                                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
-                                    <Award className="h-8 w-8 text-emerald-400 mx-auto mb-1.5" />
-                                    <p className="text-sm font-bold text-emerald-400">You're all set up!</p>
-                                    <p className="text-[11px] text-slate-500 mt-0.5">Keep applying — your next role is close.</p>
+                        {/* All done banner */}
+                        {allDone && (
+                            <div className="px-6 pb-4 shrink-0">
+                                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-center">
+                                    <Award className="h-8 w-8 text-black mx-auto mb-1.5" />
+                                    <p className="text-sm font-extrabold text-black">You're all set up!</p>
+                                    <p className="text-[11px] text-zinc-500 mt-0.5">Keep applying — your next role is close.</p>
                                 </div>
                             </div>
                         )}
 
                         {/* Footer */}
-                        <div className="px-5 py-4 shrink-0 border-t border-white/[0.06] space-y-3">
+                        <div className="px-6 py-5 shrink-0 border-t border-zinc-100">
                             <button
                                 onClick={onClose}
-                                className="w-full py-2.5 rounded-xl text-sm font-bold text-slate-400 border border-white/[0.08] hover:bg-white/[0.06] hover:text-white transition-all"
+                                className="w-full h-11 rounded-xl bg-black hover:bg-zinc-800 text-white text-sm font-bold transition-all"
                             >
                                 Close
                             </button>
-                            <p className="text-[10px] text-slate-600 text-center">
-                                Auto-tracked items update when you complete them on the platform.
+                            <p className="text-[10px] text-zinc-400 text-center mt-3 font-medium">
+                                Checked items update automatically as you use the platform.
                             </p>
                         </div>
                     </motion.aside>

@@ -1316,7 +1316,16 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       };
     });
 
-    return mapped.sort((a, b) => {
+    // Deduplicate by lowercased value before sorting
+    const seen = new Set<string>();
+    const unique = mapped.filter(c => {
+      const key = c.value.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return unique.sort((a, b) => {
       if (b.count !== a.count) {
         return b.count - a.count;
       }
@@ -1407,8 +1416,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
               <option value="" className="bg-[#0a0f1e]">
                 {isLoadingFilterOptions ? "Loading cities..." : filters.country ? "All Cities" : "All Cities Worldwide"}
               </option>
-              {filteredCities.map((city) => (
-                <option key={`city-${city.value}`} value={city.value} className="bg-[#0a0f1e]">
+              {filteredCities.map((city, i) => (
+                <option key={`city-${i}-${city.value}`} value={city.value} className="bg-[#0a0f1e]">
                   {city.label} ({city.count})
                 </option>
               ))}

@@ -1,33 +1,26 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { PublicJobDiscovery } from "@/components/jobs/PublicJobDiscovery";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { BrowseRolesSection } from "@/components/landing/BrowseRolesSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { TopCompaniesSection } from "@/components/landing/TopCompaniesSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { PlansSection } from "@/components/plans/PlansSection";
-import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
-  const { isAuthenticated } = useAuth();
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      {isAuthenticated ? (
-        <main>
-          <HeroSection />
-          <FeaturesSection />
-          <PlansSection compact />
-          <CTASection />
-        </main>
-      ) : (
-        <main>
-          <PublicJobDiscovery mode="landing" />
-          <FeaturesSection />
-          <PlansSection compact />
-          <CTASection />
-        </main>
-      )}
+      <main>
+        <HeroSection />
+        <BrowseRolesSection />
+        <TopCompaniesSection />
+        <HowItWorksSection />
+        <FeaturesSection />
+        <PlansSection compact />
+        <CTASection />
+      </main>
       <Footer />
     </div>
   );

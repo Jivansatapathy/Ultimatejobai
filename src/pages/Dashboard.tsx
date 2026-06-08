@@ -6,14 +6,14 @@ import {
   CheckCircle2,
   ArrowUpRight,
   Sparkles,
-  ShieldCheck,
   ChevronRight,
   MapPin,
   Zap,
   Target,
-  Users,
-  BarChart2,
   Search,
+  TrendingUp,
+  Bot,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -33,9 +33,8 @@ import { useJobReadiness } from "@/hooks/useJobReadiness";
 import { buildDailyMissionTasks, readDailyMissionManualTaskIds } from "@/components/dashboard/dailyMission";
 import { cn } from "@/lib/utils";
 
-const HEATMAP_DAYS = 31;
+const BAR_DAYS = 7;
 
-// Module-level cache — survives route changes so Dashboard never re-spins on back-navigation
 const DASH_TTL = 5 * 60 * 1000;
 interface DashCache {
   stats: typeof _DEFAULT_STATS;
@@ -49,43 +48,58 @@ const _DEFAULT_STATS = {
   daily_goal_target: 5, daily_goal_met: false,
 };
 let _dashCache: DashCache | null = null;
-const _isCacheFresh = () => !!_dashCache && Date.now() - _dashCache.ts < DASH_TTL;
 
-const StatCard = ({ label, value, subtext, icon: Icon, className }: {
+const StatCard = ({ label, value, subtext, icon: Icon, accent }: {
   label: string;
   value: string | number;
   subtext?: string;
   icon: React.ElementType;
-  className?: string;
+  accent?: boolean;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10 }}
+    initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
     className={cn(
-      "relative overflow-hidden bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[24px] p-6 transition-all hover:border-white/[0.15] group",
-      className
+      "relative flex flex-col justify-between rounded-2xl border p-6 transition-all duration-200 group",
+      accent
+        ? "bg-white border-white text-black"
+        : "bg-zinc-900 border-zinc-800 hover:border-zinc-700"
     )}
   >
-    <div className="flex items-start justify-between mb-4">
-      <div className="h-10 w-10 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center transition-colors group-hover:bg-teal-500/10 group-hover:border-teal-500/20">
-        <Icon className="h-5 w-5 text-slate-400 group-hover:text-teal-400 transition-colors" />
+    <div className="flex items-center justify-between mb-5">
+      <span className={cn(
+        "text-[10px] font-bold uppercase tracking-[0.2em]",
+        accent ? "text-black/50" : "text-zinc-500"
+      )}>
+        {label}
+      </span>
+      <div className={cn(
+        "h-8 w-8 flex items-center justify-center rounded-xl",
+        accent ? "bg-black/[0.07]" : "bg-zinc-800"
+      )}>
+        <Icon className={cn("h-4 w-4", accent ? "text-black/50" : "text-zinc-400")} />
       </div>
     </div>
-    <div>
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">{label}</p>
-      <div className="flex items-baseline gap-2">
-        <h3 className="text-2xl font-black text-white tracking-tighter">{value}</h3>
-        {subtext && <span className="text-xs text-slate-500 font-bold tracking-tight">{subtext}</span>}
-      </div>
+    <div className="flex items-baseline gap-2">
+      <span className={cn("text-3xl font-extrabold tracking-tight", accent ? "text-black" : "text-white")}>
+        {value}
+      </span>
+      {subtext && (
+        <span className={cn("text-xs font-semibold", accent ? "text-black/40" : "text-zinc-600")}>
+          {subtext}
+        </span>
+      )}
     </div>
   </motion.div>
 );
 
 const StatCardSkeleton = () => (
-  <div className="bg-white/[0.03] border border-white/[0.08] rounded-[24px] p-6 animate-pulse">
-    <div className="h-10 w-10 rounded-xl bg-white/[0.06] mb-4" />
-    <div className="h-3 w-20 bg-white/[0.06] rounded mb-2" />
-    <div className="h-7 w-16 bg-white/[0.08] rounded" />
+  <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 animate-pulse">
+    <div className="flex items-center justify-between mb-5">
+      <div className="h-2.5 w-24 bg-zinc-800 rounded" />
+      <div className="h-8 w-8 bg-zinc-800 rounded-xl" />
+    </div>
+    <div className="h-8 w-20 bg-zinc-800 rounded" />
   </div>
 );
 
@@ -97,7 +111,6 @@ export default function Dashboard() {
   const [showActivityDetails, setShowActivityDetails] = useState(false);
   const [showAutoApply, setShowAutoApply] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  // Show skeleton only when we have zero cached data — never on back-navigation
   const [loading, setLoading] = useState(!_dashCache?.stats);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>(_dashCache?.recommendedJobs ?? []);
   const { summary: subscriptionSummary, hasFeature, loadingSummary } = useSubscription();
@@ -106,8 +119,6 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<number[]>(_dashCache?.chartData ?? []);
 
   const loadData = useCallback(async () => {
-    // Never show skeleton on back-navigation — show stale data while refreshing silently.
-    // Only show spinner on true cold load (no cached data at all).
     const hasCachedData = !!(_dashCache?.stats);
     if (!hasCachedData) setLoading(true);
     try {
@@ -115,7 +126,6 @@ export default function Dashboard() {
         activityService.getDashboardSummary(),
         careerService.getProfile(),
       ]);
-
       const newStats = summary?.stats ? {
         resume_score: summary.stats.resume_score ?? 0,
         jobs_applied: summary.stats.jobs_applied ?? 0,
@@ -125,21 +135,16 @@ export default function Dashboard() {
         daily_goal_target: summary.stats.daily_goal_target ?? 5,
         daily_goal_met: summary.stats.daily_goal_met ?? false,
       } : _dashCache?.stats ?? _DEFAULT_STATS;
-
       const newRecommended = summary?.recommended_jobs ?? _dashCache?.recommendedJobs ?? [];
       const newChart = summary?.chart_data ?? _dashCache?.chartData ?? [];
-
       setDashboardStats(newStats);
       setRecommendedJobs(newRecommended);
       setChartData(newChart);
-
-      // Update module-level cache
       _dashCache = { stats: newStats, recommendedJobs: newRecommended, chartData: newChart, ts: Date.now() };
-
-      if (!profile?.target_roles?.length || profile.target_roles[0] === "") {
+      const onboardingEverShown = localStorage.getItem("onboarding_shown");
+      if (!onboardingEverShown && (!profile?.target_roles?.length || profile.target_roles[0] === "")) {
         setShowOnboarding(true);
       }
-
       const role = notificationService.getPrefs().targetRole || profile?.target_roles?.[0];
       if (role) prefetchJobsPage(role);
     } catch (err) {
@@ -153,11 +158,8 @@ export default function Dashboard() {
     if (checkReady()) navigate("/jobs");
   }, [checkReady, navigate]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  // Fallback: if activeResume loads after the profile fetch, ensure prefetch still fires
   useEffect(() => {
     const role = activeResume?.targetJobRole || notificationService.getPrefs().targetRole;
     if (role) prefetchJobsPage(role);
@@ -177,90 +179,63 @@ export default function Dashboard() {
     ? Math.min((dashboardStats.daily_applied_count / dashboardStats.daily_goal_target) * 100, 100)
     : 0;
 
-  // Build heatmap days: index 0 = HEATMAP_DAYS-1 days ago, last index = today
-  const heatmapCells = chartData.length > 0
-    ? chartData
-    : Array(HEATMAP_DAYS).fill(0);
-
+  // Last 7 days bar chart data
+  const rawBars = chartData.length > 0 ? chartData.slice(-BAR_DAYS) : Array(BAR_DAYS).fill(0);
+  const barMax = Math.max(...rawBars, 1);
   const today = new Date();
-  const getDateLabel = (index: number) => {
+  const getBarLabel = (offsetFromEnd: number) => {
     const d = new Date(today);
-    d.setDate(today.getDate() - (heatmapCells.length - 1 - index));
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    d.setDate(today.getDate() - (BAR_DAYS - 1 - offsetFromEnd));
+    return d.toLocaleDateString(undefined, { weekday: "short" });
+  };
+
+  const firstName = userEmail ? userEmail.split("@")[0].split(".")[0] : null;
+  const greeting = firstName
+    ? `${firstName.charAt(0).toUpperCase() + firstName.slice(1)}`
+    : "Dashboard";
+
+  const featureLabels: Record<string, string> = {
+    auto_apply_access: "Auto Apply",
+    ats_optimizer_access: "ATS Optimizer",
+    text_interview_access: "Interview Practice",
+    video_interview_access: "Video Interview",
+    resume_builder_access: "Resume Builder",
+    career_insights_access: "Career Insights",
   };
 
   return (
-    <div className="min-h-screen bg-[#050811] text-white selection:bg-teal-500/30">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] rounded-full bg-violet-600/5 blur-[160px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-0 w-[800px] h-[800px] rounded-full bg-teal-500/5 blur-[160px] animate-pulse [animation-delay:2s]" />
-      </div>
-
+    <div className="min-h-screen bg-[#0c0c0c] text-white">
       <Navbar />
 
-      <main className="relative z-10 pt-32 pb-24 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto max-w-[1400px]">
+      <main className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1320px]">
 
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16 px-2">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <span className="h-px w-8 bg-teal-500/50" />
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-400">
-                  Career Intelligence Center
-                </span>
-              </div>
-              <h1 className="text-5xl sm:text-7xl font-black tracking-tighter leading-[0.9] mb-4 bg-gradient-to-br from-white via-white to-white/40 bg-clip-text text-transparent">
-                Command Center
-              </h1>
-              <p className="text-lg font-medium text-slate-400 max-w-sm leading-relaxed">
-                Your job search progress and activity at a glance.
-              </p>
-            </motion.div>
+          {/* Page header */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-10"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-600 mb-1.5">
+              Career Intelligence
+            </p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
+              Good morning, {greeting}
+            </h1>
+          </motion.div>
 
-            {userEmail && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-4 bg-white/[0.03] backdrop-blur-md border border-white/[0.08] p-2 rounded-[22px]"
-              >
-                <div className="h-10 w-10 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center ml-2">
-                  <ShieldCheck className="h-5 w-5 text-teal-400" />
-                </div>
-                <div className="pr-4 border-l border-white/10 pl-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Signed in as</p>
-                  <p className="text-sm font-bold text-white truncate max-w-[180px]">{userEmail}</p>
-                </div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+          {/* Stat cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {loading ? (
-              <>
-                <StatCardSkeleton />
-                <StatCardSkeleton />
-                <StatCardSkeleton />
-                <StatCardSkeleton />
-              </>
+              <><StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton /></>
             ) : (
               <>
                 <StatCard
                   label="Resume Strength"
                   value={`${dashboardStats.resume_score}%`}
                   icon={Target}
-                />
-                <StatCard
-                  label="Interviews"
-                  value={dashboardStats.interviews}
-                  subtext="scheduled"
-                  icon={Users}
+                  accent
                 />
                 <StatCard
                   label="Total Applied"
@@ -269,121 +244,153 @@ export default function Dashboard() {
                   icon={Briefcase}
                 />
                 <StatCard
-                  label="Response Rate"
-                  value={dashboardStats.response_rate}
-                  icon={BarChart2}
-                  className="bg-indigo-500/5 border-indigo-500/20"
+                  label="Today's Goal"
+                  value={`${dashboardStats.daily_applied_count}/${dashboardStats.daily_goal_target}`}
+                  subtext="applied"
+                  icon={CalendarDays}
                 />
               </>
             )}
           </div>
 
-          {/* Main Content Layout */}
-          <div className="grid lg:grid-cols-12 gap-8">
+          {/* Main grid */}
+          <div className="grid lg:grid-cols-12 gap-6">
 
-            {/* Left: Activity & Applications (8 cols) */}
-            <div className="lg:col-span-8 space-y-8">
+            {/* Left column — 8 */}
+            <div className="lg:col-span-8 space-y-6">
 
-              {/* Activity Heatmap */}
+              {/* Application Activity — 7-day bar chart */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[32px] overflow-hidden"
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden"
               >
-                <div className="p-8 pb-4 flex items-center justify-between">
+                <div className="flex items-center justify-between px-7 pt-6 pb-5">
                   <div>
-                    <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-teal-400" />
-                      Application Activity
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium">Your activity over the last 30 days</p>
+                    <h3 className="text-base font-bold text-white tracking-tight">Application Activity</h3>
+                    <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Last 7 days</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className="h-10 rounded-xl px-4 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white border border-white/5"
+                  <button
+                    type="button"
                     onClick={() => setShowActivityDetails(true)}
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
                   >
                     View History
-                  </Button>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </button>
                 </div>
 
-                <div className="px-8 pb-8">
-                  <div className="flex flex-wrap gap-2 mt-8">
-                    {heatmapCells.map((count, i) => {
-                      const intensity = Math.min(count / 2, 1);
+                <div className="px-7 pb-7">
+                  {/* Bars */}
+                  <div className="flex items-end justify-between gap-2 h-28">
+                    {rawBars.map((count, i) => {
+                      const heightPct = barMax > 0 ? (count / barMax) * 100 : 0;
+                      const isToday = i === rawBars.length - 1;
                       return (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: i * 0.01 }}
-                          className={cn(
-                            "h-8 w-8 rounded-lg transition-all duration-500 relative group cursor-pointer border border-white/[0.05]",
-                            count > 0
-                              ? "bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
-                              : "bg-white/[0.03] hover:bg-white/[0.06]"
-                          )}
-                          style={{
-                            opacity: count > 0 ? 0.3 + intensity * 0.7 : 1,
-                          }}
-                        >
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-white text-[#050811] text-[10px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
-                            {getDateLabel(i)}: {count} application{count !== 1 ? 's' : ''}
+                        <div key={i} className="relative group flex-1 flex flex-col items-center gap-2">
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full mb-2 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none text-white">
+                            {count} application{count !== 1 ? 's' : ''}
                           </div>
-                        </motion.div>
+                          {/* Bar */}
+                          <div className="w-full h-full flex items-end">
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: `${Math.max(heightPct, count > 0 ? 8 : 4)}%` }}
+                              transition={{ delay: i * 0.06, duration: 0.45, ease: "easeOut" }}
+                              className={cn(
+                                "w-full rounded-t-lg",
+                                isToday
+                                  ? "bg-white"
+                                  : count > 0
+                                  ? "bg-zinc-500 group-hover:bg-zinc-300 transition-colors"
+                                  : "bg-zinc-800 group-hover:bg-zinc-700 transition-colors"
+                              )}
+                            />
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
-                  <div className="flex justify-between mt-6 text-[11px] font-black uppercase tracking-widest text-slate-600">
-                    <span>30 Days Ago</span>
-                    <span>Today</span>
+
+                  {/* Day labels */}
+                  <div className="flex justify-between gap-2 mt-3">
+                    {rawBars.map((_, i) => {
+                      const isToday = i === rawBars.length - 1;
+                      return (
+                        <div key={i} className="flex-1 text-center">
+                          <span className={cn(
+                            "text-[10px] font-bold uppercase",
+                            isToday ? "text-white" : "text-zinc-600"
+                          )}>
+                            {isToday ? "Today" : getBarLabel(i)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Total this week */}
+                  <div className="mt-5 pt-4 border-t border-zinc-800 flex items-center justify-between">
+                    <span className="text-[11px] text-zinc-600 font-medium">Total this week</span>
+                    <span className="text-sm font-extrabold text-white">
+                      {rawBars.reduce((a, b) => a + b, 0)} applications
+                    </span>
                   </div>
                 </div>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              {/* Daily Mission + AI Insights */}
+              <div className="grid md:grid-cols-2 gap-6">
+
                 {/* Daily Mission */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[32px] p-8"
+                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
                 >
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                      <Target className="h-5 w-5 text-orange-400" />
-                      Daily Mission
-                    </h3>
-                    <div className="h-10 w-10 rounded-full border-2 border-teal-500/20 flex items-center justify-center">
-                      <span className="text-xs font-black text-teal-400 leading-none">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-base font-bold text-white tracking-tight">Daily Mission</h3>
+                      <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Today's goals</p>
+                    </div>
+                    <div className="relative h-11 w-11">
+                      <svg className="h-11 w-11 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="#27272a" strokeWidth="3" />
+                        <circle
+                          cx="18" cy="18" r="15" fill="none" stroke="white" strokeWidth="3"
+                          strokeDasharray={`${progressPct * 0.942} 94.2`}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">
                         {Math.round(progressPct)}%
                       </span>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {dailyMissionTasks.map((task) => (
                       <motion.div
                         key={task.id}
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ x: 2 }}
                         className={cn(
-                          "flex items-center gap-4 rounded-2xl px-5 py-4 border transition-all cursor-default",
+                          "flex items-center gap-3 rounded-xl px-4 py-3 border transition-all",
                           task.completed
-                            ? "bg-teal-500/5 border-teal-500/10 opacity-60"
-                            : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]"
+                            ? "bg-white/[0.04] border-white/[0.08] opacity-60"
+                            : "bg-zinc-800 border-zinc-700 hover:border-zinc-600"
                         )}
                       >
                         <div className={cn(
-                          "h-6 w-6 rounded-lg flex items-center justify-center flex-shrink-0",
-                          task.completed
-                            ? "bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
-                            : "bg-white/[0.06] border border-white/10"
+                          "h-5 w-5 rounded-md flex items-center justify-center flex-shrink-0",
+                          task.completed ? "bg-white" : "bg-zinc-700 border border-zinc-600"
                         )}>
-                          <CheckCircle2 className={cn("h-3.5 w-3.5", task.completed ? "text-[#050811]" : "text-slate-600")} />
+                          <CheckCircle2 className={cn("h-3 w-3", task.completed ? "text-black" : "text-zinc-600")} />
                         </div>
                         <span className={cn(
-                          "text-[13px] font-bold tracking-tight",
-                          task.completed ? "text-slate-500 line-through" : "text-white"
+                          "text-[13px] font-semibold flex-1",
+                          task.completed ? "text-zinc-600 line-through" : "text-zinc-300"
                         )}>
                           {task.label}
                         </span>
@@ -394,213 +401,268 @@ export default function Dashboard() {
 
                 {/* AI Insights */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[32px] p-8 overflow-hidden relative group"
+                  transition={{ delay: 0.15 }}
+                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col"
                 >
-                  <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none group-hover:rotate-12 transition-transform duration-700">
-                    <Sparkles className="h-32 w-32 text-teal-500" />
+                  <div className="mb-6">
+                    <h3 className="text-base font-bold text-white tracking-tight">AI Insights</h3>
+                    <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Tips to improve your search</p>
                   </div>
 
-                  <h3 className="text-xl font-black tracking-tight text-white mb-2 flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-teal-400" />
-                    AI Insights
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mb-8">Tips to improve your job search</p>
-
-                  <div className="space-y-4 relative z-10">
-                    <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
-                      <p className="text-xs font-black text-teal-500 uppercase mb-2">Resume Tip</p>
-                      <p className="text-sm font-bold text-slate-200">Keep your resume updated with your latest skills and experience to improve match scores.</p>
+                  <div className="space-y-3 flex-1">
+                    <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700">
+                      <p className="text-[9px] font-black text-white uppercase tracking-[0.2em] mb-1.5">Resume Tip</p>
+                      <p className="text-[13px] text-zinc-400 leading-relaxed">Keep your resume updated with your latest skills to improve match scores.</p>
                     </div>
-                    <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
-                      <p className="text-xs font-black text-orange-400 uppercase mb-2">Search Tip</p>
-                      <p className="text-sm font-bold text-slate-200">Apply consistently — candidates who apply daily get 3x more responses than those who apply in bursts.</p>
+                    <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700">
+                      <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1.5">Search Tip</p>
+                      <p className="text-[13px] text-zinc-400 leading-relaxed">Candidates who apply daily get 3x more responses than those who apply in bursts.</p>
                     </div>
-                    <Button
-                      className="w-full h-12 rounded-xl bg-teal-500 text-[#050811] font-black uppercase text-xs tracking-widest hover:bg-teal-400 transition-all shadow-[0_0_20px_rgba(20,184,166,0.3)]"
-                      onClick={() => navigate("/ai-mentor")}
-                    >
-                      Open AI Mentor
-                    </Button>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate("/ai-mentor")}
+                    className="mt-4 w-full h-10 rounded-xl bg-white hover:bg-zinc-100 text-black font-bold text-xs uppercase tracking-widest transition-all"
+                  >
+                    Open AI Mentor
+                  </button>
                 </motion.div>
               </div>
 
               {/* Recommended Jobs */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[32px] p-8"
+                transition={{ delay: 0.2 }}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
               >
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                      <Search className="h-5 w-5 text-teal-400" />
-                      Recommended Jobs
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium mt-1">Matched to your profile and target roles</p>
+                    <h3 className="text-base font-bold text-white tracking-tight">Recommended Roles</h3>
+                    <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Matched to your profile</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className="h-10 rounded-xl px-4 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-white gap-2 border border-white/5"
-                    onClick={() => navigateToJobs()}
+                  <button
+                    type="button"
+                    onClick={navigateToJobs}
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
                   >
                     Browse All
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Button>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </button>
                 </div>
 
                 {loading ? (
-                  <div className="grid sm:grid-cols-2 gap-4 animate-pulse">
+                  <div className="grid sm:grid-cols-2 gap-3 animate-pulse">
                     {[1,2,3,4].map(i => (
-                      <div key={i} className="p-5 rounded-2xl bg-white/[0.04] border border-white/10">
-                        <div className="flex justify-between mb-3">
-                          <div className="h-4 w-32 bg-white/[0.08] rounded" />
-                          <div className="h-5 w-12 bg-teal-500/10 rounded-lg" />
-                        </div>
-                        <div className="h-3 w-24 bg-white/[0.06] rounded mb-3" />
-                        <div className="h-3 w-20 bg-white/[0.04] rounded" />
+                      <div key={i} className="p-4 rounded-xl bg-zinc-800 border border-zinc-700 space-y-2.5">
+                        <div className="h-3 w-32 bg-zinc-700 rounded" />
+                        <div className="h-2.5 w-20 bg-zinc-700 rounded" />
+                        <div className="h-2.5 w-16 bg-zinc-700 rounded" />
                       </div>
                     ))}
                   </div>
                 ) : recommendedJobs.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     {recommendedJobs.slice(0, 6).map((job, idx) => (
                       <motion.div
                         key={idx}
-                        whileHover={{ scale: 1.02, borderColor: "rgba(20,184,166,0.3)" }}
-                        className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 cursor-pointer group transition-all"
-                        onClick={() => navigateToJobs()}
+                        whileHover={{ borderColor: "rgba(255,255,255,0.18)" }}
+                        className="p-4 rounded-xl bg-zinc-800 border border-zinc-700 cursor-pointer group transition-all"
+                        onClick={navigateToJobs}
                       >
-                        <div className="flex justify-between items-start mb-2 gap-2">
-                          <p className="text-sm font-black text-white uppercase group-hover:text-teal-400 transition-colors leading-tight">{job.title}</p>
-                          <span className="shrink-0 text-[10px] font-black text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded-lg">
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <p className="text-sm font-bold text-white group-hover:text-white/80 leading-snug transition-colors">
+                            {job.title}
+                          </p>
+                          <span className="shrink-0 text-[10px] font-black text-white bg-white/10 border border-white/10 px-2 py-0.5 rounded-lg">
                             {job.match}%
                           </span>
                         </div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter opacity-70 mb-3">{job.company}</p>
-                        <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {job.location}
-                          </span>
+                        <p className="text-[11px] text-zinc-500 font-medium mb-2.5">{job.company}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 font-semibold">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {job.location}
                         </div>
                       </motion.div>
                     ))}
                   </div>
                 ) : (
-                  <div className="py-16 text-center bg-white/[0.01] border border-dashed border-white/10 rounded-3xl">
-                    <Briefcase className="h-10 w-10 text-slate-800 mx-auto mb-4" />
-                    <p className="text-sm font-bold text-slate-500 mb-1">No recommendations yet</p>
-                    <p className="text-xs text-slate-600 mb-4">Complete your profile to get personalized job matches.</p>
-                    <Button onClick={() => navigateToJobs()} variant="link" className="text-teal-500 font-black uppercase text-[11px] tracking-widest">Browse Jobs</Button>
+                  <div className="py-12 text-center border border-dashed border-zinc-800 rounded-xl">
+                    <Briefcase className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
+                    <p className="text-sm font-semibold text-zinc-500 mb-1">No recommendations yet</p>
+                    <p className="text-xs text-zinc-600 mb-4">Complete your profile to get personalized job matches.</p>
+                    <button
+                      type="button"
+                      onClick={navigateToJobs}
+                      className="text-[11px] font-bold text-white hover:text-zinc-300 uppercase tracking-widest underline underline-offset-4 transition-colors"
+                    >
+                      Browse Jobs
+                    </button>
                   </div>
                 )}
               </motion.div>
             </div>
 
-            {/* Right: Actions & Status (4 cols) */}
-            <div className="lg:col-span-4 space-y-8">
+            {/* Right column — 4 */}
+            <div className="lg:col-span-4 space-y-6">
 
               {/* Quick Actions */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-[32px] p-8 shadow-[0_20px_50px_rgba(20,184,166,0.2)] text-[#050811] relative overflow-hidden group"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
               >
-                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
+                <div className="mb-6">
+                  <h3 className="text-base font-bold text-white tracking-tight">Quick Actions</h3>
+                  <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Get things done fast</p>
+                </div>
 
-                <h3 className="text-2xl font-black tracking-tighter uppercase mb-2 relative z-10">Quick Actions</h3>
-                <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-8 relative z-10">Get things done fast</p>
-
-                <div className="space-y-3 relative z-10">
-                  <Button
-                    className="w-full h-14 rounded-2xl bg-[#050811] text-white font-black uppercase text-xs tracking-[0.2em] hover:bg-[#0a0f1e] group"
+                <div className="space-y-3">
+                  <button
+                    type="button"
                     onClick={() => hasFeature("auto_apply_access") ? setShowAutoApply(true) : navigate("/plans")}
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-white hover:bg-zinc-100 text-black font-bold text-sm transition-all group"
                   >
-                    <Zap className="h-4 w-4 mr-3 text-teal-400 group-hover:animate-pulse" />
-                    Launch Auto-Apply
-                  </Button>
-                  <Button
-                    className="w-full h-14 rounded-2xl bg-white/20 hover:bg-white/30 text-[#050811] font-black uppercase text-xs tracking-[0.2em] border-transparent"
+                    <Bot className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 text-left">Launch Apex™</span>
+                    <Zap className="h-3.5 w-3.5 text-black/40 group-hover:text-black/70 transition-colors" />
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => navigate("/resume")}
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-sm transition-all"
                   >
-                    <FileText className="h-4 w-4 mr-3" />
-                    View Resume
-                  </Button>
+                    <FileText className="h-4 w-4 shrink-0 text-zinc-400" />
+                    <span className="flex-1 text-left">View Resume</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={navigateToJobs}
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-sm transition-all"
+                  >
+                    <Search className="h-4 w-4 shrink-0 text-zinc-400" />
+                    <span className="flex-1 text-left">Find Jobs</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate("/ai-mentor")}
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-sm transition-all"
+                  >
+                    <Sparkles className="h-4 w-4 shrink-0 text-zinc-400" />
+                    <span className="flex-1 text-left">AI Mentor</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
+                  </button>
                 </div>
               </motion.div>
 
-              {/* Status Board */}
-              <motion.div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[32px] p-8">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-lg font-black tracking-tighter uppercase text-white">Status Board</h3>
-                  <ShieldCheck className="h-5 w-5 text-teal-400" />
+              {/* Active Plan */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                onClick={() => navigate("/plans")}
+                className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 cursor-pointer group transition-all"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Active Plan</p>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-white transition-colors" />
+                </div>
+                <p className="text-xl font-extrabold text-white tracking-tight">
+                  {subscriptionSummary?.plan?.name ?? "Free Tier"}
+                </p>
+                <p className="text-[11px] text-zinc-600 mt-1 font-medium">Upgrade to unlock more features</p>
+              </motion.div>
+
+              {/* Feature Usage */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+              >
+                <div className="mb-5">
+                  <h3 className="text-base font-bold text-white tracking-tight">Feature Usage</h3>
+                  <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Current billing period</p>
                 </div>
 
-                <div className="space-y-4">
-                  <div
-                    className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between group cursor-pointer hover:bg-white/[0.06] transition-all"
-                    onClick={() => navigate("/plans")}
-                  >
-                    <div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Active Plan</p>
-                      <p className="text-sm font-black text-white">{subscriptionSummary?.plan?.name ?? "Free Tier"}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-700 group-hover:text-white transition-all" />
+                {loadingSummary ? (
+                  <div className="space-y-5 animate-pulse">
+                    {[1,2,3].map(i => (
+                      <div key={i}>
+                        <div className="flex justify-between mb-2">
+                          <div className="h-2.5 w-24 bg-zinc-800 rounded" />
+                          <div className="h-2.5 w-10 bg-zinc-800 rounded" />
+                        </div>
+                        <div className="h-1.5 w-full bg-zinc-800 rounded-full" />
+                      </div>
+                    ))}
                   </div>
-
-                  <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10">
-                    <p className="text-[10px] font-black text-slate-500 uppercase mb-4">Feature Usage</p>
-                    {loadingSummary ? (
-                      <div className="space-y-4 animate-pulse">
-                        {[1, 2, 3].map(i => (
-                          <div key={i}>
-                            <div className="flex justify-between mb-1.5">
-                              <div className="h-3 w-24 bg-white/[0.06] rounded" />
-                              <div className="h-3 w-10 bg-white/[0.06] rounded" />
-                            </div>
-                            <div className="h-1.5 w-full bg-white/5 rounded-full" />
+                ) : (
+                  <div className="space-y-5">
+                    {(subscriptionSummary?.current_usage?.slice(0, 4) ?? []).map(item => {
+                      const label = featureLabels[item.feature_key] ?? item.feature_key.replace(/_access$/, '').replace(/_/g, ' ');
+                      const pct = item.is_unlimited ? 100 : (item.used_count / item.limit) * 100;
+                      const isHigh = !item.is_unlimited && pct > 80;
+                      return (
+                        <div key={item.feature_key}>
+                          <div className="flex justify-between text-[11px] font-semibold mb-2">
+                            <span className="text-zinc-400 capitalize">{label}</span>
+                            <span className={isHigh ? "text-white" : "text-zinc-600"}>
+                              {item.is_unlimited ? '∞' : `${item.used_count}/${item.limit}`}
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {subscriptionSummary?.current_usage?.slice(0, 3).map(item => {
-                          const featureLabels: Record<string, string> = {
-                            auto_apply_access: "Auto Apply",
-                            ats_optimizer_access: "ATS Optimizer",
-                            text_interview_access: "Interview Practice",
-                            video_interview_access: "Video Interview",
-                            resume_builder_access: "Resume Builder",
-                            career_insights_access: "Career Insights",
-                          };
-                          const label = featureLabels[item.feature_key] ?? item.feature_key.replace(/_access$/, '').replace(/_/g, ' ');
-                          const pct = item.is_unlimited ? 100 : (item.used_count / item.limit) * 100;
-                          return (
-                            <div key={item.feature_key}>
-                              <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5 uppercase">
-                                <span>{label}</span>
-                                <span>{item.is_unlimited ? '∞' : `${item.used_count}/${item.limit}`}</span>
-                              </div>
-                              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${pct}%` }}
-                                  className="h-full bg-white/20 rounded-full"
-                                />
-                              </div>
-                            </div>
-                          );
-                        }) ?? (
-                          <p className="text-xs text-slate-600 font-bold">No usage data</p>
-                        )}
-                      </div>
+                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min(pct, 100)}%` }}
+                              transition={{ delay: 0.3, duration: 0.6 }}
+                              className={cn(
+                                "h-full rounded-full",
+                                isHigh ? "bg-white" : "bg-zinc-600"
+                              )}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {!subscriptionSummary?.current_usage?.length && (
+                      <p className="text-xs text-zinc-700 font-semibold">No usage data available</p>
                     )}
                   </div>
+                )}
+              </motion.div>
+
+              {/* Apex™ banner */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-2xl p-6"
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="h-9 w-9 rounded-xl bg-black flex items-center justify-center shrink-0">
+                    <Bot className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-black tracking-tight">Apex™ is ready</h4>
+                    <p className="text-[11px] text-black/50 mt-0.5 leading-relaxed">Your personal executive application delegate.</p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => hasFeature("auto_apply_access") ? setShowAutoApply(true) : navigate("/plans")}
+                  className="w-full h-10 rounded-xl bg-black hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-widest transition-all"
+                >
+                  Start Applying
+                </button>
               </motion.div>
 
             </div>
@@ -620,10 +682,11 @@ export default function Dashboard() {
       />
       <OnboardingModal
         open={showOnboarding}
-        onOpenChange={setShowOnboarding}
-        onComplete={() => {
-          loadData();
+        onOpenChange={(open) => {
+          setShowOnboarding(open);
+          if (!open) localStorage.setItem("onboarding_shown", "1");
         }}
+        onComplete={() => { loadData(); }}
       />
     </div>
   );

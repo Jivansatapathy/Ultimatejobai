@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { PublicJobDiscovery } from "@/components/jobs/PublicJobDiscovery";
 
 export default function Jobs() {

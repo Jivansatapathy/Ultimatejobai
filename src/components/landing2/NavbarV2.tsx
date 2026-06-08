@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Bot, ChevronDown, Menu, X, LogIn, Loader2, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -15,6 +15,8 @@ export const NavbarV2 = () => {
   const [catOpen, setCatOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { isAuthenticated, logout } = useAuth();
+  const { pathname } = useLocation();
+  const isHome = pathname === "/" || pathname === "/v2";
 
   const handleLogout = async () => {
     setSigningOut(true);
@@ -43,8 +45,8 @@ export const NavbarV2 = () => {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 flex-1">
             <Link
-              to="/v2"
-              className="px-4 py-2 text-sm font-semibold text-blue-600 border-b-2 border-blue-600"
+              to="/"
+              className={`px-4 py-2 text-sm font-semibold transition-colors ${isHome ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50"}`}
             >
               Home
             </Link>
@@ -154,7 +156,7 @@ export const NavbarV2 = () => {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
-          <Link to="/v2" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50">Home</Link>
+          <Link to="/" onClick={() => setMenuOpen(false)} className={`block px-3 py-2.5 rounded-lg text-sm font-semibold ${isHome ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:bg-gray-50"}`}>Home</Link>
           <Link to="/find-jobs" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Browse Jobs</Link>
           {CATEGORIES.map(c => (
             <Link key={c.href} to={c.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 pl-6">{c.label}</Link>

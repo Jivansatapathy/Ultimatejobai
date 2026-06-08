@@ -5,7 +5,7 @@ import {
   Loader2, Crown, TrendingUp, Users2, ChevronDown,
   SlidersHorizontal, CalendarDays, ExternalLink, ArrowRight,
 } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
 import { toast } from "sonner";
 import {

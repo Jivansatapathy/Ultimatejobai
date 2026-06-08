@@ -12,7 +12,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { ConversationPanel } from "@/components/chat/ConversationPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

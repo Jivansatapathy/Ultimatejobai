@@ -4,7 +4,7 @@ import { Building2, Briefcase, Globe2, Linkedin, MapPin, Star, Users } from "luc
 import { Link, useParams } from "react-router-dom";
 
 import { useAuth } from "@/context/AuthContext";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

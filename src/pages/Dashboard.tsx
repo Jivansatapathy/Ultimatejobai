@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import {
   FileText,
   Briefcase,

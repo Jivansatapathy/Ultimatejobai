@@ -4,7 +4,7 @@ import { ModeSelector } from "@/components/interview/ModeSelector";
 import { useHealthCheck } from "@/hooks/use-health-check";
 import { AIStatusBadge } from "@/components/interview/AIStatusBadge";
 import { Loader2, Sparkles } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 
 const TextInterview = lazy(() =>
   import("@/components/interview/TextInterview").then((module) => ({

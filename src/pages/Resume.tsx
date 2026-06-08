@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { Button } from "@/components/ui/button";
 import {
   FileText,

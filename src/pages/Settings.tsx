@@ -20,7 +20,7 @@ import { autoApplyService } from "@/services/autoApplyService";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { Chrome, ChevronDown } from "lucide-react";
 import {
   sanitizeString,

@@ -133,7 +133,7 @@ const App = () => (
                   <ErrorBoundary>
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
-                  <Route path="/" element={<CandidateRoute><Index /></CandidateRoute>} />
+                  <Route path="/" element={<Index2 />} />
                   <Route path="/v2" element={<Index2 />} />
                   <Route path="/auth" element={<CandidateRoute><Auth /></CandidateRoute>} />
 

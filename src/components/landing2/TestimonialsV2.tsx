@@ -29,7 +29,7 @@ const TESTIMONIALS = [
 ];
 
 export const TestimonialsV2 = () => (
-  <section className="bg-white py-20 px-6 border-t border-gray-100">
+  <section className="bg-white py-14 sm:py-20 px-4 sm:px-6 border-t border-gray-100">
     <div className="mx-auto max-w-6xl">
 
       <motion.div
@@ -42,9 +42,9 @@ export const TestimonialsV2 = () => (
         <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700 mb-4">
           Success Stories
         </span>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-          Executives Who Leveled Up<br />
-          <span className="text-gray-400">with JobAI</span>
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
+          Executives Who Leveled Up
+          <span className="text-gray-400"> with JobAI</span>
         </h2>
       </motion.div>
 

@@ -47,7 +47,7 @@ const FEATURES = [
 ];
 
 export const FeaturesV2 = () => (
-  <section className="bg-gray-50 py-20 px-6 border-t border-gray-100">
+  <section className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6 border-t border-gray-100">
     <div className="mx-auto max-w-6xl">
 
       <motion.div
@@ -61,9 +61,9 @@ export const FeaturesV2 = () => (
           <Star className="h-3 w-3" />
           Platform Features
         </span>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-          Everything a Senior Leader Needs<br />
-          <span className="text-gray-400">to Land Their Next Role</span>
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
+          Everything a Senior Leader Needs<br className="hidden sm:block" />
+          <span className="text-gray-400"> to Land Their Next Role</span>
         </h2>
       </motion.div>
 

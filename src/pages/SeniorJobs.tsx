@@ -426,17 +426,17 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
       onClick={() => onSelect(job)}
       className="group bg-white border border-gray-200 hover:border-blue-200 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md"
     >
-      <div className="p-6">
-        <div className="flex gap-4">
+      <div className="p-4 sm:p-6">
+        <div className="flex gap-3 sm:gap-4">
           {/* Company initial */}
-          <div className={`shrink-0 w-14 h-14 rounded-xl border-2 flex items-center justify-center font-black text-xl ${iconBg}`}>
+          <div className={`shrink-0 w-11 h-11 sm:w-14 sm:h-14 rounded-xl border-2 flex items-center justify-center font-black text-base sm:text-xl ${iconBg}`}>
             {initial}
           </div>
 
           <div className="flex-1 min-w-0">
             {/* Title + salary */}
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <h3 className="text-gray-900 font-bold text-[18px] leading-snug group-hover:text-blue-600 transition-colors capitalize">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h3 className="text-gray-900 font-bold text-[15px] sm:text-[18px] leading-snug group-hover:text-blue-600 transition-colors capitalize">
                 {job.title}
               </h3>
               {job.salary && (
@@ -494,8 +494,8 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
 
       {/* Apply bot footer */}
       {job.apply_url && (
-        <div className="px-6 pb-5" onClick={(e) => e.stopPropagation()}>
-          <div className="border-t border-gray-100 pt-4">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-5" onClick={(e) => e.stopPropagation()}>
+          <div className="border-t border-gray-100 pt-3 sm:pt-4">
             <ApplyBotButton
               variant="light"
               jobUrl={job.apply_url}
@@ -549,13 +549,13 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
             className="fixed right-0 top-0 bottom-0 w-full max-w-[560px] bg-white border-l border-gray-200 z-50 flex flex-col shadow-2xl"
           >
             {/* Header */}
-            <div className="p-6 border-b border-gray-100 shrink-0">
-              <div className="flex items-start gap-4">
-                <div className={`shrink-0 w-16 h-16 rounded-xl border-2 flex items-center justify-center font-black text-2xl ${SENIORITY_ICON_BG[job.seniority_level] ?? SENIORITY_ICON_BG["Director"]}`}>
+            <div className="p-4 sm:p-6 border-b border-gray-100 shrink-0">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className={`shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-xl border-2 flex items-center justify-center font-black text-xl sm:text-2xl ${SENIORITY_ICON_BG[job.seniority_level] ?? SENIORITY_ICON_BG["Director"]}`}>
                   {job.company_name?.[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-gray-900 font-bold text-xl leading-snug capitalize">{job.title}</h2>
+                  <h2 className="text-gray-900 font-bold text-base sm:text-xl leading-snug capitalize">{job.title}</h2>
                   {job.company_name && (
                     <p className="text-gray-500 text-sm mt-1 flex items-center gap-1.5">
                       <Building2 className="h-3.5 w-3.5 shrink-0" />{job.company_name}
@@ -580,7 +580,7 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
               {/* Meta grid */}
               <div className="grid grid-cols-2 gap-3">
                 {([
@@ -631,7 +631,7 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
 
             {/* Footer */}
             {job.apply_url && (
-              <div className="p-5 border-t border-gray-100 shrink-0 bg-gray-50/50 space-y-2.5">
+              <div className="p-4 sm:p-5 border-t border-gray-100 shrink-0 bg-gray-50/50 space-y-2.5">
                 <ApplyBotButton
                   variant="light"
                   jobUrl={job.apply_url}
@@ -968,12 +968,12 @@ export default function FindJobs() {
 
       {/* ── Hero search bar ── */}
       <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-blue-800 pt-[64px]">
-        <div className="max-w-3xl mx-auto px-5 pt-12 pb-10 text-center">
+        <div className="max-w-3xl mx-auto px-4 sm:px-5 pt-8 sm:pt-12 pb-8 sm:pb-10 text-center">
           <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-4 py-1.5 text-white/80 text-xs font-semibold mb-5 backdrop-blur-sm">
             <Crown className="h-3.5 w-3.5 text-amber-300" />
             Executive &amp; Senior Leadership Roles
           </div>
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-tight mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight mb-2">
             Find Your Next Role
           </h1>
           <p className="text-blue-100 text-sm mb-8">
@@ -984,20 +984,20 @@ export default function FindJobs() {
 
           <form onSubmit={submitText} className="flex gap-2 items-stretch shadow-xl shadow-blue-900/30">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 sm:h-5 w-4 sm:w-5 text-gray-400 pointer-events-none" />
               <input
                 value={textInput}
                 onChange={(e) => {
                   setTextInput(e.target.value);
                   if (!e.target.value) setFilters((f) => ({ ...f, text: "", role: "" }));
                 }}
-                placeholder="Search by title, company, or keyword…"
-                className="w-full h-full pl-12 pr-4 py-4 bg-white rounded-xl text-gray-900 placeholder:text-gray-400 text-base outline-none focus:ring-2 focus:ring-blue-300 transition-all"
+                placeholder="Search by title, company…"
+                className="w-full h-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-3.5 sm:py-4 bg-white rounded-xl text-gray-900 placeholder:text-gray-400 text-sm sm:text-base outline-none focus:ring-2 focus:ring-blue-300 transition-all"
               />
             </div>
             <button
               type="submit"
-              className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-gray-900 rounded-xl font-black text-sm transition-colors shrink-0 shadow-sm"
+              className="px-4 sm:px-8 py-3.5 sm:py-4 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-gray-900 rounded-xl font-black text-sm transition-colors shrink-0 shadow-sm"
             >
               Search
             </button>
@@ -1026,7 +1026,7 @@ export default function FindJobs() {
       </div>
 
       {/* ── Body ── */}
-      <div className="max-w-[1340px] mx-auto px-4 py-6 flex gap-5 items-start">
+      <div className="max-w-[1340px] mx-auto px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-5 items-start">
 
         {/* Desktop sidebar — explicit h so h-full children work; min-h-0 on scroll div */}
         <aside className="hidden lg:flex flex-col w-[288px] shrink-0 sticky top-[72px] self-start bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm h-[calc(100vh-90px)]">

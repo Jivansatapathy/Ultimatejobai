@@ -198,6 +198,11 @@
       opacity: 1;
     }
   }
+
+  @keyframes loader-sweep {
+    0%   { transform: translateX(-150%); }
+    100% { transform: translateX(400%); }
+  }
   @keyframes neon-blink {
     0%, 100% { opacity: 1; border-color: rgba(20, 184, 166, 0.5); box-shadow: 0 0 15px rgba(20, 184, 166, 0.3); }
     50% { opacity: 0.8; border-color: rgba(20, 184, 166, 0.2); box-shadow: 0 0 5px rgba(20, 184, 166, 0.1); }

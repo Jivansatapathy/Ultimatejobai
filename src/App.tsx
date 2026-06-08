@@ -71,12 +71,46 @@ const queryClient = new QueryClient({
 
 // Elegant Loading Placeholder
 const PageLoader = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-    <div className="relative">
-      <div className="h-16 w-16 rounded-full border-t-2 border-accent animate-spin"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-accent font-bold">...</div>
+  <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 select-none">
+    {/* Multi-ring spinner */}
+    <div className="relative flex items-center justify-center mb-8">
+      {/* Outermost — slow dashed orbit */}
+      <div className="absolute w-28 h-28 rounded-full border-2 border-dashed border-blue-100 animate-[spin_5s_linear_infinite]" />
+      {/* Middle — fast arc */}
+      <div className="absolute w-20 h-20 rounded-full border-[3px] border-transparent border-t-blue-600 border-r-blue-300 animate-spin" />
+      {/* Inner — counter-spin arc */}
+      <div className="absolute w-14 h-14 rounded-full border-2 border-transparent border-b-blue-400 border-l-blue-200 animate-[spin_1.8s_linear_infinite_reverse]" />
+      {/* Center badge */}
+      <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-300/40">
+        {/* Inline bot/AI icon */}
+        <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="8" width="18" height="13" rx="2"/>
+          <path d="M9 8V6a3 3 0 016 0v2"/>
+          <circle cx="9" cy="14" r="1" fill="white" stroke="none"/>
+          <circle cx="15" cy="14" r="1" fill="white" stroke="none"/>
+          <path d="M9 18h6" strokeWidth="1.5"/>
+        </svg>
+      </div>
     </div>
-    <span className="mt-4 text-muted-foreground animate-pulse tracking-widest text-xs uppercase font-medium">Priming System</span>
+
+    {/* Brand */}
+    <p className="text-lg font-black text-gray-900 tracking-tight mb-0.5">JobAI</p>
+    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-2">Powered by Apex™</p>
+
+    {/* "Priming System" label with bouncing dots */}
+    <div className="flex items-center gap-2 mb-6">
+      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Priming System</span>
+      <span className="flex gap-1 items-center">
+        <span className="h-1 w-1 rounded-full bg-blue-400 animate-bounce [animation-delay:0ms]" />
+        <span className="h-1 w-1 rounded-full bg-blue-500 animate-bounce [animation-delay:150ms]" />
+        <span className="h-1 w-1 rounded-full bg-blue-600 animate-bounce [animation-delay:300ms]" />
+      </span>
+    </div>
+
+    {/* Sweep progress bar */}
+    <div className="w-44 h-0.5 bg-blue-50 rounded-full overflow-hidden">
+      <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-[loader-sweep_1.6s_ease-in-out_infinite]" />
+    </div>
   </div>
 );
 

@@ -72,7 +72,7 @@ function PricingCard({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4, delay: index * 0.07 }}
-        className="relative flex flex-col w-full rounded-3xl px-8 py-12 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl shadow-blue-500/30 z-10"
+        className="relative flex flex-col w-full rounded-3xl px-6 py-10 sm:px-8 sm:py-12 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl shadow-blue-500/30 z-10"
       >
         {/* Badge */}
         {config.badge && (
@@ -247,7 +247,7 @@ export const PricingV2 = () => {
   };
 
   return (
-    <section id="pricing" className="relative bg-white py-28 px-6 overflow-hidden">
+    <section id="pricing" className="relative bg-white py-16 sm:py-28 px-4 sm:px-6 overflow-hidden">
       {/* Subtle background blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-blue-50 blur-3xl opacity-70" />
@@ -266,7 +266,7 @@ export const PricingV2 = () => {
           <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-700 mb-5">
             Pricing
           </span>
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight mb-4">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight mb-4">
             Invest in your{" "}
             <span className="text-blue-600">next role</span>
           </h2>

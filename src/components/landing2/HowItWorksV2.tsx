@@ -28,7 +28,7 @@ const STEPS = [
 ];
 
 export const HowItWorksV2 = () => (
-  <section className="bg-white py-20 px-6 border-t border-gray-100">
+  <section className="bg-white py-14 sm:py-20 px-4 sm:px-6 border-t border-gray-100">
     <div className="mx-auto max-w-6xl">
 
       <motion.div
@@ -41,9 +41,9 @@ export const HowItWorksV2 = () => (
         <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700 mb-4">
           How It Works
         </span>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-          Land Your Next Executive Role<br />
-          <span className="text-gray-400">in Three Simple Steps</span>
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
+          Land Your Next Executive Role<br className="hidden sm:block" />
+          <span className="text-gray-400"> in Three Simple Steps</span>
         </h2>
       </motion.div>
 
@@ -55,7 +55,7 @@ export const HowItWorksV2 = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: i * 0.1 }}
-            className={`relative rounded-2xl border p-7 flex flex-col gap-5 ${
+            className={`relative rounded-2xl border p-5 sm:p-7 flex flex-col gap-4 sm:gap-5 ${
               step.highlight
                 ? "border-blue-200 bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200"
                 : "border-gray-200 bg-white hover:shadow-md transition-shadow"

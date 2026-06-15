@@ -10,7 +10,7 @@ const BENEFITS = [
 ];
 
 export const CTAV2 = () => (
-  <section className="relative overflow-hidden py-24 px-6">
+  <section className="relative overflow-hidden py-16 sm:py-24 px-4 sm:px-6">
     {/* Blue gradient background */}
     <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800" />
     {/* Subtle dot pattern via Tailwind bg-[...] arbitrary values */}
@@ -32,12 +32,13 @@ export const CTAV2 = () => (
           Join Top Executives
         </span>
 
-        <h2 className="mb-5 text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-white">
-          Your Next C-Suite Role<br />
-          <span className="text-blue-200">Is Waiting For You</span>
+        <h2 className="mb-5 text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-white">
+          Your Next C-Suite Role
+          <br className="hidden sm:block" />
+          <span className="text-blue-200"> Is Waiting For You</span>
         </h2>
 
-        <p className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-white/60">
+        <p className="mx-auto mb-8 sm:mb-10 max-w-xl text-sm sm:text-base leading-relaxed text-white/60">
           Join thousands of senior leaders who use JobAI to find exclusive CEO, CFO, CTO and VP roles —
           and let <span className="text-white font-semibold">Apex™</span> handle every application.
         </p>
@@ -45,7 +46,7 @@ export const CTAV2 = () => (
         <div className="mb-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
             to="/auth?mode=signup"
-            className="inline-flex items-center gap-2 px-9 py-4 rounded-xl bg-white hover:bg-blue-50 text-blue-700 font-bold text-base transition-colors group shadow-lg"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 sm:px-9 py-3.5 sm:py-4 rounded-xl bg-white hover:bg-blue-50 text-blue-700 font-bold text-sm sm:text-base transition-colors group shadow-lg"
           >
             <Sparkles className="h-4 w-4" />
             Start For Free
@@ -53,7 +54,7 @@ export const CTAV2 = () => (
           </Link>
           <Link
             to="/find-jobs"
-            className="inline-flex items-center gap-2 px-9 py-4 rounded-xl border border-white/30 text-white/80 hover:text-white hover:border-white/50 font-bold text-base transition-all"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 sm:px-9 py-3.5 sm:py-4 rounded-xl border border-white/30 text-white/80 hover:text-white hover:border-white/50 font-bold text-sm sm:text-base transition-all"
           >
             Browse Jobs
           </Link>

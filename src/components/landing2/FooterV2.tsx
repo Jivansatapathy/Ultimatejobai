@@ -29,7 +29,7 @@ const LINKS = {
 
 export const FooterV2 = () => (
   <footer className="bg-gray-900 text-white">
-    <div className="mx-auto max-w-7xl px-6 py-14">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
         {/* Brand col */}
         <div className="col-span-2 md:col-span-1">

@@ -17,11 +17,11 @@ const CATEGORIES = [
 ];
 
 export const CategoriesV2 = () => (
-  <section id="categories" className="bg-gray-50 py-20 px-6 border-t border-gray-100">
+  <section id="categories" className="bg-gray-50 py-14 sm:py-20 px-4 sm:px-6 border-t border-gray-100">
     <div className="mx-auto max-w-6xl">
 
       <motion.div
-        className="mb-12 flex items-end justify-between gap-4"
+        className="mb-8 sm:mb-12 flex items-start sm:items-end justify-between gap-4"
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -31,9 +31,9 @@ export const CategoriesV2 = () => (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700 mb-4">
             Browse by Category
           </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
-            Find the Right Role<br />
-            <span className="text-gray-400">for Your Leadership Level</span>
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
+            Find the Right Role<br className="hidden sm:block" />
+            <span className="text-gray-400"> for Your Leadership Level</span>
           </h2>
         </div>
         <Link

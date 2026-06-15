@@ -88,53 +88,59 @@ function JobCard({ job, index }: { job: SeniorJob; index: number }) {
     >
       <Link
         to={`/find-jobs`}
-        className="group flex items-start gap-5 rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200"
+        className="group flex items-start gap-3 sm:gap-5 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200"
       >
         {/* Company icon — deterministic color + seniority icon */}
-        <div className={`shrink-0 h-16 w-16 rounded-2xl border flex items-center justify-center ${color.bg} ${color.border}`}>
-          <Icon className={`h-7 w-7 ${color.icon}`} />
+        <div className={`shrink-0 h-12 w-12 sm:h-16 sm:w-16 rounded-2xl border flex items-center justify-center ${color.bg} ${color.border}`}>
+          <Icon className={`h-5 w-5 sm:h-7 sm:w-7 ${color.icon}`} />
         </div>
 
         <div className="flex-1 min-w-0">
           {/* Company name + "NEW" badge */}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-blue-600 font-bold text-lg truncate">{job.company_name}</span>
+          <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+            <span className="text-blue-600 font-bold text-base sm:text-lg truncate">{job.company_name}</span>
             {isNew && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-emerald-600">
-                <Flame className="h-3 w-3" /> New
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-emerald-600">
+                <Flame className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> New
               </span>
             )}
           </div>
 
           {/* Job title */}
-          <p className="text-gray-900 font-extrabold text-xl leading-snug mb-3 group-hover:text-blue-700 transition-colors">
+          <p className="text-gray-900 font-extrabold text-base sm:text-xl leading-snug mb-2 sm:mb-3 group-hover:text-blue-700 transition-colors line-clamp-2">
             {job.title}
           </p>
 
           {/* Tags row */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {job.seniority_level && (
-              <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-bold uppercase tracking-wide text-gray-500">
+              <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-bold uppercase tracking-wide text-gray-500">
                 {job.seniority_level}
               </span>
             )}
             {(job.employment_type || job.workplace_type) && (
-              <span className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-bold uppercase tracking-wide text-gray-500">
+              <span className="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-bold uppercase tracking-wide text-gray-500">
                 <Clock className="h-3.5 w-3.5" />
                 {job.employment_type || job.workplace_type}
               </span>
             )}
             {job.location && (
-              <span className="flex items-center gap-1.5 text-sm text-gray-400 font-medium">
-                <MapPin className="h-3.5 w-3.5" />
+              <span className="flex items-center gap-1 text-xs sm:text-sm text-gray-400 font-medium">
+                <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                 {job.location.split(",")[0]}
+              </span>
+            )}
+            {/* Date inline on mobile */}
+            {job.posted_at && (
+              <span className="sm:hidden flex items-center gap-1 text-xs text-gray-400 font-medium ml-auto">
+                {timeAgo(job.posted_at)}
               </span>
             )}
           </div>
         </div>
 
-        {/* Date + arrow */}
-        <div className="shrink-0 flex flex-col items-end gap-3 ml-2">
+        {/* Date + arrow — hidden on mobile, shown on sm+ */}
+        <div className="shrink-0 hidden sm:flex flex-col items-end gap-3 ml-2">
           <span className="text-sm text-gray-400 font-medium whitespace-nowrap">
             {timeAgo(job.posted_at)}
           </span>
@@ -168,7 +174,7 @@ export const LatestJobsV2 = () => {
   };
 
   return (
-    <section className="bg-white py-16 px-6 border-t border-gray-100">
+    <section className="bg-white py-12 sm:py-16 px-4 sm:px-6 border-t border-gray-100">
       <div className="mx-auto max-w-6xl">
 
         {/* Section title */}
@@ -179,7 +185,7 @@ export const LatestJobsV2 = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
         >
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
             Latest{" "}
             <span className="relative inline-block text-blue-600">
               executive jobs

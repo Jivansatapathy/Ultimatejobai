@@ -751,7 +751,7 @@ export default function FindJobs() {
               const active = filters.country === c.value;
               const cnt = c.code === "CA"
                 ? fmtCount(liveCount("Canada", timeSeed, 100_000, 112_000))
-                : fmtCount(liveCount("UnitedStates", timeSeed, 28_000, 33_000));
+                : fmtCount(liveCount("UnitedStates", timeSeed, 185_000, 190_000));
               return (
                 <button
                   key={c.value}
@@ -842,7 +842,7 @@ export default function FindJobs() {
             return (
               <div className="space-y-0.5">
                 {visible.map((ind) => {
-                  const cnt = fmtCount(liveCount(ind.key, timeSeed, 800, 4500));
+                  const cnt = fmtCount(liveCount(ind.key, timeSeed, 2_800, 5_800));
                   const active = filters.industry === ind.key;
                   return (
                     <button

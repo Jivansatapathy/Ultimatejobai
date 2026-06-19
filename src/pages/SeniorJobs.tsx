@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Search, X, MapPin, Building2, Briefcase, Globe2,
   Loader2, Crown, TrendingUp, Users2, ChevronDown,
-  SlidersHorizontal, CalendarDays, ExternalLink, ArrowRight,
+  SlidersHorizontal, CalendarDays, ExternalLink, ArrowRight, Zap, DollarSign,
 } from "lucide-react";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
@@ -14,6 +15,45 @@ import {
   fetchSeniorJobById,
   searchSeniorJobs,
 } from "@/services/seniorJobService";
+import { venusService } from "@/services/venusService";
+
+// ─── Venus AI profile → search filter mapping ──────────────────────────────────
+
+const ROLE_TO_SEARCH: Record<string, string> = {
+  "CEO": "Chief Executive Officer",
+  "COO": "Chief Operating Officer",
+  "CTO": "Chief Technology Officer",
+  "CFO": "Chief Financial Officer",
+  "CPO": "Chief Product Officer",
+  "CMO": "Chief Marketing Officer",
+  "CRO": "Chief Revenue Officer",
+  "CHRO": "Chief Human Resources Officer",
+  "CISO": "Chief Information Security Officer",
+  "CIO": "Chief Information Officer",
+  "VP Engineering": "VP Engineering",
+  "VP Sales": "VP Sales",
+  "VP Marketing": "VP Marketing",
+  "VP Product": "VP Product Management",
+  "VP Finance": "VP Finance",
+  "VP Operations": "VP Operations",
+  "Board Advisor": "Board Director",
+  "Fractional Executive": "Fractional",
+};
+
+const PROFILE_INDUSTRY_TO_KEY: Record<string, string> = {
+  "Technology": "Technology", "FinTech": "Fintech", "HealthTech": "HealthTech",
+  "SaaS": "Technology", "E-commerce": "Retail", "Manufacturing": "Manufacturing",
+  "Healthcare": "Healthcare", "Financial Services": "Banking", "Media": "Media",
+  "Education": "Education", "Clean Energy": "Clean Energy", "Real Estate": "Real Estate",
+  "Consulting": "Consulting", "Retail": "Retail", "Defense": "Defense", "Biotech": "Biotech",
+};
+
+function profileRoleToSeniority(role: string): string {
+  if (!role) return "";
+  if (role.startsWith("VP ")) return "VP";
+  if (role === "Board Advisor" || role === "Fractional Executive") return "";
+  return "C-Suite";
+}
 
 // ─── Static data ───────────────────────────────────────────────────────────────
 
@@ -352,10 +392,11 @@ interface PageFilters {
   role: string;
   workplace: string;
   text: string;
+  hasSalary: string;
 }
 
 const EMPTY: PageFilters = {
-  country: "", industry: "", seniority: "", role: "", workplace: "", text: "",
+  country: "", industry: "", seniority: "", role: "", workplace: "", text: "", hasSalary: "",
 };
 
 function toApiFilters(f: PageFilters): SeniorJobSearchFilters {
@@ -365,6 +406,7 @@ function toApiFilters(f: PageFilters): SeniorJobSearchFilters {
     industry:        f.industry || undefined,
     seniority_level: f.seniority || undefined,
     workplace_type:  f.workplace || undefined,
+    has_salary:      f.hasSalary === "true" || undefined,
   };
 }
 
@@ -671,10 +713,29 @@ export default function FindJobs() {
   const [timeSeed, setTimeSeed] = useState(() => Math.floor(Date.now() / (1000 * 60 * 12)));
   const [showAllIndustries, setShowAllIndustries] = useState(false);
   const [expandedRoleLevels, setExpandedRoleLevels] = useState<Record<string, boolean>>({});
+  const [venusPreFill, setVenusPreFill] = useState<{ role: string; industry: string } | null>(null);
+  const [venusbannerDismissed, setVenusBannerDismissed] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setTimeSeed(Math.floor(Date.now() / (1000 * 60 * 12))), 1000 * 60 * 12);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    venusService.getProfile().then(profile => {
+      if (!profile?.role) return;
+      const searchText = ROLE_TO_SEARCH[profile.role] ?? profile.role;
+      const industryKey = profile.industries?.[0] ? (PROFILE_INDUSTRY_TO_KEY[profile.industries[0]] ?? "") : "";
+      const seniority = profileRoleToSeniority(profile.role);
+      setFilters(f => ({
+        ...f,
+        text: searchText,
+        industry: industryKey,
+        seniority,
+      }));
+      setTextInput(searchText);
+      setVenusPreFill({ role: profile.role, industry: profile.industries?.[0] ?? "" });
+    }).catch(() => {});
   }, []);
 
   const runSearch = useCallback(async (f: PageFilters, pg: number, append: boolean) => {
@@ -713,6 +774,7 @@ export default function FindJobs() {
   const clearAll = () => {
     setFilters(EMPTY); setTextInput(""); setRoleSearch(""); setIndustrySearch("");
     setShowAllIndustries(false); setExpandedRoleLevels({});
+    setVenusPreFill(null);
   };
 
   const hasAnyFilter = Object.values(filters).some(Boolean);
@@ -735,6 +797,7 @@ export default function FindJobs() {
     ...(filters.industry  ? [{ label: INDUSTRIES.find((i) => i.key === filters.industry)?.label ?? filters.industry, clear: () => set("industry", "") }] : []),
     ...(filters.role      ? [{ label: filters.role, clear: () => setFilters((f) => ({ ...f, role: "", seniority: "" })) }] : []),
     ...(filters.workplace ? [{ label: filters.workplace, clear: () => set("workplace", "") }] : []),
+    ...(filters.hasSalary === "true" ? [{ label: "Salary listed", clear: () => set("hasSalary", "") }] : []),
     ...(filters.text      ? [{ label: `"${filters.text}"`, clear: () => { set("text", ""); setTextInput(""); } }] : []),
   ];
 
@@ -821,6 +884,25 @@ export default function FindJobs() {
               </button>
             ))}
           </div>
+        </FilterSection>
+
+        {/* Salary */}
+        <FilterSection title="Salary" icon={DollarSign}>
+          <button
+            type="button"
+            onClick={() => toggle("hasSalary", "true")}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+              filters.hasSalary === "true"
+                ? "bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-100"
+                : "bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:bg-emerald-50"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <DollarSign className="h-3.5 w-3.5" />
+              Salary listed only
+            </span>
+            {filters.hasSalary === "true" && <X className="h-3.5 w-3.5 opacity-70" />}
+          </button>
         </FilterSection>
 
         {/* Industry */}
@@ -1003,6 +1085,19 @@ export default function FindJobs() {
             </button>
           </form>
 
+          {/* Fractional quick-access button */}
+          <div className="flex items-center justify-center gap-3 mt-5">
+            <span className="text-blue-200/60 text-xs font-medium">Looking for part-time work?</span>
+            <Link
+              to="/fractional-jobs"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-xs font-bold transition-all shadow-sm shadow-teal-900/30 group"
+            >
+              <Zap className="h-3 w-3 text-yellow-300" />
+              Fractional Roles
+              <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+
           {/* Active filter chips */}
           {chips.length > 0 && (
             <div className="flex flex-wrap justify-center gap-1.5 mt-4">
@@ -1024,6 +1119,34 @@ export default function FindJobs() {
           )}
         </div>
       </div>
+
+      {/* ── Venus AI pre-fill banner ── */}
+      {venusPreFill && !venusbannerDismissed && (
+        <div className="bg-violet-600 text-white px-4 py-2.5 flex items-center justify-center gap-3 text-sm">
+          <Crown className="h-4 w-4 text-violet-200 shrink-0" />
+          <span>
+            <span className="font-bold">Venus AI</span> pre-filled your search with{" "}
+            <span className="font-semibold">{venusPreFill.role}</span>
+            {venusPreFill.industry && <> in <span className="font-semibold">{venusPreFill.industry}</span></>}
+            {" "}— update filters anytime.
+          </span>
+          <button type="button" onClick={() => setVenusBannerDismissed(true)}
+            className="ml-2 text-violet-200 hover:text-white transition-colors shrink-0">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Fractional Jobs promo strip ── */}
+      <Link to="/fractional-jobs"
+        className="group flex items-center justify-center gap-2.5 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 transition-colors text-sm">
+        <Zap className="h-3.5 w-3.5 text-yellow-300 shrink-0" />
+        <span>
+          <span className="font-bold">Looking for fractional work?</span>{" "}
+          Browse Fractional CFO, CTO, CMO &amp; more roles →
+        </span>
+        <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
+      </Link>
 
       {/* ── Body ── */}
       <div className="max-w-[1340px] mx-auto px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-5 items-start">

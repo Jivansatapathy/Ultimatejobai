@@ -34,6 +34,8 @@ export interface SeniorJobSearchFilters {
   country?: string;
   employment_type?: string;
   workplace_type?: string;
+  fractional?: boolean;
+  has_salary?: boolean;
   page?: number;
   page_size?: number;
 }
@@ -74,6 +76,8 @@ export const searchSeniorJobs = async (
   if (filters.country)         params.set('country', filters.country);
   if (filters.employment_type) params.set('employment_type', filters.employment_type);
   if (filters.workplace_type)  params.set('workplace_type', filters.workplace_type);
+  if (filters.fractional)      params.set('fractional', 'true');
+  if (filters.has_salary)      params.set('has_salary', 'true');
   if (filters.page)            params.set('page', String(filters.page));
   if (filters.page_size)       params.set('page_size', String(filters.page_size));
 

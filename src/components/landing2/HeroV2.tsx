@@ -1,7 +1,7 @@
 import { motion, useInView, animate } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { Search, MapPin, Crown, ArrowRight } from "lucide-react";
+import { Search, MapPin, Crown, ArrowRight, Sparkles, Target, DollarSign, Network } from "lucide-react";
 
 const QUICK_ROLES = ["CEO", "CFO", "CTO", "COO", "VP Engineering", "VP Sales", "CHRO", "Director"];
 
@@ -159,6 +159,63 @@ export const HeroV2 = () => {
           ))}
         </motion.div>
       </div>
+
+      {/* Venus AI Executive OS banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.35 }}
+        className="relative mx-auto max-w-5xl px-4 sm:px-6 pb-10 sm:pb-14"
+      >
+        <Link to="/venus" className="group block">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-950 via-violet-900 to-indigo-900 border border-violet-700/40 shadow-[0_8px_40px_rgba(109,40,217,0.25)] hover:shadow-[0_12px_48px_rgba(109,40,217,0.4)] transition-all duration-300">
+            {/* Glow blobs */}
+            <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-violet-500/20 blur-2xl" />
+            <div className="pointer-events-none absolute bottom-0 left-1/4 h-28 w-28 rounded-full bg-indigo-500/20 blur-xl" />
+
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5 px-6 sm:px-8 py-5 sm:py-6">
+              {/* Icon */}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 shadow-lg shadow-violet-500/30">
+                <Crown className="h-6 w-6 text-white" />
+              </div>
+
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-400">New</p>
+                  <span className="rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">Executive OS</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
+                  Venus AI — Your Executive Career Operating System
+                </h3>
+                <p className="text-sm text-violet-300/80 mt-1 leading-relaxed">
+                  Company intelligence, compensation benchmarks, equity modeling, EOS™ scoring and live interview practice — built exclusively for C-suite leaders.
+                </p>
+                {/* Feature pills */}
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  {[
+                    { icon: Target,     label: "EOS™ Scoring" },
+                    { icon: DollarSign, label: "Comp Intelligence" },
+                    { icon: Sparkles,   label: "AI Career Twin" },
+                    { icon: Network,    label: "Exec Network" },
+                  ].map(({ icon: Icon, label }) => (
+                    <span key={label} className="inline-flex items-center gap-1 rounded-full bg-white/10 border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-violet-200">
+                      <Icon className="h-3 w-3" />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA arrow */}
+              <div className="shrink-0 flex items-center gap-2 rounded-xl bg-violet-600 group-hover:bg-violet-500 transition-colors px-5 py-3 text-white font-bold text-sm shadow-md shadow-violet-900/30 self-start sm:self-auto">
+                Explore Venus
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
+        </Link>
+      </motion.div>
 
       {/* Stats strip */}
       <motion.div

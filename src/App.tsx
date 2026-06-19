@@ -57,6 +57,21 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
 const SeniorJobs = lazy(() => import("./pages/SeniorJobs"));
+const FractionalJobs = lazy(() => import("./pages/FractionalJobs"));
+
+// Venus AI Executive Career OS
+const VenusShell = lazy(() => import("./components/venus/VenusShell"));
+const VenusDashboard = lazy(() => import("./pages/venus/VenusDashboard"));
+const ExecutiveProfileBuilder = lazy(() => import("./pages/venus/ExecutiveProfileBuilder"));
+const ExecutiveOpportunityEngine = lazy(() => import("./pages/venus/ExecutiveOpportunityEngine"));
+const CompanyIntelligence = lazy(() => import("./pages/venus/CompanyIntelligence"));
+const CompensationIntelligence = lazy(() => import("./pages/venus/CompensationIntelligence"));
+const EquityCalculator = lazy(() => import("./pages/venus/EquityCalculator"));
+const NetworkingEngine = lazy(() => import("./pages/venus/NetworkingEngine"));
+const ExecutiveBranding = lazy(() => import("./pages/venus/ExecutiveBranding"));
+const ExecInterviewPrep = lazy(() => import("./pages/venus/ExecInterviewPrep"));
+const ExecutiveReadinessScore = lazy(() => import("./pages/venus/ExecutiveReadinessScore"));
+const AICareerTwin = lazy(() => import("./pages/venus/AICareerTwin"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -206,6 +221,7 @@ const App = () => (
                   } />
                   <Route path="/jobs" element={<CandidateRoute><Jobs /></CandidateRoute>} />
                   <Route path="/find-jobs" element={<CandidateRoute><SeniorJobs /></CandidateRoute>} />
+                  <Route path="/fractional-jobs" element={<CandidateRoute><FractionalJobs /></CandidateRoute>} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
                   <Route path="/applications" element={
@@ -294,6 +310,21 @@ const App = () => (
                       <Route path="settings" element={<EmployerSettings />} />
                     </Route>
                   </Route>
+                  {/* Venus AI Executive Career OS */}
+                  <Route path="/venus" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
+                    <Route index element={<VenusDashboard />} />
+                    <Route path="profile" element={<ExecutiveProfileBuilder />} />
+                    <Route path="opportunities" element={<ExecutiveOpportunityEngine />} />
+                    <Route path="company-intel" element={<CompanyIntelligence />} />
+                    <Route path="compensation" element={<CompensationIntelligence />} />
+                    <Route path="equity" element={<EquityCalculator />} />
+                    <Route path="network" element={<NetworkingEngine />} />
+                    <Route path="branding" element={<ExecutiveBranding />} />
+                    <Route path="interview-prep" element={<ExecInterviewPrep />} />
+                    <Route path="readiness-score" element={<ExecutiveReadinessScore />} />
+                    <Route path="career-twin" element={<AICareerTwin />} />
+                  </Route>
+
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/return-policy" element={<ReturnPolicy />} />

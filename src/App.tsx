@@ -58,6 +58,9 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
 const SeniorJobs = lazy(() => import("./pages/SeniorJobs"));
 const FractionalJobs = lazy(() => import("./pages/FractionalJobs"));
+const BookACall = lazy(() => import("./pages/BookACall"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Plans = lazy(() => import("./pages/Plans"));
 
 // Venus AI Executive Career OS
 const VenusShell = lazy(() => import("./components/venus/VenusShell"));
@@ -328,6 +331,9 @@ const App = () => (
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/return-policy" element={<ReturnPolicy />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/book-a-call" element={<BookACall />} />
+                  <Route path="/plans" element={<Plans />} />
                   <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>

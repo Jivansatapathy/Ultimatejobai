@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Check, ArrowRight, Sparkles, Briefcase, Zap, Crown } from "lucide-react";
+import { Check, ArrowRight, Sparkles, Briefcase, Crown, Phone, Clock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
-import { planUiConfig } from "@/data/plans";
+import { planUiConfig, plans as staticPlans } from "@/data/plans";
 import { toast } from "sonner";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -38,17 +38,20 @@ const PLAN_CONFIG: Record<string, {
   icon: React.ElementType;
   badge?: string;
   featured?: boolean;
-  gradient?: string;
+  callout?: string;
 }> = {
-  free:         { icon: Sparkles },
-  starter:      { icon: Zap },
-  premium:      { icon: Briefcase, featured: true, badge: "Most Popular", gradient: "from-blue-600 to-indigo-700" },
-  professional: { icon: Briefcase, featured: true, badge: "Most Popular", gradient: "from-blue-600 to-indigo-700" },
-  accelerator:  { icon: Zap },
-  executive:    { icon: Crown, badge: "Best Value" },
+  free:         { icon: Sparkles, callout: "15-min call · Free forever" },
+  beginner:     { icon: Phone, callout: "1 session/mo · 30 min" },
+  professional: { icon: Briefcase, featured: true, badge: "Most Popular", callout: "2 sessions/mo · 60 min total" },
+  personal:     { icon: Crown, badge: "Premium", callout: "3 sessions/mo + dedicated recruiter" },
+  // legacy slugs
+  starter:      { icon: Phone, callout: "1 session/mo · 30 min" },
+  premium:      { icon: Briefcase, featured: true, badge: "Most Popular", callout: "2 sessions/mo · 60 min total" },
+  premium_tier: { icon: Crown, badge: "Premium", callout: "3 sessions/mo + dedicated recruiter" },
+  executive:    { icon: Crown, badge: "Premium", callout: "3 sessions/mo + dedicated recruiter" },
 };
 
-const fallbackConfig = { icon: Zap };
+const fallbackConfig = { icon: Phone };
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
@@ -87,13 +90,20 @@ function PricingCard({
         </div>
 
         {/* Name */}
-        <h3 className="text-xl font-extrabold tracking-tight">{plan.name || ui.name}</h3>
-        {ui.subtitle && <p className="text-blue-200 text-sm mt-0.5 font-medium">{ui.subtitle}</p>}
+        <h3 className="text-xl font-extrabold tracking-tight">{ui.name}</h3>
+
+        {/* Session callout */}
+        {config.callout && (
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 w-fit">
+            <Clock className="h-3 w-3 text-white/80" />
+            <span className="text-[11px] font-semibold text-white/90">{config.callout}</span>
+          </div>
+        )}
 
         {/* Price */}
         <div className="mt-5 mb-1 flex items-end gap-1">
           <span className="text-5xl font-black tracking-tight leading-none">{price}</span>
-          {!isFree && <span className="text-blue-300 text-base font-semibold mb-1">/mo</span>}
+          {!isFree && <span className="text-blue-300 text-base font-semibold mb-1">/{ui.subtitle || "mo"}</span>}
         </div>
         {annual && !isFree && (
           <p className="text-blue-200 text-xs font-semibold mb-3">Billed annually · 20% off</p>
@@ -101,7 +111,7 @@ function PricingCard({
 
         {/* Divider */}
         <p className="text-blue-100/80 text-sm leading-relaxed mt-3 mb-6 pb-6 border-b border-white/20">
-          {("description" in plan && plan.description) || ui.description || ""}
+          {ui.description || ""}
         </p>
 
         {/* Features */}
@@ -156,13 +166,20 @@ function PricingCard({
       </div>
 
       {/* Name */}
-      <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">{plan.name || ui.name}</h3>
-      {ui.subtitle && <p className="text-gray-400 text-sm mt-0.5 font-medium">{ui.subtitle}</p>}
+      <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">{ui.name}</h3>
+
+      {/* Session callout */}
+      {config.callout && (
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 w-fit">
+          <Clock className="h-3 w-3 text-gray-500" />
+          <span className="text-[11px] font-semibold text-gray-600">{config.callout}</span>
+        </div>
+      )}
 
       {/* Price */}
       <div className="mt-5 mb-1 flex items-end gap-1">
         <span className="text-4xl font-black text-gray-900 tracking-tight leading-none">{price}</span>
-        {!isFree && <span className="text-gray-400 text-base font-semibold mb-1">/mo</span>}
+        {!isFree && <span className="text-gray-400 text-base font-semibold mb-1">/{ui.subtitle || "mo"}</span>}
       </div>
       {annual && !isFree && (
         <p className="text-emerald-600 text-xs font-semibold mb-1">Billed annually · save 20%</p>
@@ -170,7 +187,7 @@ function PricingCard({
 
       {/* Description */}
       <p className="text-gray-500 text-sm leading-relaxed mt-3 mb-6 pb-6 border-b border-gray-100">
-        {("description" in plan && plan.description) || ui.description || ""}
+        {ui.description || ""}
       </p>
 
       {/* Features */}
@@ -211,16 +228,14 @@ export const PricingV2 = () => {
   const { isAuthenticated } = useAuth();
   const { plans, summary, loadingPlans, selectPlan, initiateCheckout } = useSubscription();
 
-  const displayPlans = plans
-    .filter(p => !["explorer", "enterprise", "executive"].includes(p.slug))
-    .slice(0, 4);
+  // Prefer the 4 canonical slugs in order; fall back to static definitions
+  const CANONICAL = ["free", "beginner", "professional", "personal"];
+  const apiBySlug = Object.fromEntries(plans.map(p => [p.slug, p]));
+  const displayPlans = CANONICAL.map(slug => apiBySlug[slug]).filter(Boolean).length === 4
+    ? CANONICAL.map(slug => apiBySlug[slug])
+    : staticPlans.map(p => ({ slug: p.slug, name: p.name, price_display: p.price, features: [], price_data: null, is_default: p.slug === "free" }));
 
-  const n = displayPlans.length;
-  const gridCols =
-    n === 1 ? "grid-cols-1 max-w-sm" :
-    n === 2 ? "grid-cols-2 max-w-3xl" :
-    n === 3 ? "grid-cols-1 md:grid-cols-3 max-w-5xl" :
-              "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 max-w-7xl";
+  const gridCols = "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 max-w-7xl";
 
   const isPaid = (slug: string) => {
     const p = plans.find(x => x.slug === slug);
@@ -267,11 +282,11 @@ export const PricingV2 = () => {
             Pricing
           </span>
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight mb-4">
-            Invest in your{" "}
-            <span className="text-blue-600">next role</span>
+            Executive recruiter access,{" "}
+            <span className="text-blue-600">built for your career stage</span>
           </h2>
-          <p className="text-gray-500 text-lg max-w-lg mx-auto leading-relaxed">
-            Every plan includes AI-powered tools. Upgrade or cancel anytime — no lock-in.
+          <p className="text-gray-500 text-lg max-w-xl mx-auto leading-relaxed">
+            From a free 15-minute career consultation to a dedicated executive recruiter — every plan includes full AI platform access.
           </p>
 
           {/* Billing toggle */}
@@ -338,7 +353,7 @@ export const PricingV2 = () => {
           transition={{ delay: 0.35 }}
         >
           <p className="text-sm text-gray-400 font-medium">
-            No credit card required for the Free plan · Cancel anytime · Secure payments via Stripe
+            No credit card required for the free consultation · Cancel anytime · Secure payments via Stripe
           </p>
         </motion.div>
       </div>

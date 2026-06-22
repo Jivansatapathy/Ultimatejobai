@@ -138,21 +138,21 @@ function MessageBubble({ msg }: { msg: CareerTwinMessage }) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       <div className={`shrink-0 h-8 w-8 rounded-xl flex items-center justify-center ${
-        isUser ? "bg-zinc-700" : "bg-gradient-to-br from-violet-600 to-violet-800"
+        isUser ? "bg-gray-100" : "bg-gradient-to-br from-blue-600 to-blue-800"
       }`}>
-        {isUser ? <span className="text-xs font-bold text-zinc-300">You</span> : <Crown className="h-4 w-4 text-white" />}
+        {isUser ? <span className="text-xs font-bold text-gray-600">You</span> : <Crown className="h-4 w-4 text-white" />}
       </div>
       <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-        isUser ? "bg-zinc-700 text-white rounded-tr-sm" : "bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-tl-sm"
+        isUser ? "bg-blue-600 text-white rounded-tr-sm" : "bg-white border border-gray-200 text-gray-700 rounded-tl-sm"
       }`}>
         <div className="text-sm leading-relaxed whitespace-pre-wrap">
           {msg.content.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
             part.startsWith("**") && part.endsWith("**")
-              ? <strong key={i} className="font-bold text-white">{part.slice(2, -2)}</strong>
+              ? <strong key={i} className={`font-bold ${isUser ? "text-white" : "text-gray-900"}`}>{part.slice(2, -2)}</strong>
               : part
           )}
         </div>
-        <p className="text-[10px] text-zinc-600 mt-1.5">
+        <p className="text-[10px] text-gray-400 mt-1.5">
           {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
@@ -163,13 +163,13 @@ function MessageBubble({ msg }: { msg: CareerTwinMessage }) {
 function TypingIndicator() {
   return (
     <div className="flex gap-3">
-      <div className="shrink-0 h-8 w-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-600 to-violet-800">
+      <div className="shrink-0 h-8 w-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800">
         <Crown className="h-4 w-4 text-white" />
       </div>
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3">
+      <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3">
         <div className="flex gap-1 items-center h-5">
           {[0, 1, 2].map(i => (
-            <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-violet-500"
+            <motion.div key={i} className="h-1.5 w-1.5 rounded-full bg-blue-500"
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} />
           ))}
@@ -243,17 +243,17 @@ export default function AICareerTwin() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Priority 2 · AI</p>
-          <h1 className="text-lg font-black text-white">AI Career Twin</h1>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · AI</p>
+          <h1 className="text-lg font-black text-gray-900">AI Career Twin</h1>
           {profile?.role && (
-            <p className="text-xs text-zinc-500">Personalized for {profile.role}{profile.growth_stage ? ` · ${profile.growth_stage}` : ""}</p>
+            <p className="text-xs text-gray-400">Personalized for {profile.role}{profile.growth_stage ? ` · ${profile.growth_stage}` : ""}</p>
           )}
         </div>
         {messages.length > 0 && (
           <Button size="sm" variant="outline" onClick={clearHistory}
-            className="border-zinc-700 text-zinc-500 hover:bg-zinc-800 hover:text-red-400 h-7 text-xs">
+            className="border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-red-600 h-7 text-xs">
             <Trash2 className="h-3 w-3 mr-1" />
             Clear
           </Button>
@@ -265,22 +265,22 @@ export default function AICareerTwin() {
         {isEmpty && (
           <div className="py-8">
             <div className="flex flex-col items-center text-center mb-8">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center mb-4 shadow-lg shadow-violet-500/20">
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
                 <Crown className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-lg font-black text-white">Venus Career Twin</h2>
-              <p className="text-sm text-zinc-400 mt-1 max-w-sm">
+              <h2 className="text-lg font-black text-gray-900">Venus Career Twin</h2>
+              <p className="text-sm text-gray-500 mt-1 max-w-sm">
                 Your AI advisor trained on executive career strategy. Ask about comp negotiation, board positioning, role decisions, or PE diligence.
               </p>
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Or start with a common question:</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Or start with a common question:</p>
               <div className="space-y-2">
                 {STARTER_PROMPTS.map((prompt, i) => (
                   <button key={i} type="button" onClick={() => send(prompt)}
-                    className="w-full text-left rounded-xl border border-zinc-800 bg-zinc-800/50 hover:border-violet-500/40 hover:bg-zinc-800 px-4 py-3 text-sm text-zinc-300 hover:text-white transition-all flex items-center gap-3">
-                    <Sparkles className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                    className="w-full text-left rounded-xl border border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-gray-100 px-4 py-3 text-sm text-gray-600 hover:text-gray-900 transition-all flex items-center gap-3">
+                    <Sparkles className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                     {prompt}
                   </button>
                 ))}
@@ -297,7 +297,7 @@ export default function AICareerTwin() {
       </div>
 
       {/* Input */}
-      <div className="px-6 py-4 border-t border-zinc-800 shrink-0">
+      <div className="px-6 py-4 border-t border-gray-200 shrink-0">
         <div className="flex gap-3 items-end">
           <textarea
             ref={inputRef}
@@ -306,15 +306,15 @@ export default function AICareerTwin() {
             onKeyDown={handleKeyDown}
             placeholder="Ask Venus anything about your executive career..."
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all max-h-32 overflow-y-auto"
+            className="flex-1 resize-none rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all max-h-32 overflow-y-auto"
             style={{ fieldSizing: "content" } as React.CSSProperties}
           />
           <Button onClick={() => send()} disabled={loading || !input.trim()}
-            className="bg-violet-600 hover:bg-violet-700 text-white h-11 w-11 p-0 shrink-0 rounded-xl">
+            className="bg-blue-600 hover:bg-blue-700 text-white h-11 w-11 p-0 shrink-0 rounded-xl">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
-        <p className="text-[10px] text-zinc-600 mt-2 text-center">
+        <p className="text-[10px] text-gray-400 mt-2 text-center">
           Shift+Enter for new line · Enter to send · Conversation saved locally
         </p>
       </div>

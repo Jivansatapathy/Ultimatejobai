@@ -23,7 +23,7 @@ const ROLE_OPTIONS = [
 ];
 
 function ScoreGauge({ score }: { score: number }) {
-  const color = score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-400" : score >= 40 ? "text-orange-400" : "text-red-400";
+  const color = score >= 80 ? "text-emerald-600" : score >= 60 ? "text-amber-600" : score >= 40 ? "text-orange-600" : "text-red-600";
   const bgColor = score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : score >= 40 ? "bg-orange-500" : "bg-red-500";
   const label = score >= 80 ? "Ready" : score >= 60 ? "Nearly Ready" : score >= 40 ? "Building" : "Early Stage";
 
@@ -31,7 +31,7 @@ function ScoreGauge({ score }: { score: number }) {
     <div className="flex flex-col items-center py-6">
       <div className="relative flex items-center justify-center w-36 h-36">
         <svg className="absolute inset-0 -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="52" fill="none" stroke="#27272a" strokeWidth="12" />
+          <circle cx="60" cy="60" r="52" fill="none" stroke="#e5e7eb" strokeWidth="12" />
           <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor"
             strokeWidth="12" strokeLinecap="round"
             strokeDasharray={`${(score / 100) * 326.7} 326.7`}
@@ -39,7 +39,7 @@ function ScoreGauge({ score }: { score: number }) {
         </svg>
         <div className="text-center z-10">
           <p className={`text-4xl font-black tabular-nums ${color}`}>{score}</p>
-          <p className="text-xs text-zinc-500 font-bold">/100</p>
+          <p className="text-xs text-gray-400 font-bold">/100</p>
         </div>
       </div>
       <div className={`mt-3 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${bgColor}/20 ${color}`}>
@@ -56,12 +56,12 @@ function DimensionBar({ dim, score }: { dim: typeof DIMENSIONS[number]; score: n
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-white">{dim.label}</p>
-          <p className="text-xs text-zinc-500">{dim.desc}</p>
+          <p className="text-sm font-semibold text-gray-900">{dim.label}</p>
+          <p className="text-xs text-gray-400">{dim.desc}</p>
         </div>
-        <span className="text-sm font-black text-zinc-300 tabular-nums">{score}/10</span>
+        <span className="text-sm font-black text-gray-600 tabular-nums">{score}/10</span>
       </div>
-      <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
         <motion.div initial={{ width: 0 }} animate={{ width: barWidth }} transition={{ duration: 0.6, delay: 0.1 }}
           className={`h-full rounded-full ${color}`} />
       </div>
@@ -133,21 +133,21 @@ export default function ExecutiveReadinessScore() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Priority 2 · Assessment</p>
-        <h1 className="text-2xl font-black text-white mt-0.5">Executive Readiness Score</h1>
-        <p className="text-sm text-zinc-500 mt-1">Rate yourself on 6 executive dimensions. Get a score, gap analysis, and 90-day action plan.</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · Assessment</p>
+        <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Readiness Score</h1>
+        <p className="text-sm text-gray-400 mt-1">Rate yourself on 6 executive dimensions. Get a score, gap analysis, and 90-day action plan.</p>
       </div>
 
       {/* Assessment panel */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-5">
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
         {/* Target role */}
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2 block">Target Role</label>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Target Role</label>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {ROLE_OPTIONS.map(r => (
               <button key={r} type="button" onClick={() => setTargetRole(r)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
-                  targetRole === r ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                  targetRole === r ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
                 }`}>
                 {r}
               </button>
@@ -155,31 +155,31 @@ export default function ExecutiveReadinessScore() {
           </div>
           <Input value={targetRole} onChange={e => setTargetRole(e.target.value)}
             placeholder="Or type a custom role..."
-            className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 rounded-xl" />
+            className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
         </div>
 
         {/* Sliders */}
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Self-Assessment (1 = beginner, 10 = world-class)</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3">Self-Assessment (1 = beginner, 10 = world-class)</p>
           <div className="space-y-5">
             {DIMENSIONS.map(dim => (
               <div key={dim.key} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-white">{dim.label}</p>
-                    <p className="text-xs text-zinc-500">{dim.desc}</p>
+                    <p className="text-sm font-semibold text-gray-900">{dim.label}</p>
+                    <p className="text-xs text-gray-400">{dim.desc}</p>
                   </div>
-                  <span className="text-lg font-black text-violet-400 w-8 text-right tabular-nums">
+                  <span className="text-lg font-black text-blue-600 w-8 text-right tabular-nums">
                     {scores[dim.key]}
                   </span>
                 </div>
                 <input type="range" min={1} max={10} step={1}
                   value={scores[dim.key]}
                   onChange={e => setScores(s => ({ ...s, [dim.key]: Number(e.target.value) }))}
-                  className="w-full accent-violet-500 cursor-pointer" />
-                <div className="flex justify-between text-[10px] text-zinc-600">
+                  className="w-full accent-blue-500 cursor-pointer" />
+                <div className="flex justify-between text-[10px] text-gray-400">
                   <span>1 — Beginner</span>
-                  <span className="text-zinc-500">weight {Math.round(dim.weight * 100)}%</span>
+                  <span className="text-gray-400">weight {Math.round(dim.weight * 100)}%</span>
                   <span>10 — World-class</span>
                 </div>
               </div>
@@ -187,7 +187,7 @@ export default function ExecutiveReadinessScore() {
           </div>
         </div>
 
-        <Button onClick={calculate} disabled={loading} className="w-full bg-violet-600 hover:bg-violet-700 text-white h-11">
+        <Button onClick={calculate} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11">
           {loading
             ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Calculating your score...</>
             : <><Target className="h-4 w-4 mr-2" />Calculate Readiness Score</>}
@@ -199,23 +199,23 @@ export default function ExecutiveReadinessScore() {
         {result && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             {/* Score + verdict */}
-            <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-950/50 to-zinc-900 p-6">
+            <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6">
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <ScoreGauge score={result.overall_score} />
                 <div className="flex-1 text-center sm:text-left">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">
                     Readiness for {result.target_role}
                   </p>
-                  <p className="text-white font-medium leading-relaxed">{result.verdict}</p>
+                  <p className="text-gray-900 font-medium leading-relaxed">{result.verdict}</p>
                 </div>
               </div>
             </div>
 
             {/* Dimension breakdown */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
               <div className="flex items-center gap-2 mb-5">
-                <TrendingUp className="h-4 w-4 text-violet-400" />
-                <p className="text-sm font-black text-white uppercase tracking-wide">Dimension Breakdown</p>
+                <TrendingUp className="h-4 w-4 text-blue-600" />
+                <p className="text-sm font-black text-gray-900 uppercase tracking-wide">Dimension Breakdown</p>
               </div>
               <div className="space-y-5">
                 {result.dimensions.map((dim, i) => {
@@ -226,19 +226,19 @@ export default function ExecutiveReadinessScore() {
             </div>
 
             {/* Insights per dimension */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-              <p className="text-sm font-black text-white uppercase tracking-wide mb-4">Dimension Insights</p>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <p className="text-sm font-black text-gray-900 uppercase tracking-wide mb-4">Dimension Insights</p>
               <div className="space-y-3">
                 {result.dimensions.map((dim, i) => (
                   <div key={i} className="flex gap-3 items-start">
                     <div className={`shrink-0 mt-0.5 h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                      dim.score >= 8 ? "bg-emerald-900/50 text-emerald-400" : dim.score >= 6 ? "bg-amber-900/50 text-amber-400" : "bg-red-900/50 text-red-400"
+                      dim.score >= 8 ? "bg-emerald-100 text-emerald-700" : dim.score >= 6 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
                     }`}>
                       {dim.score}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">{dim.name}</p>
-                      <p className="text-xs text-zinc-400 mt-0.5">{dim.insight}</p>
+                      <p className="text-xs font-bold text-gray-900">{dim.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{dim.insight}</p>
                     </div>
                   </div>
                 ))}
@@ -246,14 +246,14 @@ export default function ExecutiveReadinessScore() {
             </div>
 
             {/* Key gaps */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
               <div className="flex items-center gap-2 mb-4">
-                <AlertCircle className="h-4 w-4 text-amber-400" />
-                <p className="text-sm font-black text-white uppercase tracking-wide">Key Gaps</p>
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <p className="text-sm font-black text-gray-900 uppercase tracking-wide">Key Gaps</p>
               </div>
               <ul className="space-y-2">
                 {result.key_gaps.map((gap, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-zinc-300">
+                  <li key={i} className="flex gap-2 text-sm text-gray-600">
                     <span className="text-amber-500 shrink-0 mt-0.5">⚠</span>
                     {gap}
                   </li>
@@ -262,24 +262,24 @@ export default function ExecutiveReadinessScore() {
             </div>
 
             {/* 90-day action plan */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Calendar className="h-4 w-4 text-blue-400" />
-                <p className="text-sm font-black text-white uppercase tracking-wide">90-Day Action Plan</p>
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <p className="text-sm font-black text-gray-900 uppercase tracking-wide">90-Day Action Plan</p>
               </div>
               <div className="space-y-2">
                 {result.action_plan.map((item, i) => (
-                  <div key={i} className="flex gap-3 items-start rounded-xl border border-zinc-800 bg-zinc-800/50 px-3 py-3">
+                  <div key={i} className="flex gap-3 items-start rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
                     <div className="shrink-0">
                       <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
-                        item.priority === "high" ? "bg-violet-900/50 text-violet-300" : "bg-zinc-700 text-zinc-400"
+                        item.priority === "high" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
                       }`}>
                         Wk {item.week}
                       </span>
                     </div>
                     <div className="flex-1 flex items-start gap-2">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-0.5" />
-                      <p className="text-sm text-zinc-300">{item.action}</p>
+                      <CheckCircle2 className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
+                      <p className="text-sm text-gray-600">{item.action}</p>
                     </div>
                   </div>
                 ))}
@@ -290,10 +290,10 @@ export default function ExecutiveReadinessScore() {
       </AnimatePresence>
 
       {!result && !loading && (
-        <div className="rounded-2xl border border-dashed border-zinc-800 py-16 text-center">
-          <Target className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500 font-semibold">Rate yourself across 6 dimensions above</p>
-          <p className="text-xs text-zinc-600 mt-1">Get your readiness score, gap analysis, and a 12-week action plan</p>
+        <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
+          <Target className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-400 font-semibold">Rate yourself across 6 dimensions above</p>
+          <p className="text-xs text-gray-400 mt-1">Get your readiness score, gap analysis, and a 12-week action plan</p>
         </div>
       )}
     </div>

@@ -123,17 +123,17 @@ function CityPicker({ value, onChange }: { value: string; onChange: (v: string) 
   return (
     <div ref={ref} className="relative">
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 pointer-events-none" />
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
         <input
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange(""); }}
           onFocus={() => setOpen(true)}
           onKeyDown={e => e.key === "Escape" && setOpen(false)}
           placeholder="Search city or state…"
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-800 pl-8 pr-8 py-2.5 text-sm text-zinc-300 placeholder:text-zinc-600 outline-none focus:border-violet-500 transition-colors"
+          className="w-full rounded-xl border border-gray-300 bg-gray-100 pl-8 pr-8 py-2.5 text-sm text-gray-600 placeholder:text-gray-400 outline-none focus:border-blue-500 transition-colors"
         />
         {query && (
-          <button type="button" onClick={clear} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
+          <button type="button" onClick={clear} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
             <X className="h-3.5 w-3.5" />
           </button>
         )}
@@ -144,21 +144,21 @@ function CityPicker({ value, onChange }: { value: string; onChange: (v: string) 
           <motion.div
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.12 }}
-            className="absolute z-50 mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl overflow-hidden"
+            className="absolute z-50 mt-1 w-full rounded-xl border border-gray-300 bg-white shadow-xl overflow-hidden"
           >
             <div className="max-h-64 overflow-y-auto p-1">
               {grouped.map(group => (
                 <div key={group.label}>
                   <div className="flex items-center gap-2 px-2 py-1.5 mt-1">
                     <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
-                      group.country === "USA" ? "bg-blue-900/60 text-blue-400" : "bg-red-900/60 text-red-400"
+                      group.country === "USA" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
                     }`}>{group.country}</span>
-                    <span className="text-[10px] font-bold text-zinc-500">{group.label}</span>
+                    <span className="text-[10px] font-bold text-gray-400">{group.label}</span>
                   </div>
                   {group.cities.map(city => (
                     <button key={city} type="button" onClick={() => select(city)}
                       className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                        value === city ? "bg-violet-600 text-white" : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                        value === city ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       }`}>
                       {city}
                     </button>
@@ -170,9 +170,9 @@ function CityPicker({ value, onChange }: { value: string; onChange: (v: string) 
         )}
         {open && query.trim().length > 0 && filtered.length === 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="absolute z-50 mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-center shadow-xl">
-            <Search className="h-5 w-5 text-zinc-600 mx-auto mb-1" />
-            <p className="text-xs text-zinc-500">No cities match "{query}"</p>
+            className="absolute z-50 mt-1 w-full rounded-xl border border-gray-300 bg-white p-4 text-center shadow-xl">
+            <Search className="h-5 w-5 text-gray-400 mx-auto mb-1" />
+            <p className="text-xs text-gray-400">No cities match "{query}"</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -193,39 +193,39 @@ function BenchmarkResult({ b }: { b: CompBenchmark }) {
   ];
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-5">
+      className="rounded-2xl border border-gray-200 bg-white p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-0.5">
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-0.5">
             {b.stage} · {b.location}{b.years_experience ? ` · ${b.years_experience} yrs exp` : ""}
           </p>
-          <h3 className="text-xl font-black text-white">{b.role}</h3>
+          <h3 className="text-xl font-black text-gray-900">{b.role}</h3>
         </div>
         <div className="text-right">
-          <p className="text-3xl font-black text-white">{FmtK(b.p50_total)}</p>
-          <p className="text-xs text-zinc-500 font-semibold">Market P50</p>
+          <p className="text-3xl font-black text-gray-900">{FmtK(b.p50_total)}</p>
+          <p className="text-xs text-gray-400 font-semibold">Market P50</p>
         </div>
       </div>
 
       <div className="space-y-2">
         {rows.map(({ label, min, max }) => (
-          <div key={label} className="rounded-xl border border-zinc-800 bg-zinc-800/50 px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-zinc-300">{label}</span>
-            <span className="text-base font-black text-white">{FmtK(min)} – {FmtK(max)}</span>
+          <div key={label} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-semibold text-gray-600">{label}</span>
+            <span className="text-base font-black text-gray-900">{FmtK(min)} – {FmtK(max)}</span>
           </div>
         ))}
       </div>
 
       {b.equity_min > 0 && (
-        <div className="rounded-xl border border-violet-500/20 bg-violet-950/30 px-4 py-3 flex justify-between items-center">
-          <span className="text-sm font-semibold text-violet-300">Equity Grant</span>
-          <span className="text-base font-black text-violet-300">{b.equity_min}% – {b.equity_max}%</span>
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 flex justify-between items-center">
+          <span className="text-sm font-semibold text-blue-700">Equity Grant</span>
+          <span className="text-base font-black text-blue-700">{b.equity_min}% – {b.equity_max}%</span>
         </div>
       )}
 
-      <div className="rounded-xl border border-teal-500/20 bg-teal-950/30 p-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-teal-400 mb-1">Your Ask</p>
-        <p className="text-sm text-teal-300">
+      <div className="rounded-xl border border-teal-200 bg-teal-50 p-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-teal-600 mb-1">Your Ask</p>
+        <p className="text-sm text-teal-700">
           Negotiate for <strong>{FmtK(Math.round(b.p50_total * 1.12 / 1000) * 1000)}</strong> total — that's 12% above market median, standard for candidates with strong exit history.
         </p>
       </div>
@@ -273,55 +273,55 @@ export default function CompensationIntelligence() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Phase 2 · Intelligence</p>
-        <h1 className="text-2xl font-black text-white mt-0.5">Compensation Intelligence</h1>
-        <p className="text-sm text-zinc-500 mt-1">Benchmark base, bonus, RSUs & equity for any executive role across 300+ US & Canadian cities.</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 2 · Intelligence</p>
+        <h1 className="text-2xl font-black text-gray-900 mt-0.5">Compensation Intelligence</h1>
+        <p className="text-sm text-gray-400 mt-1">Benchmark base, bonus, RSUs & equity for any executive role across 300+ US & Canadian cities.</p>
       </div>
 
       {/* Inputs */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Role</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Role</label>
             <select value={role} onChange={e => setRole(e.target.value)}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-300 outline-none focus:border-violet-500 transition-colors">
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-blue-500 transition-colors">
               <option value="">Select role</option>
               {ROLES.map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Company Stage</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Company Stage</label>
             <select value={stage} onChange={e => setStage(e.target.value)}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-300 outline-none focus:border-violet-500 transition-colors">
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-blue-500 transition-colors">
               <option value="">Select stage</option>
               {STAGES.map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Location</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Location</label>
             <CityPicker value={location} onChange={setLocation} />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Years of Experience</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Years of Experience</label>
             <input
               type="number" min={0} max={60} value={experience}
               onChange={e => setExperience(e.target.value)}
               placeholder="e.g. 12"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-300 placeholder:text-zinc-600 outline-none focus:border-violet-500 transition-colors"
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 placeholder:text-gray-400 outline-none focus:border-blue-500 transition-colors"
             />
           </div>
         </div>
 
         {/* Selected city display */}
         {location && (
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
-            <MapPin className="h-3 w-3 text-violet-400" />
-            <span>Benchmarking for <span className="text-white font-semibold">{location}</span></span>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <MapPin className="h-3 w-3 text-blue-600" />
+            <span>Benchmarking for <span className="text-gray-900 font-semibold">{location}</span></span>
           </div>
         )}
 
         <Button onClick={handleBenchmark} disabled={loading || !role || !stage || !location}
-          className="w-full bg-violet-600 hover:bg-violet-700 text-white h-11 disabled:opacity-50">
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11 disabled:opacity-50">
           {loading
             ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Benchmarking...</>
             : <><DollarSign className="h-4 w-4 mr-2" />Benchmark Compensation</>}
@@ -331,22 +331,22 @@ export default function CompensationIntelligence() {
       {result && <BenchmarkResult b={result} />}
 
       {history.length > 0 && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+        <div className="rounded-2xl border border-gray-200 bg-white p-5">
           <div className="flex items-center gap-2 mb-4">
-            <History className="h-4 w-4 text-zinc-500" />
-            <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Recent Benchmarks</p>
+            <History className="h-4 w-4 text-gray-400" />
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Recent Benchmarks</p>
           </div>
           <div className="space-y-2">
             {history.map((h, i) => (
               <button key={i} type="button" onClick={() => setResult(h)}
-                className="w-full flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-800/50 hover:border-zinc-700 px-4 py-3 transition-all text-left">
+                className="w-full flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 hover:border-gray-300 px-4 py-3 transition-all text-left">
                 <div>
-                  <p className="text-sm font-semibold text-white">{h.role}</p>
-                  <p className="text-xs text-zinc-500">{h.stage} · {h.location}</p>
+                  <p className="text-sm font-semibold text-gray-900">{h.role}</p>
+                  <p className="text-xs text-gray-400">{h.stage} · {h.location}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-black text-white">{FmtK(h.p50_total)}</p>
-                  <p className="text-[10px] text-zinc-600">P50</p>
+                  <p className="text-sm font-black text-gray-900">{FmtK(h.p50_total)}</p>
+                  <p className="text-[10px] text-gray-400">P50</p>
                 </div>
               </button>
             ))}
@@ -355,10 +355,10 @@ export default function CompensationIntelligence() {
       )}
 
       {!result && !loading && (
-        <div className="rounded-2xl border border-dashed border-zinc-800 py-16 text-center">
-          <TrendingUp className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500 font-semibold">Select role, stage & location to benchmark</p>
-          <p className="text-xs text-zinc-600 mt-1">300+ cities across the US and Canada · Groq AI-powered</p>
+        <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
+          <TrendingUp className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-400 font-semibold">Select role, stage & location to benchmark</p>
+          <p className="text-xs text-gray-400 mt-1">300+ cities across the US and Canada · Groq AI-powered</p>
         </div>
       )}
     </div>

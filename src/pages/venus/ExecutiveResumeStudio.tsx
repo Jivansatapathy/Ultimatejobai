@@ -22,24 +22,24 @@ function VersionCard({ version, onView, onDelete }: {
 }) {
   return (
     <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex items-start justify-between gap-3 hover:border-zinc-700 transition-all">
+      className="rounded-xl border border-gray-200 bg-white p-4 flex items-start justify-between gap-3 hover:border-gray-300 transition-all">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <p className="text-sm font-bold text-white truncate">{version.version_label}</p>
-          <span className="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-violet-900/40 text-violet-300">
+          <p className="text-sm font-bold text-gray-900 truncate">{version.version_label}</p>
+          <span className="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700">
             {version.mode}
           </span>
         </div>
-        <p className="text-xs text-zinc-500">{new Date(version.created_at).toLocaleDateString()} · {version.target_company || "General"}</p>
+        <p className="text-xs text-gray-400">{new Date(version.created_at).toLocaleDateString()} · {version.target_company || "General"}</p>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <Button size="sm" variant="outline" onClick={() => onView(version)}
-          className="h-7 text-xs border-zinc-700 text-zinc-400 hover:bg-zinc-800">
+          className="h-7 text-xs border-gray-300 text-gray-500 hover:bg-gray-100">
           <Eye className="h-3 w-3 mr-1" /> View
         </Button>
         {version.id && (
           <Button size="sm" variant="outline" onClick={() => onDelete(version.id!)}
-            className="h-7 text-xs border-red-900/50 text-red-400 hover:bg-red-950">
+            className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50">
             <Trash2 className="h-3 w-3" />
           </Button>
         )}
@@ -53,23 +53,23 @@ function ResumePreview({ version, onClose }: { version: ResumeVersion; onClose: 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-        className="relative w-full max-w-2xl rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between border-b border-zinc-800 p-5 shrink-0">
+        className="relative w-full max-w-2xl rounded-2xl border border-gray-300 bg-white shadow-2xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between border-b border-gray-200 p-5 shrink-0">
           <div>
-            <p className="text-sm font-black text-white">{version.version_label}</p>
-            <p className="text-xs text-zinc-500">{version.mode} · {version.target_company || "General"}</p>
+            <p className="text-sm font-black text-gray-900">{version.version_label}</p>
+            <p className="text-xs text-gray-400">{version.mode} · {version.target_company || "General"}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline"
-              className="h-7 text-xs border-zinc-700 text-zinc-400 hover:bg-zinc-800"
+              className="h-7 text-xs border-gray-300 text-gray-500 hover:bg-gray-100"
               onClick={() => { const b = new Blob([version.content], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `${version.version_label}.txt`; a.click(); }}>
               <Download className="h-3 w-3 mr-1" /> Download
             </Button>
-            <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white text-xl leading-none">&times;</button>
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-900 text-xl leading-none">&times;</button>
           </div>
         </div>
         <div className="overflow-y-auto p-6 flex-1">
-          <pre className="text-xs text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed">{version.content}</pre>
+          <pre className="text-xs text-gray-600 font-mono whitespace-pre-wrap leading-relaxed">{version.content}</pre>
         </div>
       </motion.div>
     </div>
@@ -126,44 +126,44 @@ export default function ExecutiveResumeStudio() {
       {previewing && <ResumePreview version={previewing} onClose={() => setPreviewing(null)} />}
 
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Phase 3 · Resume & Brand</p>
-        <h1 className="text-2xl font-black text-white mt-0.5">Executive Resume Studio</h1>
-        <p className="text-sm text-zinc-500 mt-1">AI-tailored resumes for every type of executive opportunity.</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 3 · Resume & Brand</p>
+        <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Resume Studio</h1>
+        <p className="text-sm text-gray-400 mt-1">AI-tailored resumes for every type of executive opportunity.</p>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
         {/* Generator */}
         <div className="lg:col-span-3 space-y-4">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
-            <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Select Mode</p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Select Mode</p>
             <div className="grid grid-cols-2 gap-2">
               {MODES.map(mode => (
                 <button key={mode.key} type="button" onClick={() => setSelectedMode(mode.key)}
-                  className={`rounded-xl border p-3 text-left transition-all ${selectedMode === mode.key ? "border-violet-500/60 bg-violet-950/40" : "border-zinc-800 bg-zinc-800/50 hover:border-zinc-700"}`}>
+                  className={`rounded-xl border p-3 text-left transition-all ${selectedMode === mode.key ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}>
                   <span className="text-xl">{mode.icon}</span>
-                  <p className="text-xs font-bold text-white mt-1">{mode.label}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5">{mode.desc}</p>
+                  <p className="text-xs font-bold text-gray-900 mt-1">{mode.label}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{mode.desc}</p>
                 </button>
               ))}
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Target Company (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Target Company (optional)</label>
                 <Input value={targetCompany} onChange={e => setTargetCompany(e.target.value)}
                   placeholder="e.g. Stripe, Anthropic"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
               </div>
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Target Role (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Target Role (optional)</label>
                 <Input value={targetRole} onChange={e => setTargetRole(e.target.value)}
                   placeholder="e.g. CTO, COO, Board Director"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
               </div>
             </div>
 
             <Button onClick={generate} disabled={generating}
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white h-11">
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11">
               {generating
                 ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Generating with Groq AI...</>
                 : <><Sparkles className="h-4 w-4 mr-2" />Generate Resume</>}
@@ -174,18 +174,18 @@ export default function ExecutiveResumeStudio() {
         {/* Version history */}
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-zinc-500" />
-            <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Saved Versions</p>
+            <FileText className="h-4 w-4 text-gray-400" />
+            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Saved Versions</p>
           </div>
           {loadingVersions ? (
-            <div className="flex items-center gap-2 text-zinc-500 py-6">
+            <div className="flex items-center gap-2 text-gray-400 py-6">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-xs">Loading versions...</span>
             </div>
           ) : versions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-800 py-10 text-center">
-              <FileText className="h-8 w-8 text-zinc-700 mx-auto mb-2" />
-              <p className="text-xs text-zinc-600">No versions yet</p>
+            <div className="rounded-2xl border border-dashed border-gray-200 py-10 text-center">
+              <FileText className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-xs text-gray-400">No versions yet</p>
             </div>
           ) : (
             <AnimatePresence>

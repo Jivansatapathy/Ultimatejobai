@@ -131,28 +131,28 @@ const DEMO_PACKS: Record<InterviewType, (company: string, role: string) => Inter
 function QuestionCard({ q, index }: { q: InterviewQuestion; index: number }) {
   const [open, setOpen] = useState(index === 0);
   const diffColor = q.difficulty === "hard"
-    ? "text-red-400 bg-red-900/30"
+    ? "text-red-700 bg-red-50"
     : q.difficulty === "medium"
-    ? "text-amber-400 bg-amber-900/30"
-    : "text-emerald-400 bg-emerald-900/30";
+    ? "text-amber-700 bg-amber-50"
+    : "text-emerald-700 bg-emerald-50";
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-800/50 overflow-hidden">
+    <div className="rounded-xl border border-gray-200 bg-gray-50 overflow-hidden">
       <button type="button" onClick={() => setOpen(o => !o)}
-        className="w-full flex items-start justify-between gap-3 p-4 text-left hover:bg-zinc-800 transition-colors">
+        className="w-full flex items-start justify-between gap-3 p-4 text-left hover:bg-gray-100 transition-colors">
         <div className="flex-1">
           <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${diffColor}`}>{q.difficulty}</span>
-          <p className="text-sm font-semibold text-white leading-snug mt-1">{q.question}</p>
+          <p className="text-sm font-semibold text-gray-900 leading-snug mt-1">{q.question}</p>
         </div>
-        {open ? <ChevronUp className="h-4 w-4 shrink-0 text-zinc-500 mt-0.5" /> : <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500 mt-0.5" />}
+        {open ? <ChevronUp className="h-4 w-4 shrink-0 text-gray-400 mt-0.5" /> : <ChevronDown className="h-4 w-4 shrink-0 text-gray-400 mt-0.5" />}
       </button>
       <AnimatePresence>
         {open && (
           <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}
-            className="overflow-hidden border-t border-zinc-800">
+            className="overflow-hidden border-t border-gray-200">
             <div className="p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400 mb-2">Model Answer</p>
-              <p className="text-sm text-zinc-300 leading-relaxed">{q.model_answer}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-2">Model Answer</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{q.model_answer}</p>
             </div>
           </motion.div>
         )}
@@ -173,19 +173,19 @@ interface UsageInfo {
 function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; onRefresh: () => void; loading: boolean }) {
   if (loading) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 flex items-center gap-2">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
-        <span className="text-xs text-zinc-500">Loading usage...</span>
+      <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 flex items-center gap-2">
+        <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />
+        <span className="text-xs text-gray-400">Loading usage...</span>
       </div>
     );
   }
 
   if (!usage) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 flex items-center gap-2">
+      <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 flex items-center gap-2">
         <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-        <span className="text-xs text-zinc-400">Could not load usage data</span>
-        <button type="button" onClick={onRefresh} className="ml-auto text-xs text-violet-400 hover:text-violet-300">Retry</button>
+        <span className="text-xs text-gray-500">Could not load usage data</span>
+        <button type="button" onClick={onRefresh} className="ml-auto text-xs text-blue-600 hover:text-blue-700">Retry</button>
       </div>
     );
   }
@@ -193,31 +193,31 @@ function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; on
   const pct = usage.isUnlimited || usage.limit === null ? 100 : Math.min((usage.used / usage.limit) * 100, 100);
   const remaining = usage.isUnlimited || usage.limit === null ? null : Math.max(usage.limit - usage.used, 0);
   const isExhausted = !usage.isUnlimited && remaining !== null && remaining <= 0;
-  const barColor = isExhausted ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-violet-500";
+  const barColor = isExhausted ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-blue-500";
 
   return (
-    <div className={`rounded-xl border px-4 py-3 ${isExhausted ? "border-red-500/30 bg-red-950/20" : "border-zinc-800 bg-zinc-900"}`}>
+    <div className={`rounded-xl border px-4 py-3 ${isExhausted ? "border-red-300 bg-red-50" : "border-gray-200 bg-white"}`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Crown className="h-3.5 w-3.5 text-violet-400" />
-          <span className="text-xs font-bold text-zinc-300 capitalize">{usage.planName} Plan</span>
+          <Crown className="h-3.5 w-3.5 text-blue-600" />
+          <span className="text-xs font-bold text-gray-600 capitalize">{usage.planName} Plan</span>
           {usage.isUnlimited && (
-            <span className="rounded-full bg-violet-500/20 text-violet-300 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">Unlimited</span>
+            <span className="rounded-full bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">Unlimited</span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-gray-400">
             {usage.isUnlimited
               ? `${usage.used} sessions used`
               : `${usage.used} / ${usage.limit} sessions used this month`}
           </span>
-          <button type="button" onClick={onRefresh} className="text-zinc-600 hover:text-zinc-400 transition-colors">
+          <button type="button" onClick={onRefresh} className="text-gray-400 hover:text-gray-500 transition-colors">
             <RefreshCw className="h-3 w-3" />
           </button>
         </div>
       </div>
       {!usage.isUnlimited && usage.limit !== null && (
-        <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+        <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
@@ -227,12 +227,12 @@ function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; on
         </div>
       )}
       {isExhausted && (
-        <p className="text-xs text-red-400 mt-2 font-semibold">
+        <p className="text-xs text-red-600 mt-2 font-semibold">
           Monthly limit reached. Upgrade your plan to continue practicing.
         </p>
       )}
       {!isExhausted && remaining !== null && remaining <= 3 && (
-        <p className="text-xs text-amber-400 mt-2 font-semibold">
+        <p className="text-xs text-amber-600 mt-2 font-semibold">
           {remaining} session{remaining !== 1 ? "s" : ""} remaining this month.
         </p>
       )}
@@ -243,17 +243,17 @@ function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; on
 // ── Plan limits reference ─────────────────────────────────────────────────────
 
 const PLAN_LIMITS: { plan: string; color: string; badge: string; textLimit: string; audioLimit: string }[] = [
-  { plan: "Free",         color: "border-zinc-700",         badge: "bg-zinc-800 text-zinc-400",           textLimit: "3 / mo",      audioLimit: "—" },
-  { plan: "Professional", color: "border-blue-500/30",      badge: "bg-blue-900/40 text-blue-300",        textLimit: "20 / mo",     audioLimit: "10 / mo" },
-  { plan: "Accelerator",  color: "border-violet-500/30",    badge: "bg-violet-900/40 text-violet-300",    textLimit: "50 / mo",     audioLimit: "25 / mo" },
-  { plan: "Executive",    color: "border-amber-500/30",     badge: "bg-amber-900/40 text-amber-300",      textLimit: "Unlimited",   audioLimit: "Unlimited" },
+  { plan: "Free",         color: "border-gray-300",         badge: "bg-gray-100 text-gray-500",           textLimit: "3 / mo",      audioLimit: "—" },
+  { plan: "Professional", color: "border-blue-200",      badge: "bg-blue-100 text-blue-700",        textLimit: "20 / mo",     audioLimit: "10 / mo" },
+  { plan: "Accelerator",  color: "border-blue-200",    badge: "bg-blue-100 text-blue-700",    textLimit: "50 / mo",     audioLimit: "25 / mo" },
+  { plan: "Executive",    color: "border-amber-200",     badge: "bg-amber-100 text-amber-700",      textLimit: "Unlimited",   audioLimit: "Unlimited" },
 ];
 
 // ── Live interview loader ─────────────────────────────────────────────────────
 
 function InterviewLoader() {
   return (
-    <div className="flex items-center justify-center py-16 gap-2 text-zinc-500">
+    <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
       <Loader2 className="h-5 w-5 animate-spin" />
       <span className="text-sm">Loading interview engine...</span>
     </div>
@@ -344,13 +344,13 @@ export default function ExecInterviewPrep() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Priority 2 · Intelligence</p>
-        <h1 className="text-2xl font-black text-white mt-0.5">Interview Prep AI</h1>
-        <p className="text-sm text-zinc-500 mt-1">Executive-specific prep for board, investor, founder, PE, and comp negotiation interviews.</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · Intelligence</p>
+        <h1 className="text-2xl font-black text-gray-900 mt-0.5">Interview Prep AI</h1>
+        <p className="text-sm text-gray-400 mt-1">Executive-specific prep for board, investor, founder, PE, and comp negotiation interviews.</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 w-fit">
+      <div className="flex gap-1 p-1 rounded-xl bg-white border border-gray-200 w-fit">
         {([
           { key: "prep",     label: "Prep Pack",       Icon: Lightbulb },
           { key: "practice", label: "Live Practice",   Icon: Mic },
@@ -361,8 +361,8 @@ export default function ExecInterviewPrep() {
             onClick={() => setTab(key)}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
               tab === key
-                ? "bg-violet-600 text-white shadow-sm"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-900"
             }`}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -375,16 +375,16 @@ export default function ExecInterviewPrep() {
       {tab === "prep" && (
         <>
           {/* Config panel */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-5">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Interview Type</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3">Interview Type</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 {INTERVIEW_TYPES.map(t => (
                   <button key={t.key} type="button" onClick={() => setInterviewType(t.key)}
-                    className={`rounded-xl border p-3 text-left transition-all ${interviewType === t.key ? "border-violet-500/60 bg-violet-950/40" : "border-zinc-800 bg-zinc-800/50 hover:border-zinc-700"}`}>
+                    className={`rounded-xl border p-3 text-left transition-all ${interviewType === t.key ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}>
                     <span className="text-lg">{t.emoji}</span>
-                    <p className="text-xs font-bold text-white mt-1">{t.label}</p>
-                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{t.desc}</p>
+                    <p className="text-xs font-bold text-gray-900 mt-1">{t.label}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{t.desc}</p>
                   </button>
                 ))}
               </div>
@@ -392,20 +392,20 @@ export default function ExecInterviewPrep() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Company (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Company (optional)</label>
                 <Input value={company} onChange={e => setCompany(e.target.value)}
                   placeholder="e.g. Stripe, KKR, Benchmark"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
               </div>
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 block">Your Role (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Your Role (optional)</label>
                 <Input value={role} onChange={e => setRole(e.target.value)}
                   placeholder="e.g. CTO, Board Director"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
               </div>
             </div>
 
-            <Button onClick={generate} disabled={loading} className="w-full bg-violet-600 hover:bg-violet-700 text-white h-11">
+            <Button onClick={generate} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white h-11">
               {loading
                 ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Generating prep pack...</>
                 : <><Sparkles className="h-4 w-4 mr-2" />Generate Prep Pack</>}
@@ -416,10 +416,10 @@ export default function ExecInterviewPrep() {
           <AnimatePresence>
             {pack && (
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
                   <div className="flex items-center gap-2 mb-4">
-                    <HelpCircle className="h-4 w-4 text-violet-400" />
-                    <p className="text-sm font-black text-white uppercase tracking-wide">Likely Questions + Model Answers</p>
+                    <HelpCircle className="h-4 w-4 text-blue-600" />
+                    <p className="text-sm font-black text-gray-900 uppercase tracking-wide">Likely Questions + Model Answers</p>
                   </div>
                   <div className="space-y-2">
                     {pack.likely_questions.map((q, i) => <QuestionCard key={i} q={q} index={i} />)}
@@ -427,28 +427,28 @@ export default function ExecInterviewPrep() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-5">
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
                     <div className="flex items-center gap-2 mb-4">
-                      <AlertTriangle className="h-4 w-4 text-amber-400" />
-                      <p className="text-sm font-black text-white uppercase tracking-wide">Red Flags to Watch</p>
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <p className="text-sm font-black text-gray-900 uppercase tracking-wide">Red Flags to Watch</p>
                     </div>
                     <ul className="space-y-2">
                       {pack.red_flags.map((flag, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-zinc-300">
+                        <li key={i} className="flex gap-2 text-sm text-gray-600">
                           <span className="text-amber-500 shrink-0 mt-0.5">⚠</span>{flag}
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
                     <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="h-4 w-4 text-emerald-400" />
-                      <p className="text-sm font-black text-white uppercase tracking-wide">Smart Questions to Ask</p>
+                      <Sparkles className="h-4 w-4 text-emerald-600" />
+                      <p className="text-sm font-black text-gray-900 uppercase tracking-wide">Smart Questions to Ask</p>
                     </div>
                     <ul className="space-y-2">
                       {pack.questions_to_ask.map((q, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-zinc-300">
+                        <li key={i} className="flex gap-2 text-sm text-gray-600">
                           <span className="text-emerald-500 shrink-0">→</span>{q}
                         </li>
                       ))}
@@ -456,14 +456,14 @@ export default function ExecInterviewPrep() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
                   <div className="flex items-center gap-2 mb-4">
-                    <Lightbulb className="h-4 w-4 text-blue-400" />
-                    <p className="text-sm font-black text-white uppercase tracking-wide">Prep Tips</p>
+                    <Lightbulb className="h-4 w-4 text-blue-600" />
+                    <p className="text-sm font-black text-gray-900 uppercase tracking-wide">Prep Tips</p>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-2">
                     {pack.prep_tips.map((tip, i) => (
-                      <div key={i} className="rounded-xl border border-zinc-800 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-300">{tip}</div>
+                      <div key={i} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-600">{tip}</div>
                     ))}
                   </div>
                 </div>
@@ -472,10 +472,10 @@ export default function ExecInterviewPrep() {
           </AnimatePresence>
 
           {!pack && !loading && (
-            <div className="rounded-2xl border border-dashed border-zinc-800 py-16 text-center">
-              <Mic className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500 font-semibold">Select interview type and generate your prep pack</p>
-              <p className="text-xs text-zinc-600 mt-1">AI generates tailored questions, model answers, and strategy in seconds</p>
+            <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
+              <Mic className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-400 font-semibold">Select interview type and generate your prep pack</p>
+              <p className="text-xs text-gray-400 mt-1">AI generates tailored questions, model answers, and strategy in seconds</p>
             </div>
           )}
         </>
@@ -489,14 +489,14 @@ export default function ExecInterviewPrep() {
           {practiceMode && (
             <Suspense fallback={<InterviewLoader />}>
               {practiceMode === "text" ? (
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
+                <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
                   <TextInterview
                     onBack={handleBackFromInterview}
                     initialJobDescription={interviewJD}
                   />
                 </div>
               ) : (
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
+                <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
                   <VideoInterview
                     onBack={handleBackFromInterview}
                     initialJobDescription={interviewJD}
@@ -522,27 +522,27 @@ export default function ExecInterviewPrep() {
                     onClick={() => !isExhausted && setPracticeMode("text")}
                     className={`w-full rounded-2xl border p-6 text-left transition-all group ${
                       isExhausted
-                        ? "border-zinc-800 bg-zinc-900/50 opacity-60 cursor-not-allowed"
-                        : "border-zinc-800 bg-zinc-900 hover:border-violet-500/50 hover:bg-zinc-800 cursor-pointer"
+                        ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                        : "border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50 cursor-pointer"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600/20 border border-violet-500/30">
-                        <MessageSquare className="h-6 w-6 text-violet-400" />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 border border-blue-200">
+                        <MessageSquare className="h-6 w-6 text-blue-600" />
                       </div>
                       {isExhausted
-                        ? <Lock className="h-4 w-4 text-zinc-600" />
-                        : <span className="text-xs font-bold text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
+                        ? <Lock className="h-4 w-4 text-gray-400" />
+                        : <span className="text-xs font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
                       }
                     </div>
-                    <h3 className="text-base font-black text-white mb-1">Text Interview</h3>
-                    <p className="text-sm text-zinc-400 leading-relaxed">
+                    <h3 className="text-base font-black text-gray-900 mb-1">Text Interview</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">
                       AI asks questions, you type your answers. Real-time validation, feedback panel, and full transcript export.
                     </p>
                     <div className="flex items-center gap-2 mt-4">
-                      <span className="rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-0.5">Chat-based</span>
-                      <span className="rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-0.5">AI Feedback</span>
-                      <span className="rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-0.5">Export Transcript</span>
+                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Chat-based</span>
+                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">AI Feedback</span>
+                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Export Transcript</span>
                     </div>
                   </button>
                 </motion.div>
@@ -555,66 +555,66 @@ export default function ExecInterviewPrep() {
                     onClick={() => !isExhausted && setPracticeMode("audio")}
                     className={`w-full rounded-2xl border p-6 text-left transition-all group ${
                       isExhausted
-                        ? "border-zinc-800 bg-zinc-900/50 opacity-60 cursor-not-allowed"
-                        : "border-zinc-800 bg-zinc-900 hover:border-teal-500/50 hover:bg-zinc-800 cursor-pointer"
+                        ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                        : "border-gray-200 bg-white hover:border-teal-300 hover:bg-gray-50 cursor-pointer"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-600/20 border border-teal-500/30">
-                        <Video className="h-6 w-6 text-teal-400" />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 border border-teal-200">
+                        <Video className="h-6 w-6 text-teal-600" />
                       </div>
                       {isExhausted
-                        ? <Lock className="h-4 w-4 text-zinc-600" />
-                        : <span className="text-xs font-bold text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
+                        ? <Lock className="h-4 w-4 text-gray-400" />
+                        : <span className="text-xs font-bold text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
                       }
                     </div>
-                    <h3 className="text-base font-black text-white mb-1">Audio Interview</h3>
-                    <p className="text-sm text-zinc-400 leading-relaxed">
+                    <h3 className="text-base font-black text-gray-900 mb-1">Audio Interview</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">
                       Speak your answers aloud. Voice-to-text transcription, presence detection, and AI-powered coaching after each response.
                     </p>
                     <div className="flex items-center gap-2 mt-4">
-                      <span className="rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-0.5">Voice-to-Text</span>
-                      <span className="rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-0.5">Presence Check</span>
-                      <span className="rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-0.5">AI Coaching</span>
+                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Voice-to-Text</span>
+                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Presence Check</span>
+                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">AI Coaching</span>
                     </div>
                   </button>
                 </motion.div>
               </div>
 
               {/* Context note */}
-              <div className="rounded-xl border border-zinc-800 bg-zinc-800/40 px-4 py-3 flex items-center gap-3">
-                <Lightbulb className="h-4 w-4 text-violet-400 shrink-0" />
-                <p className="text-xs text-zinc-400">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 flex items-center gap-3">
+                <Lightbulb className="h-4 w-4 text-blue-600 shrink-0" />
+                <p className="text-xs text-gray-500">
                   The interview AI will be pre-loaded with context from your selected type
                   {company ? ` at <strong>${company}</strong>` : ""}. Switch to <strong>Prep Pack</strong> tab to customize the interview context.
                 </p>
               </div>
 
               {/* Plan limits table */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Interview Session Limits by Plan</p>
+              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Interview Session Limits by Plan</p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-zinc-800">
-                        <th className="text-left text-zinc-500 font-bold pb-2 pr-4">Plan</th>
-                        <th className="text-center text-zinc-500 font-bold pb-2 px-4">Text Sessions</th>
-                        <th className="text-center text-zinc-500 font-bold pb-2 px-4">Audio Sessions</th>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left text-gray-400 font-bold pb-2 pr-4">Plan</th>
+                        <th className="text-center text-gray-400 font-bold pb-2 px-4">Text Sessions</th>
+                        <th className="text-center text-gray-400 font-bold pb-2 px-4">Audio Sessions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-800/60">
+                    <tbody className="divide-y divide-gray-200/60">
                       {PLAN_LIMITS.map(p => {
                         const isCurrent = summary?.plan?.name?.toLowerCase() === p.plan.toLowerCase();
                         return (
-                          <tr key={p.plan} className={isCurrent ? "bg-violet-950/20" : ""}>
+                          <tr key={p.plan} className={isCurrent ? "bg-blue-50" : ""}>
                             <td className="py-2 pr-4">
                               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest border ${p.color} ${p.badge}`}>
                                 {p.plan}
                               </span>
-                              {isCurrent && <span className="ml-2 text-[9px] text-violet-400 font-bold">← current</span>}
+                              {isCurrent && <span className="ml-2 text-[9px] text-blue-600 font-bold">← current</span>}
                             </td>
-                            <td className="py-2 px-4 text-center font-semibold text-zinc-300">{p.textLimit}</td>
-                            <td className="py-2 px-4 text-center font-semibold text-zinc-300">{p.audioLimit}</td>
+                            <td className="py-2 px-4 text-center font-semibold text-gray-600">{p.textLimit}</td>
+                            <td className="py-2 px-4 text-center font-semibold text-gray-600">{p.audioLimit}</td>
                           </tr>
                         );
                       })}
@@ -622,9 +622,9 @@ export default function ExecInterviewPrep() {
                   </table>
                 </div>
                 {isExhausted && (
-                  <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between">
-                    <p className="text-xs text-red-400 font-semibold">You've used all sessions for this month.</p>
-                    <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white text-xs h-8">
+                  <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+                    <p className="text-xs text-red-600 font-semibold">You've used all sessions for this month.</p>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8">
                       <Crown className="h-3 w-3 mr-1.5" /> Upgrade Plan
                     </Button>
                   </div>

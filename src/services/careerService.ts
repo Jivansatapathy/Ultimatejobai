@@ -58,6 +58,8 @@ export interface JobFair {
 export interface CareerResume {
     id: number;
     file: string;
+    file_name?: string | null;
+    firebase_download_url?: string | null;
     parsed_text?: string | null;
     structured_data?: Record<string, unknown>;
     last_analyzed?: string | null;
@@ -103,6 +105,10 @@ export const careerService = {
     async getResumes(): Promise<CareerResume[]> {
         const response = await api.get('/api/career/resumes/');
         return response.data.results || response.data;
+    },
+
+    async deleteResume(id: number): Promise<void> {
+        await api.delete(`/api/career/resumes/${id}/`);
     },
 
     async getRoadmap(): Promise<CareerRoadmap> {

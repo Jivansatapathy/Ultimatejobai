@@ -40,6 +40,10 @@ export default function Onboarding() {
       toast.error("Please upload a PDF file.");
       return;
     }
+    if (uploadedFile.size > 200 * 1024) {
+      toast.error("Resume must be under 200KB. Please compress your PDF and try again.");
+      return;
+    }
     setFile(uploadedFile);
     setLoading(true);
     try {

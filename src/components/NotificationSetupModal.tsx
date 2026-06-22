@@ -7,6 +7,7 @@ import {
 import { useResume } from "@/hooks/useResume";
 import { notificationService, NotificationPrefs } from "@/services/notificationService";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/services/api";
 
 export default function NotificationSetupModal() {
   const { isAuthenticated } = useAuth();
@@ -22,9 +23,24 @@ export default function NotificationSetupModal() {
     }
   }, [activeResume]);
 
+  // On login, pull prefs from backend and merge into localStorage so
+  // the "already set up" check works even on a fresh browser/device.
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (notificationService.hasPromptedSetup()) return;
+    api.get("/api/notifications/preferences/").then((res) => {
+      const remote = res.data as Partial<NotificationPrefs>;
+      if (remote.targetRole) {
+        const current = notificationService.getPrefs();
+        notificationService.savePrefs({ ...current, ...remote });
+        setPrefs((p) => ({ ...p, ...remote }));
+      }
+    }).catch(() => {});
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    // Skip if already prompted OR if the user already completed setup (has a targetRole).
+    if (notificationService.hasPromptedSetup() || notificationService.isSetupComplete()) return;
     const t = setTimeout(() => {
       setOpen(true);
       notificationService.markSetupPrompted();

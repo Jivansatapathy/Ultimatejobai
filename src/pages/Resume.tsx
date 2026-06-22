@@ -13,8 +13,11 @@ import {
   Edit3,
   Trash2,
   CheckCircle2,
-  History
+  History,
+  Download,
+  X,
 } from "lucide-react";
+import { CareerResume } from "@/services/careerService";
 
 import { useResume } from "@/hooks/useResume";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -37,6 +40,10 @@ export default function Resume() {
   );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAnalysisVisible, setIsAnalysisVisible] = useState(false);
+  const [serverResumes, setServerResumes] = useState<CareerResume[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [pendingUploadFile, setPendingUploadFile] = useState<File | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const {
     resumes,
     createNewResume,
@@ -60,48 +67,148 @@ export default function Resume() {
     }
   }, [activeResume, resumes, loadResume]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are supported. Please upload a PDF.");
-      e.target.value = "";
+  // Load server-stored PDFs on mount
+  useEffect(() => {
+    careerService.getResumes().then(setServerResumes).catch(() => {});
+  }, []);
+
+  const refreshServerResumes = async () => {
+    const updated = await careerService.getResumes().catch(() => [] as CareerResume[]);
+    setServerResumes(updated);
+  };
+
+  const handleDeleteAndContinue = async (id: number) => {
+    setDeletingId(id);
+    try {
+      await careerService.deleteResume(id);
+      await refreshServerResumes();
+      setShowDeleteModal(false);
+      // Retry the pending upload now that there's room
+      if (pendingUploadFile) {
+        const file = pendingUploadFile;
+        setPendingUploadFile(null);
+        await doUpload(file);
+      }
+    } catch {
+      toast.error("Failed to delete resume. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const doUpload = async (file: File) => {
+    const toastId = toast.loading("Saving resume to your profile...");
+    try {
+      await careerService.analyzeResume(file);
+      await refreshServerResumes();
+    } catch (err: any) {
+      if (err?.response?.status === 400) {
+        toast.dismiss(toastId);
+        setPendingUploadFile(file);
+        setShowDeleteModal(true);
+        return;
+      }
+      toast.error("Failed to save resume to your profile.", { id: toastId });
       return;
     }
-    lastUploadedFileRef.current = file;
-    const toastId = toast.loading("Parsing resume with AI...");
     try {
       const { parseResumeFromFile } = await import('@/services/aiService');
       const parsedData = await parseResumeFromFile(file);
-      try {
-        await careerService.analyzeResume(file);
-      } catch (backendError) {
-        console.warn("Backend resume registration failed:", backendError);
-        toast.warning("Resume parsed locally, but could not register it for employer applications yet.");
-      }
-
       const newResume = importResumeData(parsedData);
       activityTracker.trackAction(
         "RESUME_EDIT",
         `Imported resume from file: ${file.name}`,
-        {
-          fileName: file.name,
-          resumeId: newResume.id,
-        },
+        { fileName: file.name, resumeId: newResume.id },
         { dedupeKey: `resume-import:${newResume.id}`, dedupeMs: 5000 },
       );
-
-      toast.success("Resume uploaded! Now complete your profile to browse jobs.", { id: toastId });
+      toast.success("Resume saved to your profile!", { id: toastId });
       navigate(`/resume/${newResume.id}`);
     } catch (error: any) {
-      console.error("Upload failed:", error);
-      toast.error("Failed to parse resume: " + error.message, { id: toastId });
+      toast.error("Resume saved but parsing failed: " + error.message, { id: toastId });
     }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are supported. Please upload a PDF.");
+      return;
+    }
+    if (file.size > 200 * 1024) {
+      toast.error("Resume must be under 200KB. Please compress your PDF and try again.");
+      return;
+    }
+    lastUploadedFileRef.current = file;
+    await doUpload(file);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <Navbar />
+
+      {/* ── Delete-to-continue modal ── */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="h-1 w-full bg-red-500" />
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-extrabold text-gray-900">Resume limit reached (5/5)</h2>
+                  <p className="text-sm text-gray-500 mt-1">Delete one saved resume to make room for your new one.</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick={() => { setShowDeleteModal(false); setPendingUploadFile(null); }}
+                  className="text-gray-400 hover:text-gray-700 transition-colors ml-4 shrink-0"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {serverResumes.map((r) => {
+                  const name = r.file_name ? r.file_name.replace(/\.pdf$/i, "") : `Resume — ${new Date(r.created_at).toLocaleDateString()}`;
+                  const url = r.firebase_download_url || r.file;
+                  return (
+                    <div key={r.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{name}</p>
+                        <p className="text-xs text-gray-400">{new Date(r.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {url && (
+                          <a href={url} target="_blank" rel="noreferrer" aria-label="Download resume"
+                            className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-gray-100 border border-gray-200 text-gray-600 text-xs font-medium hover:bg-gray-200 transition-colors">
+                            <Download className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          disabled={deletingId === r.id}
+                          onClick={() => handleDeleteAndContinue(r.id)}
+                          className="h-8 px-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-100 transition-colors disabled:opacity-50"
+                        >
+                          {deletingId === r.id ? "Deleting…" : "Delete & Continue"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowDeleteModal(false); setPendingUploadFile(null); }}
+                className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-7xl">
@@ -229,6 +336,65 @@ export default function Resume() {
                   <GapAnalysisPanel resumes={resumes} />
                 )}
               </motion.div>
+
+              {/* Saved PDFs (server-stored) */}
+              {serverResumes.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">Saved PDFs</h2>
+                    <span className="text-xs text-gray-400 font-medium">{serverResumes.length}/5 used</span>
+                  </div>
+                  <div className="space-y-3">
+                    {serverResumes.map((r) => {
+                      const name = (r.structured_data as any)?.name || `Resume — ${new Date(r.created_at).toLocaleDateString()}`;
+                      const url = r.firebase_download_url || r.file;
+                      return (
+                        <div key={r.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 hover:border-teal-300 hover:bg-teal-50/30 transition-all">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 rounded-lg bg-teal-50 border border-teal-200 shrink-0">
+                              <FileText className="h-4 w-4 text-teal-500" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+                              <p className="text-xs text-gray-400">Uploaded {new Date(r.created_at).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {url && (
+                              <a href={url} target="_blank" rel="noreferrer" aria-label="Download resume"
+                                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold hover:bg-teal-100 transition-colors">
+                                <Download className="h-3.5 w-3.5" />
+                                Download
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              aria-label="Delete resume"
+                              onClick={async () => {
+                                try {
+                                  await careerService.deleteResume(r.id);
+                                  await refreshServerResumes();
+                                  toast.success("Resume deleted.");
+                                } catch {
+                                  toast.error("Failed to delete resume.");
+                                }
+                              }}
+                              className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
 
               {/* Resume Versions */}
               <motion.div

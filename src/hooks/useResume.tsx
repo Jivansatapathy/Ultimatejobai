@@ -1,9 +1,10 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, ReactNode } from 'react';
 import { Resume, PersonalDetails, Experience, Education, Project, Certification, Extracurricular } from '@/types/resume';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { sanitizeString, sanitizeContent, sanitizeEmail, sanitizeUrl, MAX_SMALL_TEXT, MAX_LARGE_TEXT } from '@/lib/sanitization';
+import api from '@/services/api';
 
 interface ResumeContextType {
     resumes: Resume[];
@@ -71,6 +72,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     const { userEmail, isAuthenticated } = useAuth();
     const [resumes, setResumes] = useState<Resume[]>([]);
     const [activeResume, setActiveResume] = useState<Resume | null>(null);
+    // Debounce ref so we don't hammer the backend on every keystroke
+    const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const getStorageKey = () => {
         const normalizedEmail = (userEmail || 'guest').trim().toLowerCase();
@@ -94,6 +97,23 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         return [];
     };
 
+    // On login, pull resumes from backend. Backend wins if it has data (cross-device sync).
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        api.get('/api/career/resumes/builder/').then((res) => {
+            const remoteResumes: Resume[] = res.data?.resumes || [];
+            if (remoteResumes.length > 0) {
+                localStorage.setItem(getStorageKey(), JSON.stringify(remoteResumes));
+                setResumes(remoteResumes);
+                setActiveResume((prev) =>
+                    prev
+                        ? remoteResumes.find((r) => r.id === prev.id) || remoteResumes[0]
+                        : remoteResumes[0]
+                );
+            }
+        }).catch(() => {});
+    }, [isAuthenticated]);
+
     useEffect(() => {
         const savedResumes = readStoredResumes();
         setResumes(savedResumes);
@@ -111,6 +131,11 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
     const saveToLocalStorage = (updatedResumes: Resume[]) => {
         localStorage.setItem(getStorageKey(), JSON.stringify(updatedResumes));
+        // Debounced backend sync (2s delay so rapid edits are batched)
+        if (syncTimer.current) clearTimeout(syncTimer.current);
+        syncTimer.current = setTimeout(() => {
+            api.put('/api/career/resumes/builder/', { resumes: updatedResumes }).catch(() => {});
+        }, 2000);
     };
 
     const createNewResume = () => {

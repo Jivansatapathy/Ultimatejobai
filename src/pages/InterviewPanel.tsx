@@ -20,8 +20,8 @@ const VideoInterview = lazy(() =>
 
 const InterviewModeLoader = () => (
   <div className="flex min-h-[60vh] items-center justify-center">
-    <div className="flex items-center gap-3 text-slate-400">
-      <Loader2 className="h-5 w-5 animate-spin text-teal-400" />
+    <div className="flex items-center gap-3 text-gray-500">
+      <Loader2 className="h-5 w-5 animate-spin text-teal-500" />
       <span>Loading interview workspace...</span>
     </div>
   </div>
@@ -56,51 +56,44 @@ const InterviewPanel = () => {
     navigate("/interview");
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1e] relative overflow-hidden">
-      {/* Atmospheric glows */}
-      <div className="pointer-events-none absolute top-0 left-1/3 w-[500px] h-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full bg-teal-500/10 blur-[120px]" />
-      {/* Standard site Navbar — always visible */}
-      <Navbar />
+  // When a mode is active, the interview component owns the full screen (its own header)
+  if (selectedMode === "text") {
+    return (
+      <Suspense fallback={<InterviewModeLoader />}>
+        <TextInterview onBack={handleBack} initialJobDescription={initialJD} />
+      </Suspense>
+    );
+  }
 
-      {/* Mode-selection view */}
-      {!selectedMode && (
-        <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="container mx-auto max-w-5xl mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-teal-500/10 border border-teal-500/20">
-                <Sparkles className="h-5 w-5 text-teal-400" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">AI Interview Practice</h1>
-                <p className="text-sm text-slate-400 mt-0.5">Choose your practice mode below</p>
-              </div>
+  if (selectedMode === "audio") {
+    return (
+      <Suspense fallback={<InterviewModeLoader />}>
+        <VideoInterview onBack={handleBack} initialJobDescription={initialJD} />
+      </Suspense>
+    );
+  }
+
+  // Mode-selection view — shows the site navbar
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-5xl mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-teal-50 border border-teal-200">
+              <Sparkles className="h-5 w-5 text-teal-500" />
             </div>
-            <div className="flex items-center gap-3">
-              <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">AI Interview Practice</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Choose your practice mode below</p>
             </div>
           </div>
-          <ModeSelector onSelect={handleSelect} />
-        </main>
-      )}
-
-      {/* Interview mode views — rendered below the navbar */}
-      {selectedMode === "text" && (
-        <div className="pt-16">
-          <Suspense fallback={<InterviewModeLoader />}>
-            <TextInterview onBack={handleBack} initialJobDescription={initialJD} />
-          </Suspense>
+          <div className="flex items-center gap-3">
+            <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
+          </div>
         </div>
-      )}
-
-      {selectedMode === "audio" && (
-        <div className="pt-16">
-          <Suspense fallback={<InterviewModeLoader />}>
-            <VideoInterview onBack={handleBack} initialJobDescription={initialJD} />
-          </Suspense>
-        </div>
-      )}
+        <ModeSelector onSelect={handleSelect} />
+      </main>
     </div>
   );
 };

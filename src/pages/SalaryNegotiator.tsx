@@ -200,28 +200,24 @@ export default function SalaryNegotiator() {
     };
 
     const diffColor = (d: Scenario["difficulty"]) =>
-        d === "Beginner" ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
-            : d === "Intermediate" ? "text-amber-400 bg-amber-400/10 border-amber-400/20"
-                : "text-red-400 bg-red-400/10 border-red-400/20";
+        d === "Beginner" ? "text-emerald-600 bg-emerald-50 border-emerald-200"
+            : d === "Intermediate" ? "text-amber-600 bg-amber-50 border-amber-200"
+                : "text-red-600 bg-red-50 border-red-200";
 
     // ── PICK SCENARIO ──────────────────────────────────────────────────────────
     if (stage === "pick") return (
-        <div className="min-h-screen bg-[#0a0f1e] text-white relative overflow-hidden">
-            {/* Atmospheric glows */}
-            <div className="pointer-events-none absolute top-0 left-1/4 w-[800px] h-[500px] rounded-full bg-orange-600/5 blur-[140px]" />
-            <div className="pointer-events-none absolute bottom-1/4 right-0 w-[600px] h-[600px] rounded-full bg-orange-500/5 blur-[140px]" />
-            
+        <div className="min-h-screen bg-gray-50 relative overflow-hidden">
             <div className="max-w-4xl mx-auto px-6 py-24 relative z-10">
-                <button onClick={() => navigate("/ai-mentor")} className="flex items-center gap-2 text-slate-500 hover:text-white text-[11px] font-black uppercase tracking-widest mb-12 transition-all">
+                <button type="button" onClick={() => navigate("/ai-mentor")} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 text-[11px] font-black uppercase tracking-widest mb-12 transition-all">
                     <ArrowLeft className="h-4 w-4" /> Back to Matrix
                 </button>
 
                 <div className="mb-14" data-tour="salary-header">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.3em] text-orange-400 mb-6 shadow-lg shadow-orange-500/10">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.3em] text-orange-600 mb-6 shadow-sm">
                         <DollarSign className="h-3 w-3" /> Negotiation Protocol
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic mb-4">Capital Leverage</h1>
-                    <p className="text-lg font-medium text-slate-400 max-w-2xl leading-relaxed">Multimodal simulation suite for high-stakes compensation engineering. Master the art of the counter-offer.</p>
+                    <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase mb-4">Capital Leverage</h1>
+                    <p className="text-lg font-medium text-gray-500 max-w-2xl leading-relaxed">Multimodal simulation suite for high-stakes compensation engineering. Master the art of the counter-offer.</p>
                 </div>
 
                 <div className="grid gap-4" data-tour="salary-scenarios">
@@ -231,8 +227,9 @@ export default function SalaryNegotiator() {
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.07 }}
+                            type="button"
                             onClick={() => { setScenario(sc); setStage("brief"); }}
-                            className="w-full text-left rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 hover:bg-white/[0.05] hover:border-white/[0.15] transition-all group"
+                            className="w-full text-left rounded-2xl border border-gray-200 bg-white p-6 hover:bg-gray-50 hover:border-teal-400 transition-all group shadow-sm"
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
@@ -240,22 +237,22 @@ export default function SalaryNegotiator() {
                                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${diffColor(sc.difficulty)}`}>
                                             {sc.difficulty}
                                         </span>
-                                        <span className="text-xs text-slate-500">{sc.company} · {sc.role}</span>
+                                        <span className="text-xs text-gray-400">{sc.company} · {sc.role}</span>
                                     </div>
-                                    <h3 className="text-lg font-bold text-white mb-1">{sc.title}</h3>
-                                    <p className="text-sm text-slate-400 leading-relaxed">{sc.context.slice(0, 100)}…</p>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-1">{sc.title}</h3>
+                                    <p className="text-sm text-gray-500 leading-relaxed">{sc.context.slice(0, 100)}…</p>
                                     <div className="flex gap-6 mt-3">
                                         <div>
-                                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Offered</p>
-                                            <p className="text-sm font-bold text-slate-300">{sc.offered}</p>
+                                            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Offered</p>
+                                            <p className="text-sm font-bold text-gray-700">{sc.offered}</p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Your Target</p>
-                                            <p className="text-sm font-bold text-orange-400">{sc.target}</p>
+                                            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Your Target</p>
+                                            <p className="text-sm font-bold text-orange-600">{sc.target}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <ChevronRight className="h-5 w-5 text-slate-600 group-hover:text-orange-400 transition-colors mt-1 shrink-0" />
+                                <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-orange-600 transition-colors mt-1 shrink-0" />
                             </div>
                         </motion.button>
                     ))}
@@ -266,9 +263,9 @@ export default function SalaryNegotiator() {
 
     // ── BRIEF ──────────────────────────────────────────────────────────────────
     if (stage === "brief" && scenario) return (
-        <div className="min-h-screen bg-[#0a0f1e] text-white">
+        <div className="min-h-screen bg-gray-50">
             <div className="max-w-2xl mx-auto px-6 py-12">
-                <button onClick={() => setStage("pick")} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-10 transition-colors">
+                <button type="button" onClick={() => setStage("pick")} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 text-sm mb-10 transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Choose scenario
                 </button>
 
@@ -276,49 +273,50 @@ export default function SalaryNegotiator() {
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${diffColor(scenario.difficulty)}`}>
                         {scenario.difficulty}
                     </span>
-                    <h1 className="text-3xl font-black mt-4 mb-2">{scenario.title}</h1>
-                    <p className="text-slate-400 mb-8 leading-relaxed">{scenario.context}</p>
+                    <h1 className="text-3xl font-black mt-4 mb-2 text-gray-900">{scenario.title}</h1>
+                    <p className="text-gray-500 mb-8 leading-relaxed">{scenario.context}</p>
 
                     <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Company</p>
-                            <p className="font-bold">{scenario.company}</p>
+                        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Company</p>
+                            <p className="font-bold text-gray-900">{scenario.company}</p>
                         </div>
-                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Role</p>
-                            <p className="font-bold">{scenario.role}</p>
+                        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Role</p>
+                            <p className="font-bold text-gray-900">{scenario.role}</p>
                         </div>
-                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Their Offer</p>
-                            <p className="font-bold text-slate-300">{scenario.offered}</p>
+                        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Their Offer</p>
+                            <p className="font-bold text-gray-700">{scenario.offered}</p>
                         </div>
-                        <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4">
-                            <p className="text-[10px] text-orange-400 uppercase tracking-wider mb-1">Your Target</p>
-                            <p className="font-bold text-orange-400">{scenario.target}</p>
+                        <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+                            <p className="text-[10px] text-orange-600 uppercase tracking-wider mb-1">Your Target</p>
+                            <p className="font-bold text-orange-600">{scenario.target}</p>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 mb-8">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                    <div className="rounded-xl border border-gray-200 bg-white p-5 mb-8 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-2">
                             <Target className="h-3.5 w-3.5" /> Negotiation Tips
                         </p>
                         <ul className="space-y-2">
                             {scenario.tips.map((tip, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                                    <CheckCircle2 className="h-4 w-4 text-orange-400 mt-0.5 shrink-0" />
+                                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                                    <CheckCircle2 className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
                                     {tip}
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    <Button
+                    <button
+                        type="button"
                         onClick={() => startSession(scenario)}
                         disabled={loading}
-                        className="w-full h-12 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl text-sm"
+                        className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Starting…</> : "Start Negotiation"}
-                    </Button>
+                        {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Starting…</> : "Start Negotiation"}
+                    </button>
                 </motion.div>
             </div>
         </div>
@@ -326,22 +324,22 @@ export default function SalaryNegotiator() {
 
     // ── CHAT ───────────────────────────────────────────────────────────────────
     if (stage === "chat" && scenario) return (
-        <div className="h-screen flex flex-col bg-[#0a0f1e] text-white">
+        <div className="h-screen flex flex-col bg-gray-50">
             {/* Header */}
-            <header className="shrink-0 border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
+            <header className="shrink-0 border-b border-gray-200 bg-white px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <button onClick={reset} className="text-slate-400 hover:text-white transition-colors">
+                    <button type="button" onClick={reset} aria-label="Back to scenarios" className="text-gray-500 hover:text-gray-900 transition-colors">
                         <ArrowLeft className="h-5 w-5" />
                     </button>
                     <div>
-                        <p className="text-sm font-bold">{scenario.title}</p>
-                        <p className="text-xs text-slate-500">{scenario.company} · {scenario.role}</p>
+                        <p className="text-sm font-bold text-gray-900">{scenario.title}</p>
+                        <p className="text-xs text-gray-400">{scenario.company} · {scenario.role}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">Target</p>
-                        <p className="text-sm font-bold text-orange-400">{scenario.target}</p>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Target</p>
+                        <p className="text-sm font-bold text-orange-600">{scenario.target}</p>
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${diffColor(scenario.difficulty)}`}>
                         {scenario.difficulty}
@@ -350,9 +348,9 @@ export default function SalaryNegotiator() {
             </header>
 
             {/* Context bar */}
-            <div className="shrink-0 bg-orange-500/5 border-b border-orange-500/10 px-6 py-2 flex items-center gap-2">
-                <TrendingUp className="h-3.5 w-3.5 text-orange-400 shrink-0" />
-                <p className="text-xs text-orange-300/80">{scenario.context}</p>
+            <div className="shrink-0 bg-orange-50 border-b border-orange-200 px-6 py-2 flex items-center gap-2">
+                <TrendingUp className="h-3.5 w-3.5 text-orange-600 shrink-0" />
+                <p className="text-xs text-orange-700/80">{scenario.context}</p>
             </div>
 
             {/* Messages */}
@@ -368,10 +366,10 @@ export default function SalaryNegotiator() {
                             <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                                 msg.role === "candidate"
                                     ? "bg-orange-500 text-white rounded-br-md"
-                                    : "bg-white/[0.06] border border-white/[0.08] text-slate-200 rounded-bl-md"
+                                    : "bg-gray-50 border border-gray-200 text-gray-700 rounded-bl-md"
                             }`}>
                                 {msg.role === "interviewer" && (
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
                                         {scenario.company} HR
                                     </p>
                                 )}
@@ -383,10 +381,14 @@ export default function SalaryNegotiator() {
 
                 {loading && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                        <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl rounded-bl-md px-4 py-3">
+                        <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3">
                             <div className="flex gap-1">
-                                {[0, 1, 2].map(i => (
-                                    <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                                {([
+                                    "animate-bounce",
+                                    "animate-bounce [animation-delay:150ms]",
+                                    "animate-bounce [animation-delay:300ms]",
+                                ] as const).map((cls, i) => (
+                                    <span key={i} className={`w-1.5 h-1.5 rounded-full bg-gray-400 ${cls}`} />
                                 ))}
                             </div>
                         </div>
@@ -396,10 +398,10 @@ export default function SalaryNegotiator() {
             </div>
 
             {/* Input */}
-            <div className="shrink-0 border-t border-white/[0.06] px-6 py-4">
+            <div className="shrink-0 border-t border-gray-200 bg-white px-6 py-4">
                 {validation.ok !== null && validation.hint && (
                     <div className={`flex items-start gap-2 mb-2 text-xs px-3 py-1.5 rounded-lg ${
-                        validation.ok ? "text-emerald-400 bg-emerald-400/10" : "text-amber-400 bg-amber-400/10"
+                        validation.ok ? "text-emerald-600 bg-emerald-50" : "text-amber-600 bg-amber-50"
                     }`}>
                         {validation.ok ? <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /> : <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />}
                         {validation.hint}
@@ -411,19 +413,21 @@ export default function SalaryNegotiator() {
                         onChange={e => handleInputChange(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                         placeholder="Type your response… (Enter to send, Shift+Enter for new line)"
-                        className="flex-1 resize-none bg-white/[0.04] border-white/[0.08] text-white placeholder:text-slate-600 rounded-xl min-h-[60px] max-h-[120px] text-sm focus:border-orange-500/50 focus:ring-orange-500/20"
+                        className="flex-1 resize-none bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl min-h-[60px] max-h-[120px] text-sm focus:border-orange-400 focus:ring-orange-500/20"
                         rows={2}
                         disabled={finished || loading}
                     />
                     <Button
+                        type="button"
                         onClick={handleSend}
                         disabled={!input.trim() || loading || finished}
-                        className="h-[60px] w-[60px] shrink-0 bg-orange-500 hover:bg-orange-400 rounded-xl"
+                        aria-label="Send message"
+                        className="h-[60px] w-[60px] shrink-0 bg-orange-500 hover:bg-orange-600 rounded-xl"
                     >
                         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                 </div>
-                <p className="text-[10px] text-slate-600 mt-2 text-center">
+                <p className="text-[10px] text-gray-400 mt-2 text-center">
                     Respond as you would in a real negotiation. Be professional, confident, and specific.
                 </p>
             </div>
@@ -432,24 +436,24 @@ export default function SalaryNegotiator() {
 
     // ── RESULT ─────────────────────────────────────────────────────────────────
     if (stage === "result" && scenario && score) return (
-        <div className="min-h-screen bg-[#0a0f1e] text-white">
+        <div className="min-h-screen bg-gray-50">
             <div className="max-w-2xl mx-auto px-6 py-12">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                     <div className="text-center mb-10">
-                        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full border border-orange-500/30 bg-orange-500/10 mb-4">
+                        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full border border-orange-200 bg-orange-50 mb-4">
                             {score.overall >= 70
-                                ? <Trophy className="h-9 w-9 text-orange-400" />
-                                : <TrendingUp className="h-9 w-9 text-orange-400" />}
+                                ? <Trophy className="h-9 w-9 text-orange-500" />
+                                : <TrendingUp className="h-9 w-9 text-orange-500" />}
                         </div>
-                        <h1 className="text-3xl font-black mb-2">Negotiation Complete</h1>
-                        <p className="text-slate-400">{scenario.title} · {scenario.company}</p>
+                        <h1 className="text-3xl font-black mb-2 text-gray-900">Negotiation Complete</h1>
+                        <p className="text-gray-500">{scenario.title} · {scenario.company}</p>
                     </div>
 
                     {/* Overall score */}
-                    <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-6 mb-6 text-center">
-                        <p className="text-[10px] text-orange-400 uppercase tracking-widest mb-1">Overall Score</p>
-                        <p className="text-6xl font-black text-orange-400">{score.overall}</p>
-                        <p className="text-slate-500 text-sm mt-1">out of 100</p>
+                    <div className="rounded-2xl border border-orange-200 bg-orange-50 p-6 mb-6 text-center">
+                        <p className="text-[10px] text-orange-600 uppercase tracking-widest mb-1">Overall Score</p>
+                        <p className="text-6xl font-black text-orange-600">{score.overall}</p>
+                        <p className="text-gray-400 text-sm mt-1">out of 100</p>
                     </div>
 
                     {/* Breakdown */}
@@ -460,15 +464,15 @@ export default function SalaryNegotiator() {
                             { label: "Communication", val: score.communication, icon: MessageSquare },
                             { label: "Outcome", val: score.outcome, icon: TrendingUp },
                         ] as const).map(({ label, val, icon: Icon }) => (
-                            <div key={label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+                            <div key={label} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <Icon className="h-3.5 w-3.5 text-slate-400" />
-                                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">{label}</p>
+                                    <Icon className="h-3.5 w-3.5 text-gray-500" />
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</p>
                                 </div>
                                 <div className="flex items-end gap-2">
-                                    <p className="text-2xl font-black text-white">{val}</p>
+                                    <p className="text-2xl font-black text-gray-900">{val}</p>
                                     <div className="flex-1 mb-1">
-                                        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                                        <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${val}%` }}
@@ -484,34 +488,38 @@ export default function SalaryNegotiator() {
 
                     {/* AI Feedback */}
                     {feedback && (
-                        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 mb-6">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">AI Coach Feedback</p>
-                            <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{feedback}</p>
+                        <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-6 shadow-sm">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-3">AI Coach Feedback</p>
+                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{feedback}</p>
                         </div>
                     )}
 
                     {/* Transcript */}
-                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 mb-8 max-h-64 overflow-y-auto">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Conversation Transcript</p>
+                    <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-8 max-h-64 overflow-y-auto shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-3">Conversation Transcript</p>
                         <div className="space-y-3">
                             {messages.map((m, i) => (
                                 <div key={i}>
-                                    <p className="text-[10px] text-slate-500 mb-0.5">
+                                    <p className="text-[10px] text-gray-400 mb-0.5">
                                         {m.role === "interviewer" ? scenario.company + " HR" : "You"}
                                     </p>
-                                    <p className="text-sm text-slate-300 leading-relaxed">{m.content}</p>
+                                    <p className="text-sm text-gray-600 leading-relaxed">{m.content}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     <div className="flex gap-3">
-                        <Button onClick={reset} variant="outline" className="flex-1 border-white/10 text-white hover:bg-white/5 rounded-xl h-11">
-                            <RotateCcw className="h-4 w-4 mr-2" /> Try Again
-                        </Button>
+                        <button
+                            type="button"
+                            onClick={reset}
+                            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 font-medium text-sm transition-colors"
+                        >
+                            <RotateCcw className="h-4 w-4" /> Try Again
+                        </button>
                         <Button
                             onClick={() => { setScenario(null); setStage("pick"); }}
-                            className="flex-1 bg-orange-500 hover:bg-orange-400 text-white rounded-xl h-11 font-bold"
+                            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-11 font-bold"
                         >
                             New Scenario
                         </Button>

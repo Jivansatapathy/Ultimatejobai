@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { Bot } from "lucide-react";
 
 const LINKS = {
@@ -38,7 +38,7 @@ export const FooterV2 = () => (
               <Bot className="h-4 w-4 text-white" />
             </div>
             <span className="text-base font-extrabold tracking-tight text-white">
-              Job<span className="text-blue-400">AI</span>
+              Hizorex
             </span>
           </Link>
           <p className="text-sm text-gray-400 leading-relaxed max-w-[200px]">
@@ -67,7 +67,7 @@ export const FooterV2 = () => (
       </div>
 
       <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-xs text-gray-600">© {new Date().getFullYear()} JobAI. All rights reserved.</p>
+        <p className="text-xs text-gray-600">© {new Date().getFullYear()} Hizorex. All rights reserved.</p>
         <p className="text-xs text-gray-600">Connecting senior leaders with their next opportunity.</p>
       </div>
     </div>

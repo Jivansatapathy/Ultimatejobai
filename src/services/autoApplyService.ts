@@ -5,7 +5,7 @@ export interface ApplicationHistoryItem {
     job_id: string;
     job_title: string;
     company: string;
-    status: "queued" | "sent" | "failed" | "submitted" | "cancelled";
+    status: "queued" | "sent" | "failed" | "submitted" | "cancelled" | "applying";
     delivery_method: "email" | "employer_portal" | "test" | "bot";
     job_url?: string | null;
     job_source?: string | null;
@@ -77,6 +77,27 @@ export const autoApplyService = {
     // Send a real test email to the hardcoded test recipient (no DB job needed)
     async testSend() {
         const res = await api.post('/api/apply/test-send/');
+        return res.data;
+    },
+
+    // Daily auto-apply preference
+    async getDailyAutoApplyPref() {
+        const res = await api.get<{
+            enabled: boolean;
+            daily_limit: number;
+            daily_applied_count: number;
+            target_roles: string[];
+        }>('/api/bot/daily-auto-apply/');
+        return res.data;
+    },
+
+    async setDailyAutoApplyPref(enabled: boolean, daily_limit?: number) {
+        const body: Record<string, unknown> = { enabled };
+        if (daily_limit !== undefined) body.daily_limit = daily_limit;
+        const res = await api.patch<{ enabled: boolean; daily_limit: number }>(
+            '/api/bot/daily-auto-apply/',
+            body,
+        );
         return res.data;
     },
 };

@@ -109,35 +109,35 @@ export default function CareerPlanner() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-[#0a0f1e] text-white">
+        <div className="h-screen flex flex-col bg-gray-50">
             {/* Header */}
-            <header className="shrink-0 border-b border-white/[0.06] px-6 py-4 flex items-center justify-between bg-[#0a0f1e]/90 backdrop-blur-md">
+            <header className="shrink-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
-                    <button onClick={() => navigate("/ai-mentor")} className="text-slate-400 hover:text-white transition-colors">
+                    <button onClick={() => navigate("/ai-mentor")} className="text-gray-500 hover:text-gray-900 transition-colors">
                         <ArrowLeft className="h-5 w-5" />
                     </button>
                     <div className="flex items-center gap-2" data-tour="planner-header">
-                        <div className="h-8 w-8 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center">
-                            <TrendingUp className="h-4 w-4 text-accent" />
+                        <div className="h-8 w-8 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center">
+                            <TrendingUp className="h-4 w-4 text-teal-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-bold leading-tight">Career Strategic Planner</p>
-                            <p className="text-[11px] text-slate-500">AI-powered 12–24 month planning</p>
+                            <p className="text-sm font-bold leading-tight text-gray-900">Career Strategic Planner</p>
+                            <p className="text-[11px] text-gray-400">AI-powered 12–24 month planning</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                     {activeResume && (
-                        <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400 bg-white/[0.04] border border-white/[0.06] rounded-full px-3 py-1">
-                            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                        <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-3 py-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
                             Resume loaded
                         </span>
                     )}
                     {started && (
                         <button
                             onClick={reset}
-                            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.05]"
+                            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100"
                         >
                             <RotateCcw className="h-3.5 w-3.5" /> New session
                         </button>
@@ -151,17 +151,17 @@ export default function CareerPlanner() {
                     /* Landing / prompt picker */
                     <div className="max-w-2xl mx-auto px-6 py-12">
                         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-accent mb-6">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-teal-600 mb-6">
                                 <Sparkles className="h-3 w-3" /> AI Career Advisor
                             </div>
-                            <h1 className="text-3xl font-black tracking-tight mb-3">
+                            <h1 className="text-3xl font-black tracking-tight mb-3 text-gray-900">
                                 Plan your next career move
                             </h1>
-                            <p className="text-slate-400 mb-10 leading-relaxed">
+                            <p className="text-gray-500 mb-10 leading-relaxed">
                                 Have a real strategic conversation with your AI career advisor. Get a concrete 12–24 month roadmap tailored to your goals, skills, and current situation.
                             </p>
 
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">
                                 Start with a question, or pick one below
                             </p>
 
@@ -174,9 +174,9 @@ export default function CareerPlanner() {
                                         transition={{ delay: i * 0.06 }}
                                         onClick={() => sendMessage(p)}
                                         disabled={loading}
-                                        className="w-full text-left flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-sm text-slate-300 hover:bg-white/[0.05] hover:border-accent/30 hover:text-white transition-all group"
+                                        className="w-full text-left flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:border-teal-400 hover:text-gray-900 transition-all group shadow-sm"
                                     >
-                                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-accent shrink-0 transition-colors" />
+                                        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-teal-600 shrink-0 transition-colors" />
                                         {p}
                                     </motion.button>
                                 ))}
@@ -197,27 +197,27 @@ export default function CareerPlanner() {
                                     {/* Avatar */}
                                     <div className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
                                         msg.role === "ai"
-                                            ? "bg-accent/20 border border-accent/30"
-                                            : "bg-white/10 border border-white/10"
+                                            ? "bg-teal-50 border border-teal-200"
+                                            : "bg-gray-100 border border-gray-200"
                                     }`}>
                                         {msg.role === "ai"
-                                            ? <Bot className="h-4 w-4 text-accent" />
-                                            : <User className="h-4 w-4 text-slate-300" />
+                                            ? <Bot className="h-4 w-4 text-teal-600" />
+                                            : <User className="h-4 w-4 text-gray-500" />
                                         }
                                     </div>
 
                                     {/* Bubble */}
                                     <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                                         msg.role === "user"
-                                            ? "bg-accent text-white rounded-tr-md"
-                                            : "bg-white/[0.06] border border-white/[0.08] text-slate-200 rounded-tl-md"
+                                            ? "bg-teal-500 text-white rounded-tr-md"
+                                            : "bg-gray-50 border border-gray-200 text-gray-700 rounded-tl-md"
                                     }`}>
                                         {msg.role === "ai" ? (
                                             <div className="whitespace-pre-wrap">{cleanMarkdown(msg.content)}</div>
                                         ) : (
                                             msg.content
                                         )}
-                                        <p className={`text-[10px] mt-2 ${msg.role === "user" ? "text-white/50 text-right" : "text-slate-600"}`}>
+                                        <p className={`text-[10px] mt-2 ${msg.role === "user" ? "text-white/50 text-right" : "text-gray-400"}`}>
                                             {msg.ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                         </p>
                                     </div>
@@ -228,15 +228,15 @@ export default function CareerPlanner() {
                         {/* Typing indicator */}
                         {loading && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-                                <div className="shrink-0 h-8 w-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center">
-                                    <Bot className="h-4 w-4 text-accent" />
+                                <div className="shrink-0 h-8 w-8 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center">
+                                    <Bot className="h-4 w-4 text-teal-600" />
                                 </div>
-                                <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl rounded-tl-md px-4 py-3">
+                                <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-md px-4 py-3">
                                     <div className="flex gap-1 items-center h-5">
                                         {[0, 1, 2].map(i => (
                                             <span
                                                 key={i}
-                                                className="w-1.5 h-1.5 rounded-full bg-accent/60 animate-bounce"
+                                                className="w-1.5 h-1.5 rounded-full bg-teal-500/60 animate-bounce"
                                                 style={{ animationDelay: `${i * 0.18}s` }}
                                             />
                                         ))}
@@ -251,7 +251,7 @@ export default function CareerPlanner() {
             </div>
 
             {/* Input bar */}
-            <div className="shrink-0 border-t border-white/[0.06] bg-[#0a0f1e]/90 backdrop-blur-md px-6 py-4" data-tour="planner-input">
+            <div className="shrink-0 border-t border-gray-200 bg-white px-6 py-4" data-tour="planner-input">
                 <div className="max-w-2xl mx-auto">
                     <div className="flex gap-3 items-end">
                         <Textarea
@@ -260,14 +260,14 @@ export default function CareerPlanner() {
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder={started ? "Ask a follow-up question…" : "Type your career question…"}
-                            className="flex-1 resize-none bg-white/[0.04] border-white/[0.08] text-white placeholder:text-slate-600 rounded-xl min-h-[52px] max-h-[140px] text-sm focus:border-accent/50 focus:ring-accent/20"
+                            className="flex-1 resize-none bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl min-h-[52px] max-h-[140px] text-sm focus:border-teal-400 focus:ring-teal-500/20"
                             rows={1}
                             disabled={loading}
                         />
                         <Button
                             onClick={() => sendMessage(input)}
                             disabled={!input.trim() || loading}
-                            className="h-[52px] w-[52px] shrink-0 bg-accent hover:bg-accent/90 rounded-xl"
+                            className="h-[52px] w-[52px] shrink-0 bg-teal-500 hover:bg-teal-600 rounded-xl"
                         >
                             {loading
                                 ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -275,7 +275,7 @@ export default function CareerPlanner() {
                             }
                         </Button>
                     </div>
-                    <p className="text-[10px] text-slate-600 mt-2 text-center">
+                    <p className="text-[10px] text-gray-400 mt-2 text-center">
                         Enter to send · Shift+Enter for new line · Your resume is used as context
                     </p>
                 </div>

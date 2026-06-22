@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
@@ -69,7 +69,7 @@ export default function Onboarding() {
         toast.info("Analysing your resume…");
         await analyzeFileATS(file, { ...tempResume, targetJobRole: targetRole });
       }
-      toast.success("All set! Welcome to JobAI.");
+      toast.success("All set! Welcome to Hizorex.");
       activityService.logActivity({
         activity_type: "ONBOARDING",
         description: `Completed onboarding with target role: ${targetRole}`,
@@ -94,7 +94,7 @@ export default function Onboarding() {
           <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center">
             <Bot className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-extrabold text-black tracking-tight">JobAI</span>
+          <span className="text-lg font-extrabold text-black tracking-tight">Hizorex</span>
         </div>
 
         {/* Progress bar */}

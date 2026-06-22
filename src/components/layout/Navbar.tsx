@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -101,7 +101,7 @@ export const Navbar = () => {
                 <Bot className={`h-4 w-4 ${logoIconColor}`} />
               </div>
               <span className={`text-[1.05rem] font-extrabold tracking-tight ${logoText}`}>
-                Job<span className={logoSub}>AI</span>
+                Hizorex
               </span>
             </Link>
 

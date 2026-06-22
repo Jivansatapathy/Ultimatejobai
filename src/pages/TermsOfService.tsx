@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { Footer } from "@/components/layout/Footer";
 
@@ -16,7 +16,7 @@ const TermsOfService = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">1. Acceptance of Terms</h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing or using Hozorex, you agree to comply with these Terms &amp; Conditions. If you do not agree, you must discontinue use of the platform immediately.
+              By accessing or using Hizorex, you agree to comply with these Terms &amp; Conditions. If you do not agree, you must discontinue use of the platform immediately.
             </p>
           </section>
 
@@ -82,7 +82,7 @@ const TermsOfService = () => {
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">7. AI Disclaimer</h2>
-            <p className="text-muted-foreground leading-relaxed">AI-generated content may contain inaccuracies. Hozorex:</p>
+            <p className="text-muted-foreground leading-relaxed">AI-generated content may contain inaccuracies. Hizorex:</p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li>Does not guarantee employment</li>
               <li>Does not guarantee interview success</li>
@@ -94,14 +94,14 @@ const TermsOfService = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">8. Intellectual Property</h2>
             <p className="text-muted-foreground leading-relaxed">
-              All platform materials including logos, branding, software, UI/UX, AI systems, and website content remain the property of Hozorex.
+              All platform materials including logos, branding, software, UI/UX, AI systems, and website content remain the property of Hizorex.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">9. User Content</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Users retain ownership of uploaded resumes and documents but grant Hozorex permission to process and display such content for service functionality.
+              Users retain ownership of uploaded resumes and documents but grant Hizorex permission to process and display such content for service functionality.
             </p>
           </section>
 
@@ -129,7 +129,7 @@ const TermsOfService = () => {
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">12. Limitation of Liability</h2>
-            <p className="text-muted-foreground leading-relaxed">Hozorex shall not be liable for:</p>
+            <p className="text-muted-foreground leading-relaxed">Hizorex shall not be liable for:</p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li>Loss of employment opportunities</li>
               <li>Platform downtime</li>
@@ -154,14 +154,14 @@ const TermsOfService = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">14. Third-Party Links</h2>
             <p className="text-muted-foreground leading-relaxed">
-              External websites linked through the platform operate independently and Hozorex is not responsible for their content or practices.
+              External websites linked through the platform operate independently and Hizorex is not responsible for their content or practices.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">15. Indemnification</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Users agree to indemnify and hold Hozorex harmless from claims, damages, losses, or legal disputes arising from misuse of the platform.
+              Users agree to indemnify and hold Hizorex harmless from claims, damages, losses, or legal disputes arising from misuse of the platform.
             </p>
           </section>
 
@@ -182,8 +182,8 @@ const TermsOfService = () => {
           <section className="space-y-4 border-t pt-8">
             <h2 className="text-2xl font-semibold text-foreground">18. Contact Information</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Hozorex<br />
-              Email: <a href="mailto:contact@hozorex.com" className="text-accent hover:underline">contact@hozorex.com</a>
+              Hizorex<br />
+              Email: <a href="mailto:contact@Hizorex.com" className="text-accent hover:underline">contact@Hizorex.com</a>
             </p>
           </section>
         </div>

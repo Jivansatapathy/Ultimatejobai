@@ -109,7 +109,7 @@ const PageLoader = () => (
     </div>
 
     {/* Brand */}
-    <p className="text-lg font-black text-gray-900 tracking-tight mb-0.5">JobAI</p>
+    <p className="text-lg font-black text-gray-900 tracking-tight mb-0.5">Hizorex</p>
     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-2">Powered by Apex™</p>
 
     {/* "Priming System" label with bouncing dots */}

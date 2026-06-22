@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 
 const TESTIMONIALS = [
@@ -15,7 +15,7 @@ const TESTIMONIALS = [
     role: "VP Engineering → CTO",
     avatar: "JO",
     color: "bg-emerald-100 text-emerald-700",
-    quote: "The role matching is uncanny. JobAI only surfaced CTO roles at companies where my background actually fit — no noise, just signal. Got my CTO offer within 5 weeks.",
+    quote: "The role matching is uncanny. Hizorex only surfaced CTO roles at companies where my background actually fit — no noise, just signal. Got my CTO offer within 5 weeks.",
     stars: 5,
   },
   {
@@ -44,7 +44,7 @@ export const TestimonialsV2 = () => (
         </span>
         <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
           Executives Who Leveled Up
-          <span className="text-gray-400"> with JobAI</span>
+          <span className="text-gray-400"> with Hizorex</span>
         </h2>
       </motion.div>
 

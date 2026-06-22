@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { Footer } from "@/components/layout/Footer";
 
@@ -16,7 +16,7 @@ const PrivacyPolicy = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">1. Introduction</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Hozorex is an AI-powered career and recruitment platform that helps users build resumes, prepare for interviews, discover jobs, manage applications, and improve career growth using artificial intelligence tools. By using the platform, you agree to the collection and use of information in accordance with this policy.
+              Hizorex is an AI-powered career and recruitment platform that helps users build resumes, prepare for interviews, discover jobs, manage applications, and improve career growth using artificial intelligence tools. By using the platform, you agree to the collection and use of information in accordance with this policy.
             </p>
           </section>
 
@@ -52,7 +52,7 @@ const PrivacyPolicy = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">4. AI &amp; Automated Processing</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Hozorex uses AI systems to analyze resumes, generate interview simulations, create recommendations, and provide automated feedback. AI-generated outputs are intended for guidance purposes only and may not always be fully accurate.
+              Hizorex uses AI systems to analyze resumes, generate interview simulations, create recommendations, and provide automated feedback. AI-generated outputs are intended for guidance purposes only and may not always be fully accurate.
             </p>
           </section>
 
@@ -145,7 +145,7 @@ const PrivacyPolicy = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">12. Children's Privacy</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Hozorex is intended only for users aged 18 years or older. We do not knowingly collect information from minors.
+              Hizorex is intended only for users aged 18 years or older. We do not knowingly collect information from minors.
             </p>
           </section>
 
@@ -166,9 +166,9 @@ const PrivacyPolicy = () => {
           <section className="space-y-4 border-t pt-8">
             <h2 className="text-2xl font-semibold text-foreground">15. Contact Information</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Hozorex<br />
-              Email: <a href="mailto:privacy@hozorex.com" className="text-accent hover:underline">privacy@hozorex.com</a><br />
-              Support: <a href="mailto:support@hozorex.com" className="text-accent hover:underline">support@hozorex.com</a>
+              Hizorex<br />
+              Email: <a href="mailto:privacy@Hizorex.com" className="text-accent hover:underline">privacy@Hizorex.com</a><br />
+              Support: <a href="mailto:support@Hizorex.com" className="text-accent hover:underline">support@Hizorex.com</a>
             </p>
           </section>
         </div>

@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Search, Loader2, Star, MapPin, Building2, Briefcase, ExternalLink, ChevronDown, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, ExecutiveOpportunity, EOSResult } from "@/services/venusService";
 
@@ -85,20 +83,25 @@ function OpportunityCard({ opp, onDecision }: { opp: ExecutiveOpportunity; onDec
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-        <Button size="sm" onClick={() => onDecision(opp)}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
-          <Star className="h-3.5 w-3.5 mr-1.5" />
+      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+        <button
+          type="button"
+          onClick={() => onDecision(opp)}
+          className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-100 hover:border-blue-300 transition-colors"
+        >
+          <Star className="h-3.5 w-3.5" />
           Should I Pursue?
-        </Button>
+        </button>
         {opp.apply_url && (
-          <Button size="sm" variant="outline" asChild
-            className="border-gray-300 text-gray-600 hover:bg-gray-100 text-xs">
-            <a href={opp.apply_url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-              Apply
-            </a>
-          </Button>
+          <a
+            href={opp.apply_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Apply
+          </a>
         )}
         <span className="ml-auto text-[10px] text-gray-400 capitalize">{opp.platform || opp.source}</span>
       </div>
@@ -251,9 +254,12 @@ export default function ExecutiveOpportunityEngine() {
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input value={search} onChange={e => setSearch(e.target.value)}
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
               placeholder="Search roles, companies..."
-              className="pl-9 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl h-10" />
+              className="w-full h-10 pl-9 pr-4 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15 transition-all"
+            />
           </div>
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
             className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 outline-none focus:border-blue-500">
@@ -266,10 +272,13 @@ export default function ExecutiveOpportunityEngine() {
             {SENIORITY.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           {(typeFilter || seniorityFilter || countryFilter) && (
-            <Button variant="outline" size="sm" onClick={() => { setTypeFilter(""); setSeniorityFilter(""); setCountryFilter(""); }}
-              className="border-gray-300 text-gray-500 hover:bg-gray-100">
-              <X className="h-3.5 w-3.5 mr-1" /> Clear
-            </Button>
+            <button
+              type="button"
+              onClick={() => { setTypeFilter(""); setSeniorityFilter(""); setCountryFilter(""); }}
+              className="inline-flex items-center gap-1 h-10 px-3 rounded-xl border border-gray-200 bg-white text-gray-500 text-sm font-medium hover:bg-gray-50 hover:text-gray-700 transition-colors"
+            >
+              <X className="h-3.5 w-3.5" /> Clear
+            </button>
           )}
         </div>
         {/* Country filter */}
@@ -311,11 +320,14 @@ export default function ExecutiveOpportunityEngine() {
             <OpportunityCard key={opp.id} opp={opp} onDecision={setSelectedOpp} />
           ))}
           {hasNext && (
-            <Button variant="outline" className="w-full border-gray-300 text-gray-600 hover:bg-gray-100"
-              onClick={() => { const next = page + 1; setPage(next); load(search, typeFilter, seniorityFilter, countryFilter, next, true); }}>
+            <button
+              type="button"
+              onClick={() => { const next = page + 1; setPage(next); load(search, typeFilter, seniorityFilter, countryFilter, next, true); }}
+              className="w-full h-10 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
+            >
               Load more
-              <ChevronDown className="h-4 w-4 ml-1" />
-            </Button>
+              <ChevronDown className="h-4 w-4" />
+            </button>
           )}
         </div>
       )}

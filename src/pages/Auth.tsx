@@ -281,7 +281,7 @@ export default function Auth() {
               <Bot className="h-4 w-4 text-white" />
             </div>
             <span className="text-[1rem] font-extrabold tracking-tight text-black">
-              Job<span className="text-black/30">AI</span>
+              Hizorex
             </span>
           </Link>
           <p className="text-sm text-zinc-500">
@@ -312,7 +312,7 @@ export default function Auth() {
               </h1>
               <p className="text-sm text-zinc-500">
                 {isSignUp
-                  ? "Join 10,000+ executives using JobAI to land C-Suite roles."
+                  ? "Join 10,000+ executives using Hizorex to land C-Suite roles."
                   : "Sign in to access your career dashboard."}
               </p>
             </div>

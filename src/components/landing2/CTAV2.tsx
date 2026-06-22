@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Crown, Sparkles } from "lucide-react";
 
@@ -39,7 +39,7 @@ export const CTAV2 = () => (
         </h2>
 
         <p className="mx-auto mb-8 sm:mb-10 max-w-xl text-sm sm:text-base leading-relaxed text-white/60">
-          Join thousands of senior leaders who use JobAI to find exclusive CEO, CFO, CTO and VP roles —
+          Join thousands of senior leaders who use Hizorex to find exclusive CEO, CFO, CTO and VP roles —
           and let <span className="text-white font-semibold">Apex™</span> handle every application.
         </p>
 

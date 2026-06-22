@@ -63,6 +63,7 @@ import { BotMultiApplyPanel } from "@/components/jobs/BotMultiApplyPanel";
 import { LoginRequiredModal } from "@/components/auth/LoginRequiredModal";
 import { careerService } from "@/services/careerService";
 import api from "@/services/api";
+import { autoApplyService, ApplicationHistoryItem } from "@/services/autoApplyService";
 
 type DiscoveryMode = "landing" | "results";
 type DiscoveryCard = DefaultDiscoveryFilter;
@@ -343,7 +344,7 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
 
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [queuedJobIds, setQueuedJobIds] = useState<Set<string>>(new Set());
-  const [appliedHistoryItems, setAppliedHistoryItems] = useState<import("@/services/autoApplyService").ApplicationHistoryItem[]>([]);
+  const [appliedHistoryItems, setAppliedHistoryItems] = useState<ApplicationHistoryItem[]>([]);
   const [feedTab, setFeedTab] = useState<"all" | "queued" | "applied">("all");
   const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
@@ -354,19 +355,22 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const loadAppliedHistory = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const res = await api.get('/api/bot/history/');
+      const [emailResult, botResult] = await Promise.allSettled([
+        autoApplyService.getHistory(),
+        autoApplyService.getBotHistory(),
+      ]);
       const ids = new Set<string>();
       const queuedIds = new Set<string>();
-      const items: import("@/services/autoApplyService").ApplicationHistoryItem[] = [];
-      if (emailData.status === "fulfilled" && emailData.value?.applications) {
-        emailData.value.applications.forEach(a => {
+      const items: ApplicationHistoryItem[] = [];
+      if (emailResult.status === "fulfilled" && emailResult.value?.applications) {
+        emailResult.value.applications.forEach(a => {
           items.push(a);
           if (a.job_id && (a.status === "sent" || a.status === "submitted")) ids.add(String(a.job_id));
           if (a.job_id && a.status === "queued") queuedIds.add(String(a.job_id));
         });
       }
-      if (botData.status === "fulfilled" && botData.value?.applications) {
-        botData.value.applications.forEach(a => {
+      if (botResult.status === "fulfilled" && botResult.value?.applications) {
+        botResult.value.applications.forEach(a => {
           items.push(a);
           if (a.job_id && (a.status === "sent" || a.status === "submitted")) ids.add(String(a.job_id));
           if (a.job_id && a.status === "queued") queuedIds.add(String(a.job_id));

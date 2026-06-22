@@ -24,7 +24,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -265,11 +264,7 @@ export default function CareerInsights() {
   return (
     <>
 
-      <div className="min-h-screen bg-[#0a0f1e] text-white selection:bg-teal-500/30 relative overflow-hidden">
-        {/* Atmospheric glows */}
-        <div className="pointer-events-none absolute top-0 left-1/3 w-[800px] h-[500px] rounded-full bg-violet-600/10 blur-[140px]" />
-        <div className="pointer-events-none absolute bottom-1/3 right-0 w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[140px]" />
-        <div className="pointer-events-none absolute top-1/2 left-0 w-[500px] h-[500px] rounded-full bg-blue-500/5 blur-[150px]" />
+      <div className="min-h-screen bg-gray-50 relative overflow-hidden">
         <Navbar />
 
 
@@ -283,14 +278,14 @@ export default function CareerInsights() {
                 animate={{ opacity: 1, y: 0 }}
                 className="min-h-[70vh] flex flex-col items-center justify-center py-16"
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.25em] text-teal-400 mb-8 border-teal-500/20">
+                <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.25em] text-teal-600 mb-8">
                   <Sparkles className="h-3.5 w-3.5" /> AI Strategist
                 </div>
-                <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-center mb-6 text-white uppercase italic">
+                <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-center mb-6 text-gray-900 uppercase">
                   Career Intelligence
                 </h1>
 
-                <p className="text-slate-400 text-center max-w-md mb-14 leading-relaxed">
+                <p className="text-gray-500 text-center max-w-md mb-14 leading-relaxed">
                   Pick a section to get started. You can switch between them anytime from the top tabs.
                 </p>
 
@@ -301,24 +296,24 @@ export default function CareerInsights() {
                       icon: Sparkles,
                       label: "AI Insights",
                       sub: "Career planner, move analyzer & strategic advice",
-                      accent: "border-accent/30 hover:border-accent/60 hover:bg-accent/5",
-                      iconCls: "text-accent bg-accent/10 border-accent/20",
+                      accent: "border-teal-200 hover:border-teal-400 hover:bg-teal-50",
+                      iconCls: "text-teal-600 bg-teal-50 border-teal-200",
                     },
                     {
                       tab: "fairs",
                       icon: Calendar,
                       label: "Job Fairs",
                       sub: "Browse upcoming career fairs filtered by location",
-                      accent: "border-sky-500/30 hover:border-sky-500/60 hover:bg-sky-500/5",
-                      iconCls: "text-sky-400 bg-sky-500/10 border-sky-500/20",
+                      accent: "border-sky-200 hover:border-sky-400 hover:bg-sky-50",
+                      iconCls: "text-sky-600 bg-sky-50 border-sky-200",
                     },
                     {
                       tab: "negotiate",
                       icon: DollarSign,
                       label: "Salary Negotiator",
                       sub: "Train live negotiations against an AI employer",
-                      accent: "border-orange-500/30 hover:border-orange-500/60 hover:bg-orange-500/5",
-                      iconCls: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+                      accent: "border-orange-200 hover:border-orange-400 hover:bg-orange-50",
+                      iconCls: "text-orange-600 bg-orange-50 border-orange-200",
                     },
                   ].map(({ tab, icon: Icon, label, sub, accent, iconCls }, i) => (
                     <motion.button
@@ -331,14 +326,14 @@ export default function CareerInsights() {
                         setShowLanding(false);
                         setSearchParams((p) => { const n = new URLSearchParams(p); n.set("tab", tab); return n; });
                       }}
-                      className={`group flex flex-col items-start text-left rounded-[28px] border bg-white/[0.03] p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] ${accent}`}
+                      className={`group flex flex-col items-start text-left rounded-[28px] border bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-md shadow-sm ${accent}`}
                     >
                       <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-[20px] border ${iconCls} transition-transform group-hover:scale-110 duration-500`}>
                         <Icon className="h-6 w-6" />
                       </div>
-                      <h3 className="text-lg font-black text-white mb-2 uppercase tracking-tight tracking-widest">{label}</h3>
-                      <p className="text-sm font-medium text-slate-400 leading-relaxed mb-6">{sub}</p>
-                      <div className="mt-auto flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 group-hover:text-teal-400 transition-colors">
+                      <h3 className="text-lg font-black text-gray-900 mb-2 uppercase tracking-tight tracking-widest">{label}</h3>
+                      <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6">{sub}</p>
+                      <div className="mt-auto flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 group-hover:text-teal-600 transition-colors">
                         Launch Section <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </div>
                     </motion.button>
@@ -353,22 +348,19 @@ export default function CareerInsights() {
 
             {/* Hero Section */}
             <div className="relative mb-12">
-              <div className="absolute -top-24 -left-24 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-              <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center md:text-left"
               >
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 mb-6">
-                  <Sparkles className="h-4 w-4 text-teal-400" />
-                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-400">AI-Powered Strategy</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 mb-5">
+                  <Sparkles className="h-3.5 w-3.5 text-teal-600" />
+                  <span className="text-[11px] font-semibold tracking-widest text-teal-600 uppercase">AI-Powered Strategy</span>
                 </div>
-                <h1 className="text-4xl md:text-7xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-white to-slate-400 tracking-tighter uppercase italic">
+                <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight mb-4 leading-[1.1]">
                   Career Velocity
                 </h1>
-                <p className="text-xl font-medium text-slate-400 max-w-2xl leading-relaxed">
+                <p className="text-base md:text-lg text-gray-500 max-w-xl leading-relaxed">
                   Engineered to bridge elite skill gaps and optimize your path to leadership with high-precision AI diagnostics.
                 </p>
 
@@ -378,68 +370,68 @@ export default function CareerInsights() {
             <div className="grid lg:grid-cols-5 gap-8">
               {/* Sidebar Stats */}
               <div className="lg:col-span-2 space-y-6">
-                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md rounded-[28px] p-2 overflow-hidden hover:border-white/[0.15] transition-all">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-slate-500">
+                <div className="border border-gray-200 bg-white rounded-[28px] p-4 overflow-hidden hover:border-teal-400 transition-all shadow-sm">
+                  <div className="pb-2 px-2 pt-2">
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-gray-500">
                       <Target className="h-4 w-4 text-teal-500" />
                       Readiness Engine
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-5xl font-black mb-6 text-white tracking-tighter">
+                    </p>
+                  </div>
+                  <div className="px-2 pb-2">
+                    <div className="text-5xl font-black mb-6 text-gray-900 tracking-tighter">
                       {Math.round(Math.max(score, userScore?.overall_score || 0))}<span className="text-2xl text-teal-500">%</span>
                     </div>
 
-                    <Progress value={Math.max(score, userScore?.overall_score || 0)} className="h-2 bg-white/[0.06] [&>div]:bg-teal-500" />
-                    <p className="text-xs text-slate-400 mt-4">
+                    <Progress value={Math.max(score, userScore?.overall_score || 0)} className="h-2 bg-gray-200 [&>div]:bg-teal-500" />
+                    <p className="text-xs text-gray-500 mt-4">
                       {Math.max(score, userScore?.overall_score || 0) > 80 ? "Match is strong for target roles." : "Improve your resume to increase match score."}
                     </p>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full mt-2 gap-2"
+                      className="w-full mt-2 gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                       onClick={handleStartAnalysis}
                       disabled={isAnalyzing}
                     >
                       {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
                       Refresh Analysis
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
-                <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-md rounded-[28px] p-2 overflow-hidden hover:border-white/[0.15] transition-all">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-slate-500">
+                <div className="border border-gray-200 bg-white rounded-[28px] p-4 overflow-hidden hover:border-teal-400 transition-all shadow-sm">
+                  <div className="pb-2 px-2 pt-2">
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-gray-500">
                       <Zap className="h-4 w-4 text-teal-500" />
                       Strategic Focus
-                    </CardTitle>
-                  </CardHeader>
+                    </p>
+                  </div>
 
-                  <CardContent className="space-y-4">
+                  <div className="px-2 pb-2 space-y-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">Resume Score</span>
-                      <span className={`font-semibold ${Math.max(score, userScore?.resume_score || 0) > 80 ? 'text-success' : 'text-accent'}`}>
+                      <span className="text-gray-500">Resume Score</span>
+                      <span className={`font-semibold ${Math.max(score, userScore?.resume_score || 0) > 80 ? 'text-emerald-600' : 'text-teal-600'}`}>
                         {Math.round(Math.max(score, userScore?.resume_score || 0))}%
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">Interview Score</span>
-                      <span className={`font-semibold ${userScore && userScore.interview_score > 70 ? 'text-success' : 'text-accent'}`}>
+                      <span className="text-gray-500">Interview Score</span>
+                      <span className={`font-semibold ${userScore && userScore.interview_score > 70 ? 'text-emerald-600' : 'text-teal-600'}`}>
                         {userScore ? Math.round(userScore.interview_score) : 0}%
                       </span>
                     </div>
-                    <div className="flex flex-col gap-1 text-sm pt-2 border-t border-white/[0.06]">
+                    <div className="flex flex-col gap-1 text-sm pt-2 border-t border-gray-200">
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400">Target Role</span>
+                        <span className="text-gray-500">Target Role</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 px-1.5 text-success hover:text-success hover:bg-success/10 gap-1 font-bold"
+                          className="h-6 px-1.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 gap-1 font-bold"
                           onClick={() => {
                             const newRole = prompt("Enter your new target role:", activeResume?.targetJobRole || "");
                             if (newRole !== null) {
                               updateTargetJobRole(newRole);
-                              setGapAnalysis(null); // Clear previous analysis to suggest refresh
+                              setGapAnalysis(null);
                             }
                           }}
                         >
@@ -448,8 +440,8 @@ export default function CareerInsights() {
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 <div className="p-8 rounded-[28px] bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-500/20 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
@@ -486,29 +478,38 @@ export default function CareerInsights() {
                   <div className="flex items-center gap-3 mb-4">
                     <button
                       onClick={() => setShowLanding(true)}
-                      className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors shrink-0"
+                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors shrink-0"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" /> Menu
                     </button>
-                    <div className="h-4 w-px bg-border" />
+                    <div className="h-4 w-px bg-gray-200" />
                   </div>
 
                   <div className="mb-6" data-tour="mentor-tabs">
-                    <TabsList className="bg-white/[0.04] border border-white/[0.08] p-1 w-full grid grid-cols-3">
-                      <TabsTrigger value="ai-insights" className="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold">
+                    <TabsList className="bg-gray-100 border border-gray-200 p-1 w-full grid grid-cols-3 h-auto rounded-xl">
+                      <TabsTrigger
+                        value="ai-insights"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm transition-all"
+                      >
                         <Sparkles className="h-4 w-4" />
                         AI Insights
                       </TabsTrigger>
-                      <TabsTrigger value="fairs" className="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold">
+                      <TabsTrigger
+                        value="fairs"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm transition-all"
+                      >
                         <Calendar className="h-4 w-4" />
                         Job Fairs
                         {jobFairs.length > 0 && (
-                          <span className="ml-1 px-1.5 py-0.5 rounded-md bg-accent text-white text-[10px] font-bold">
+                          <span className="ml-1 px-1.5 py-0.5 rounded-md bg-teal-500 text-white text-[10px] font-bold">
                             {jobFairs.length}
                           </span>
                         )}
                       </TabsTrigger>
-                      <TabsTrigger value="negotiate" className="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold">
+                      <TabsTrigger
+                        value="negotiate"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm transition-all"
+                      >
                         <DollarSign className="h-4 w-4" />
                         Negotiate
                       </TabsTrigger>
@@ -521,23 +522,22 @@ export default function CareerInsights() {
                     <motion.div
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent p-6"
+                      className="relative overflow-hidden rounded-2xl border border-teal-200 bg-teal-50 p-6"
                     >
-                      <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
-                      <div className="relative flex flex-col sm:flex-row sm:items-center gap-5">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-accent/30 bg-accent/15">
-                          <TrendingUp className="h-7 w-7 text-accent" />
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-teal-200 bg-white">
+                          <TrendingUp className="h-7 w-7 text-teal-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent mb-1">AI-Powered</p>
-                          <h3 className="text-xl font-black text-foreground tracking-tight">Career Strategic Planner</h3>
-                          <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600 mb-1">AI-Powered</p>
+                          <h3 className="text-xl font-black text-gray-900 tracking-tight">Career Strategic Planner</h3>
+                          <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                             Chat with your AI career advisor to build a concrete 12–24 month roadmap tailored to your goals.
                           </p>
                         </div>
                         <Button
                           onClick={() => navigate("/career-planner")}
-                          className="shrink-0 gap-2 bg-accent hover:bg-accent/90 text-white font-bold px-6 h-11 rounded-xl"
+                          className="shrink-0 gap-2 bg-teal-500 hover:bg-teal-600 text-white font-bold px-6 h-11 rounded-xl"
                         >
                           <BookOpen className="h-4 w-4" />
                           Start Session
@@ -551,31 +551,31 @@ export default function CareerInsights() {
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.07 }}
-                      className="rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden"
+                      className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm"
                     >
-                      <div className="flex items-center gap-3 px-6 py-4 border-b border-white/[0.06]">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5">
-                          <Sparkles className="h-4 w-4 text-accent" />
+                      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-teal-200 bg-teal-50">
+                          <Sparkles className="h-4 w-4 text-teal-600" />
                         </div>
                         <div>
-                          <h3 className="text-base font-bold leading-tight">Career Move Analyzer</h3>
-                          <p className="text-xs text-slate-400">Paste an offer or dilemma — AI weighs the pros, cons, and fit</p>
+                          <h3 className="text-base font-bold leading-tight text-gray-900">Career Move Analyzer</h3>
+                          <p className="text-xs text-gray-500">Paste an offer or dilemma — AI weighs the pros, cons, and fit</p>
                         </div>
                       </div>
 
                       <div className="p-5 space-y-4">
                         <textarea
                           placeholder="Paste your offer letter, company details, or describe your career dilemma here…"
-                          className="w-full min-h-[120px] p-4 rounded-xl bg-white/[0.05] border border-white/10 text-slate-100 focus:border-teal-500/40 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none text-sm leading-relaxed placeholder:text-slate-500"
+                          className="w-full min-h-[120px] p-4 rounded-xl bg-white border border-gray-200 text-gray-900 focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none text-sm leading-relaxed placeholder:text-gray-400"
                           value={offerText}
                           onChange={(e) => setOfferText(e.target.value)}
                         />
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs text-slate-500">Your resume profile is used as context automatically.</p>
+                          <p className="text-xs text-gray-500">Your resume profile is used as context automatically.</p>
                           <Button
                             onClick={handleGetAdvice}
                             disabled={isAdvising || !offerText.trim()}
-                            className="gap-2 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl h-9 px-5 text-sm"
+                            className="gap-2 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl h-9 px-5 text-sm"
                           >
                             {isAdvising ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                             Analyze
@@ -587,13 +587,13 @@ export default function CareerInsights() {
                         <motion.div
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="mx-5 mb-5 rounded-xl border border-accent/20 bg-accent/5 overflow-hidden"
+                          className="mx-5 mb-5 rounded-xl border border-teal-200 bg-teal-50 overflow-hidden"
                         >
-                          <div className="flex items-center gap-2 px-4 py-3 border-b border-accent/10 bg-accent/5">
-                            <Lightbulb className="h-4 w-4 text-accent shrink-0" />
-                            <p className="text-xs font-bold text-accent uppercase tracking-wider">AI Analysis</p>
+                          <div className="flex items-center gap-2 px-4 py-3 border-b border-teal-100 bg-teal-50/50">
+                            <Lightbulb className="h-4 w-4 text-teal-600 shrink-0" />
+                            <p className="text-xs font-bold text-teal-600 uppercase tracking-wider">AI Analysis</p>
                           </div>
-                          <div className="px-4 py-4 text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                          <div className="px-4 py-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                             {advice}
                           </div>
                         </motion.div>
@@ -605,10 +605,10 @@ export default function CareerInsights() {
                     <div className="grid gap-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h2 className="text-2xl font-bold text-white">
+                          <h2 className="text-2xl font-bold text-gray-900">
                             Upcoming Job Fairs
                             {jobFairs.length > 0 && (
-                              <span className="text-accent ml-2 opacity-70">
+                              <span className="text-teal-600 ml-2 opacity-70">
                                 ({(() => {
                                   const f = fairFilters;
                                   return jobFairs.filter(fair => {
@@ -623,11 +623,10 @@ export default function CareerInsights() {
                               </span>
                             )}
                           </h2>
-                          <p className="text-slate-400">Networking events and career expos in your region.</p>
+                          <p className="text-gray-500">Networking events and career expos in your region.</p>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
+                        <button
+                          type="button"
                           disabled={isLoadingFairs}
                           onClick={async () => {
                             setIsLoadingFairs(true);
@@ -638,10 +637,11 @@ export default function CareerInsights() {
                               setIsLoadingFairs(false);
                             }
                           }}
+                          className="flex items-center h-9 px-3 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                           {isLoadingFairs ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                           Refresh
-                        </Button>
+                        </button>
                       </div>
 
                       {/* Filters */}
@@ -665,8 +665,8 @@ export default function CareerInsights() {
                                 key={field}
                                 value={fairFilters[field]}
                                 onChange={e => setFairFilters(prev => ({ ...prev, [field]: e.target.value }))}
-                                className="w-full h-10 rounded-xl border border-white/10 bg-white/[0.05] px-3 pr-8 text-sm text-slate-100 focus:outline-none focus:border-teal-500/40 focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none cursor-pointer"
-                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
+                                className="w-full h-10 rounded-xl border border-gray-200 bg-white px-3 pr-8 text-sm text-gray-900 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none cursor-pointer"
+                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
                               >
                                 <option value="">All {label}s</option>
                                 {options.map(opt => (
@@ -680,8 +680,8 @@ export default function CareerInsights() {
 
                       {isLoadingFairs ? (
                         <div className="py-20 flex flex-col items-center justify-center gap-4">
-                          <Loader2 className="h-8 w-8 animate-spin text-accent" />
-                          <p className="text-slate-400">Fetching latest job fair events...</p>
+                          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+                          <p className="text-gray-500">Fetching latest job fair events...</p>
                         </div>
                       ) : (() => {
                         const f = fairFilters;
@@ -698,54 +698,62 @@ export default function CareerInsights() {
                             {filtered.map((fair, idx) => (
                               <div
                                 key={fair.id || `fair-${idx}`}
-                                className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-teal-500/30 transition-all group flex flex-col justify-between"
+                                className="p-5 rounded-2xl bg-white border border-gray-200 hover:border-teal-400 transition-all group flex flex-col justify-between shadow-sm"
                               >
                                 <div>
                                   <div className="flex items-center justify-between mb-3">
-                                    <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider">
+                                    <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 text-[10px] font-bold uppercase tracking-wider">
                                       {fair.source || 'General'}
                                     </span>
-                                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                                    <span className="text-xs text-gray-500 flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
                                       {fair.date_text || 'Date TBA'}
                                     </span>
                                   </div>
-                                  <h3 className="text-lg font-bold mb-1 text-white group-hover:text-teal-400 transition-colors">{fair.title}</h3>
-                                  <p className="text-sm text-slate-400 mb-4 flex items-start gap-1">
+                                  <h3 className="text-lg font-bold mb-1 text-gray-900 group-hover:text-teal-600 transition-colors">{fair.title}</h3>
+                                  <p className="text-sm text-gray-500 mb-4 flex items-start gap-1">
                                     <Users className="h-4 w-4 shrink-0 mt-0.5" />
                                     {fair.location || fair.city || 'Online/Virtual'}
                                   </p>
                                 </div>
                                 {fair.link ? (
-                                  <Button className="w-full gap-2" variant="secondary" asChild>
-                                    <a href={fair.link} target="_blank" rel="noopener noreferrer">
-                                      View Event Details
-                                      <ArrowRight className="h-4 w-4" />
-                                    </a>
-                                  </Button>
+                                  <a
+                                    href={fair.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-teal-200 bg-teal-50 text-teal-700 text-sm font-medium hover:bg-teal-100 transition-colors"
+                                  >
+                                    View Event Details
+                                    <ArrowRight className="h-4 w-4" />
+                                  </a>
                                 ) : (
-                                  <Button className="w-full gap-2" variant="secondary" disabled>
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="w-full h-9 rounded-lg border border-gray-200 bg-gray-50 text-gray-400 text-sm font-medium cursor-not-allowed"
+                                  >
                                     No Link Available
-                                  </Button>
+                                  </button>
                                 )}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="py-20 text-center bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
-                            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                            <h3 className="text-xl font-bold mb-2 text-white">
+                          <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+                            <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                            <h3 className="text-xl font-bold mb-2 text-gray-900">
                               {jobFairs.length === 0 ? "No Events Found" : "No Results Match Your Filters"}
                             </h3>
-                            <p className="text-slate-400">
+                            <p className="text-gray-500">
                               {jobFairs.length === 0
                                 ? "Check back later for upcoming job fairs and recruitment events."
                                 : "Try adjusting the country, state, or city filters."}
                             </p>
                             {jobFairs.length > 0 && (
                               <button
+                                type="button"
                                 onClick={() => setFairFilters({ country: "", state: "", city: "" })}
-                                className="mt-4 text-sm text-accent hover:underline"
+                                className="mt-4 text-sm text-teal-600 hover:underline"
                               >
                                 Clear all filters
                               </button>
@@ -757,13 +765,13 @@ export default function CareerInsights() {
                   </TabsContent>
 
                   <TabsContent value="negotiate" className="space-y-6">
-                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-8 text-white">
+                    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-8">
                       <div className="max-w-xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-5">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-600 mb-5">
                           <DollarSign className="h-3 w-3" /> AI Salary Negotiator
                         </div>
-                        <h2 className="text-2xl font-black tracking-tight mb-3">Train your negotiation before the real thing</h2>
-                        <p className="text-slate-400 leading-relaxed mb-6">
+                        <h2 className="text-2xl font-black tracking-tight mb-3 text-gray-900">Train your negotiation before the real thing</h2>
+                        <p className="text-gray-500 leading-relaxed mb-6">
                           Practice live salary negotiations against an AI employer. Choose a scenario — entry offer, promotion, or executive comp — and get scored on confidence, strategy, and outcome.
                         </p>
                         <ul className="space-y-2 mb-8">
@@ -773,14 +781,14 @@ export default function CareerInsights() {
                             "Real-time response coaching & validation",
                             "Performance score + AI coach feedback at the end",
                           ].map(item => (
-                            <li key={item} className="flex items-center gap-2 text-sm text-slate-300">
-                              <CheckCircle2 className="h-4 w-4 text-orange-400 shrink-0" />
+                            <li key={item} className="flex items-center gap-2 text-sm text-gray-600">
+                              <CheckCircle2 className="h-4 w-4 text-orange-500 shrink-0" />
                               {item}
                             </li>
                           ))}
                         </ul>
                         <Link to="/salary-negotiator">
-                          <Button className="h-11 px-8 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl">
+                          <Button className="h-11 px-8 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl">
                             Start Negotiating <ArrowRight className="ml-2 h-4 w-4" />
                           </Button>
                         </Link>

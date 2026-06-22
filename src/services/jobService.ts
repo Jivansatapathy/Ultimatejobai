@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import { doc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import api from './api';
@@ -368,7 +368,7 @@ const mapJobFinderJob = (job: any, page: number): Job => {
     };
 };
 
-// Map a JOBAI DB result to the common Job shape
+// Map a Hizorex DB result to the common Job shape
 const mapDbJob = (job: any): Job => {
     const company = job.company || {};
     const companyName = typeof company === 'string' ? company : (company.name || 'Unknown Company');

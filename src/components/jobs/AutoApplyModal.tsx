@@ -406,7 +406,7 @@ export function AutoApplyModal({
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400 mb-1">
                   Intelligence Protocol
                 </p>
-                <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic leading-none">
+                <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">
                   Auto Apply
                 </h2>
               </div>
@@ -882,7 +882,7 @@ export function AutoApplyModal({
                   <p className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-500 mb-2">
                     Transmitting
                   </p>
-                  <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter">
                     Protocol Underway
                   </h3>
                   <p className="text-sm font-medium text-slate-500 mt-4 max-w-xs leading-relaxed">
@@ -906,7 +906,7 @@ export function AutoApplyModal({
                     <CheckCircle2 className="h-10 w-10 text-teal-400" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
                       {isEmployerManagedJob
                         ? "Applied Successfully"
                         : "Relay Confirmed"}
@@ -947,7 +947,7 @@ export function AutoApplyModal({
                     <X className="h-10 w-10 text-red-500" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
                       {errorCode === "missing_resume"
                         ? "Asset Failure"
                         : "Transmission Fault"}

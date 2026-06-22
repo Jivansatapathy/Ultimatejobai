@@ -254,34 +254,37 @@ export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack:
 
     if (!state.sessionId) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex flex-col">
-                <header className="flex items-center justify-between p-4 border-b">
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <header className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
                     <div className="flex items-center gap-3">
-                        <button type="button" title="Go back" onClick={onBack} className="p-2 rounded-md hover:bg-muted transition-colors">
+                        <button type="button" title="Go back" onClick={onBack} className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
                             <ArrowLeft className="h-5 w-5" />
                         </button>
-                        <div className="p-2 rounded-xl bg-primary"><Sparkles className="h-5 w-5 text-primary-foreground" /></div>
-                        <h1 className="text-xl font-semibold">Audio Interview Setup</h1>
+                        <div className="p-2 rounded-xl bg-teal-500"><Sparkles className="h-5 w-5 text-white" /></div>
+                        <h1 className="text-xl font-semibold text-gray-900">Audio Interview Setup</h1>
                     </div>
                     <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
                 </header>
                 <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
                     <div className="text-center space-y-3 max-w-lg">
-                        <h2 className="text-3xl font-bold tracking-tight">Ready to Speak?</h2>
-                        <p className="text-muted-foreground text-lg">Tell us the role and your level so we can tailor question difficulty.</p>
+                        <h2 className="text-3xl font-bold tracking-tight text-gray-900">Ready to Speak?</h2>
+                        <p className="text-gray-500 text-lg">Tell us the role and your level so we can tailor question difficulty.</p>
                     </div>
                     <div className="w-full max-w-lg space-y-5">
                         <div className="space-y-2">
-                            <Label htmlFor="targetRoleAudio" className="text-sm font-medium">Target Job Role <span className="text-destructive">*</span></Label>
-                            <Input id="targetRoleAudio" placeholder="e.g. Senior Frontend Engineer, Product Manager…" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} disabled={isStarting} className="rounded-xl" />
+                            <Label htmlFor="targetRoleAudio" className="text-sm font-medium text-gray-700">Target Job Role <span className="text-red-500">*</span></Label>
+                            <Input id="targetRoleAudio" placeholder="e.g. Senior Frontend Engineer, Product Manager…" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} disabled={isStarting}
+                                className="rounded-xl bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-teal-400 focus:ring-teal-500/40" />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium">Experience Level <span className="text-destructive">*</span></Label>
+                            <Label className="text-sm font-medium text-gray-700">Experience Level <span className="text-red-500">*</span></Label>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 {experienceLevels.map(({ value, label, years }) => (
                                     <button key={value} type="button" onClick={() => !isStarting && setExperienceLevel(value)} disabled={isStarting}
                                         className={cn("flex flex-col items-center py-3 px-2 rounded-xl border text-sm font-medium transition-all",
-                                            experienceLevel === value ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground",
+                                            experienceLevel === value
+                                                ? "border-teal-500 bg-teal-50 text-teal-600"
+                                                : "border-gray-200 bg-white text-gray-600 hover:border-teal-400 hover:text-gray-900",
                                             isStarting && "opacity-50 cursor-not-allowed")}>
                                         <span>{label}</span>
                                         <span className="text-[10px] font-normal opacity-70 mt-0.5">{years}</span>
@@ -292,13 +295,15 @@ export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack:
                     </div>
                     <InterviewTypeSelector selectedType={selectedType} onSelect={setSelectedType} disabled={isStarting} />
                     <div className="w-full max-w-lg space-y-2">
-                        <Label htmlFor="jdAudio" className="text-sm font-medium">Job Description <span className="text-muted-foreground font-normal">(Optional)</span></Label>
-                        <Textarea id="jdAudio" placeholder="Paste the job description here…" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} disabled={isStarting} className="min-h-[100px] resize-none rounded-xl" />
+                        <Label htmlFor="jdAudio" className="text-sm font-medium text-gray-700">Job Description <span className="text-gray-400 font-normal">(Optional)</span></Label>
+                        <Textarea id="jdAudio" placeholder="Paste the job description here…" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} disabled={isStarting}
+                            className="min-h-[100px] resize-none rounded-xl bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-teal-400 focus:ring-teal-500/40" />
                     </div>
-                    <button type="button" onClick={handleStart} disabled={!canStart} className="mt-2 px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold flex items-center gap-2 hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <button type="button" onClick={handleStart} disabled={!canStart}
+                        className="mt-2 px-8 py-3 rounded-lg bg-teal-500 text-white font-semibold flex items-center gap-2 hover:bg-teal-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
                         {isStarting ? <><Loader2 className="h-4 w-4 animate-spin" /> Connecting…</> : "Start Audio Interview"}
                     </button>
-                    {(!targetRole.trim() || !experienceLevel) && <p className="text-xs text-muted-foreground -mt-4">Fill in your target role and experience level to continue.</p>}
+                    {(!targetRole.trim() || !experienceLevel) && <p className="text-xs text-gray-400 -mt-4">Fill in your target role and experience level to continue.</p>}
                 </main>
             </div>
         );

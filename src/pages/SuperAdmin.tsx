@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Bot, CheckCircle2, XCircle, Clock, Search, ChevronDown,
@@ -62,7 +62,7 @@ function SuperAdminLogin({ onUnlock }: { onUnlock: () => void }) {
             <ShieldAlert className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight">Superadmin Access</h1>
-          <p className="text-gray-500 text-sm mt-1">JobAI internal dashboard</p>
+          <p className="text-gray-500 text-sm mt-1">Hizorex internal dashboard</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -742,7 +742,7 @@ function SuperAdminDashboard({ authLoading }: { authLoading: boolean }) {
               <Bot className="h-4 w-4 text-white" />
             </div>
             <span className="font-extrabold text-gray-900 tracking-tight">
-              JobAI <span className="text-blue-600">Superadmin</span>
+              Hizorex <span className="text-blue-600">Superadmin</span>
             </span>
           </div>
           <div className="flex items-center gap-3">

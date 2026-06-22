@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { Footer } from "@/components/layout/Footer";
 
@@ -16,7 +16,7 @@ const ReturnPolicy = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">1. Subscription Plans</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Hozorex operates on a subscription-based model. By subscribing to our Professional, Accelerator, or Executive plans, you gain immediate access to premium AI features, including resume building, AI mentorship, and interview practice.
+              Hizorex operates on a subscription-based model. By subscribing to our Professional, Accelerator, or Executive plans, you gain immediate access to premium AI features, including resume building, AI mentorship, and interview practice.
             </p>
           </section>
 
@@ -51,13 +51,13 @@ const ReturnPolicy = () => {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">5. How to Request a Refund</h2>
             <p className="text-muted-foreground leading-relaxed">
-              To request a refund, please email our support team at contact@hozorex.com with your account details and the reason for your request. Refunds will be processed within 5-10 business days to your original payment method.
+              To request a refund, please email our support team at contact@Hizorex.com with your account details and the reason for your request. Refunds will be processed within 5-10 business days to your original payment method.
             </p>
           </section>
 
           <section className="space-y-4 border-t pt-8">
             <p className="text-sm text-muted-foreground italic">
-              Hozorex reserves the right to deny refund requests if we detect patterns of abuse or violation of our Terms and Conditions.
+              Hizorex reserves the right to deny refund requests if we detect patterns of abuse or violation of our Terms and Conditions.
             </p>
           </section>
         </div>

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 
 const COMPANIES = [
   "Google", "Microsoft", "Amazon", "Meta", "Apple",
@@ -15,7 +15,7 @@ export const TrustedCompaniesV2 = () => (
         viewport={{ once: true }}
         className="text-center text-xs font-bold uppercase tracking-[0.22em] text-gray-400 mb-8"
       >
-        Executives at these companies trust JobAI
+        Executives at these companies trust Hizorex
       </motion.p>
 
       {/* Scrolling strip */}

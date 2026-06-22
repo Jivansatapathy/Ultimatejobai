@@ -11,11 +11,16 @@ import {
   Zap,
   Target,
   Search,
-  TrendingUp,
   Bot,
   CalendarDays,
+  Bell,
+  Mail,
+  Building2,
+  ExternalLink,
+  Repeat2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+import { autoApplyService, ApplicationHistoryItem } from "@/services/autoApplyService";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { useResume } from "@/hooks/useResume";
@@ -33,9 +38,14 @@ import { useJobReadiness } from "@/hooks/useJobReadiness";
 import { buildDailyMissionTasks, readDailyMissionManualTaskIds } from "@/components/dashboard/dailyMission";
 import { cn } from "@/lib/utils";
 
+const LinkedInIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+);
+
 const BAR_DAYS = 7;
 
-const DASH_TTL = 5 * 60 * 1000;
 interface DashCache {
   stats: typeof _DEFAULT_STATS;
   recommendedJobs: unknown[];
@@ -62,30 +72,30 @@ const StatCard = ({ label, value, subtext, icon: Icon, accent }: {
     className={cn(
       "relative flex flex-col justify-between rounded-2xl border p-6 transition-all duration-200 group",
       accent
-        ? "bg-white border-white text-black"
-        : "bg-zinc-900 border-zinc-800 hover:border-zinc-700"
+        ? "bg-gray-900 border-gray-900 text-white"
+        : "bg-white border-gray-200 hover:border-gray-300 shadow-sm"
     )}
   >
     <div className="flex items-center justify-between mb-5">
       <span className={cn(
         "text-[10px] font-bold uppercase tracking-[0.2em]",
-        accent ? "text-black/50" : "text-zinc-500"
+        accent ? "text-white/60" : "text-gray-500"
       )}>
         {label}
       </span>
       <div className={cn(
         "h-8 w-8 flex items-center justify-center rounded-xl",
-        accent ? "bg-black/[0.07]" : "bg-zinc-800"
+        accent ? "bg-white/[0.12]" : "bg-gray-100"
       )}>
-        <Icon className={cn("h-4 w-4", accent ? "text-black/50" : "text-zinc-400")} />
+        <Icon className={cn("h-4 w-4", accent ? "text-white/60" : "text-gray-400")} />
       </div>
     </div>
     <div className="flex items-baseline gap-2">
-      <span className={cn("text-3xl font-extrabold tracking-tight", accent ? "text-black" : "text-white")}>
+      <span className={cn("text-3xl font-extrabold tracking-tight", accent ? "text-white" : "text-gray-900")}>
         {value}
       </span>
       {subtext && (
-        <span className={cn("text-xs font-semibold", accent ? "text-black/40" : "text-zinc-600")}>
+        <span className={cn("text-xs font-semibold", accent ? "text-white/50" : "text-gray-400")}>
           {subtext}
         </span>
       )}
@@ -94,12 +104,12 @@ const StatCard = ({ label, value, subtext, icon: Icon, accent }: {
 );
 
 const StatCardSkeleton = () => (
-  <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 animate-pulse">
+  <div className="bg-white border border-gray-200 rounded-2xl p-6 animate-pulse shadow-sm">
     <div className="flex items-center justify-between mb-5">
-      <div className="h-2.5 w-24 bg-zinc-800 rounded" />
-      <div className="h-8 w-8 bg-zinc-800 rounded-xl" />
+      <div className="h-2.5 w-24 bg-gray-100 rounded" />
+      <div className="h-8 w-8 bg-gray-100 rounded-xl" />
     </div>
-    <div className="h-8 w-20 bg-zinc-800 rounded" />
+    <div className="h-8 w-20 bg-gray-100 rounded" />
   </div>
 );
 
@@ -117,6 +127,43 @@ export default function Dashboard() {
   const [manualDailyTaskIds, setManualDailyTaskIds] = useState<number[]>([]);
   const [dashboardStats, setDashboardStats] = useState(_dashCache?.stats ?? _DEFAULT_STATS);
   const [chartData, setChartData] = useState<number[]>(_dashCache?.chartData ?? []);
+  const [applications, setApplications] = useState<ApplicationHistoryItem[]>([]);
+  const [appsLoading, setAppsLoading] = useState(true);
+  const [dailyPref, setDailyPref] = useState<{
+    enabled: boolean;
+    daily_limit: number;
+    daily_applied_count: number;
+    target_roles: string[];
+  } | null>(null);
+  const [dailyPrefLoading, setDailyPrefLoading] = useState(true);
+  const [dailyToggling, setDailyToggling] = useState(false);
+
+  const daysSince = (app: ApplicationHistoryItem) => {
+    const date = app.sent_at || app.created_at;
+    if (!date) return 0;
+    return Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const loadApplications = useCallback(async () => {
+    try {
+      const [emailResult, botResult] = await Promise.allSettled([
+        autoApplyService.getHistory(),
+        autoApplyService.getBotHistory(),
+      ]);
+      const all: ApplicationHistoryItem[] = [];
+      if (emailResult.status === "fulfilled") all.push(...(emailResult.value?.applications ?? []));
+      if (botResult.status === "fulfilled") all.push(...(botResult.value?.applications ?? []));
+      all.sort((a, b) =>
+        new Date(b.sent_at || b.created_at || 0).getTime() -
+        new Date(a.sent_at || a.created_at || 0).getTime()
+      );
+      setApplications(all);
+    } catch {
+      // non-fatal
+    } finally {
+      setAppsLoading(false);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     const hasCachedData = !!(_dashCache?.stats);
@@ -158,7 +205,33 @@ export default function Dashboard() {
     if (checkReady()) navigate("/jobs");
   }, [checkReady, navigate]);
 
+  const loadDailyPref = useCallback(async () => {
+    try {
+      const pref = await autoApplyService.getDailyAutoApplyPref();
+      setDailyPref(pref);
+    } catch {
+      // non-fatal
+    } finally {
+      setDailyPrefLoading(false);
+    }
+  }, []);
+
+  const toggleDailyAutoApply = useCallback(async () => {
+    if (!dailyPref || dailyToggling) return;
+    setDailyToggling(true);
+    try {
+      const updated = await autoApplyService.setDailyAutoApplyPref(!dailyPref.enabled);
+      setDailyPref(prev => prev ? { ...prev, enabled: updated.enabled } : prev);
+    } catch {
+      // non-fatal
+    } finally {
+      setDailyToggling(false);
+    }
+  }, [dailyPref, dailyToggling]);
+
   useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadApplications(); }, [loadApplications]);
+  useEffect(() => { loadDailyPref(); }, [loadDailyPref]);
 
   useEffect(() => {
     const role = activeResume?.targetJobRole || notificationService.getPrefs().targetRole;
@@ -204,7 +277,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0c0c0c] text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <Navbar />
 
       <main className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
@@ -217,10 +290,10 @@ export default function Dashboard() {
             transition={{ duration: 0.4 }}
             className="mb-10"
           >
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-600 mb-1.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 mb-1.5">
               Career Intelligence
             </p>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
               Good morning, {greeting}
             </h1>
           </motion.div>
@@ -259,21 +332,160 @@ export default function Dashboard() {
             {/* Left column — 8 */}
             <div className="lg:col-span-8 space-y-6">
 
+              {/* Application History */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 tracking-tight">Application History</h3>
+                    <p className="text-[11px] text-gray-400 mt-0.5 font-medium">All jobs you've applied to</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/applications")}
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
+                  >
+                    View All
+                    <ArrowUpRight className="h-3 w-3" />
+                  </button>
+                </div>
+
+                {appsLoading ? (
+                  <div className="space-y-3 animate-pulse">
+                    {[1,2,3,4].map(i => (
+                      <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-200">
+                        <div className="h-10 w-10 rounded-xl bg-gray-200 shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 w-40 bg-gray-200 rounded" />
+                          <div className="h-2.5 w-24 bg-gray-200 rounded" />
+                        </div>
+                        <div className="h-5 w-14 bg-gray-200 rounded-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : applications.length === 0 ? (
+                  <div className="py-10 text-center border border-dashed border-gray-200 rounded-xl">
+                    <Briefcase className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm font-semibold text-gray-500 mb-1">No applications yet</p>
+                    <p className="text-xs text-gray-400 mb-4">Start applying to jobs and your history will show here.</p>
+                    <button type="button" onClick={() => navigate("/jobs")}
+                      className="text-[11px] font-bold text-gray-900 hover:text-gray-600 uppercase tracking-widest underline underline-offset-4 transition-colors">
+                      Browse Jobs
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {applications.slice(0, 8).map((app) => {
+                      const days = daysSince(app);
+                      const dateLabel = days === 0 ? "Today" : days === 1 ? "Yesterday" : `${days}d ago`;
+                      const isBot = app.delivery_method === "bot";
+                      const isFailed = app.status === "failed" || app.status === "cancelled";
+                      const isJobClosed = isFailed && (
+                        app.response_message === "job_closed" ||
+                        /job.?closed|no longer (available|open)|posting.*expired|position.*closed|job.*expired/i.test(app.response_message ?? "")
+                      );
+
+                      // Derive display label — pipeline stage takes priority for progressed apps
+                      const pipelineStage = app.pipeline_status && app.pipeline_status !== "applied"
+                        ? app.pipeline_status : null;
+                      const statusLabel = pipelineStage
+                        ? pipelineStage.charAt(0).toUpperCase() + pipelineStage.slice(1)
+                        : app.status === "sent" || app.status === "submitted" ? "Applied"
+                        : app.status === "queued" ? "Queued"
+                        : app.status === "applying" ? "Applying…"
+                        : isJobClosed ? "Job Closed"
+                        : app.status === "failed" ? "Failed"
+                        : app.status === "cancelled" ? "Cancelled"
+                        : "Applied";
+
+                      const statusColor = pipelineStage
+                        ? "text-blue-400 bg-blue-500/10 border-blue-500/20"
+                        : app.status === "sent" || app.status === "submitted"
+                        ? "text-teal-400 bg-teal-500/10 border-teal-500/20"
+                        : app.status === "queued" || app.status === "applying"
+                        ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                        : isJobClosed
+                        ? "text-orange-400 bg-orange-500/10 border-orange-500/20"
+                        : isFailed
+                        ? "text-red-400 bg-red-500/10 border-red-500/20"
+                        : "text-teal-400 bg-teal-500/10 border-teal-500/20";
+
+                      // Show error reason for real failures, suppress for job_closed (badge is enough)
+                      const failReason = isFailed && !isJobClosed && app.response_message
+                        ? app.response_message.length > 60
+                          ? app.response_message.slice(0, 57) + "…"
+                          : app.response_message
+                        : null;
+
+                      return (
+                        <motion.div key={app.id} whileHover={{ x: 2 }}
+                          className={cn(
+                            "flex items-center gap-4 p-4 rounded-xl border transition-all group",
+                            isJobClosed
+                              ? "bg-orange-500/[0.04] border-orange-500/15 hover:border-orange-500/30"
+                              : isFailed
+                              ? "bg-red-500/[0.04] border-red-500/15 hover:border-red-500/30"
+                              : "bg-gray-50 border-gray-200 hover:border-gray-300"
+                          )}>
+                          <div className={cn(
+                            "h-10 w-10 rounded-xl border flex items-center justify-center shrink-0",
+                            isJobClosed ? "bg-orange-500/10 border-orange-500/20"
+                            : isFailed ? "bg-red-500/10 border-red-500/20"
+                            : "bg-gray-100 border-gray-200"
+                          )}>
+                            <Building2 className={cn("h-5 w-5", isJobClosed ? "text-orange-400/60" : isFailed ? "text-red-400/60" : "text-gray-400")} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-gray-900 truncate leading-snug">{app.job_title || "Unknown Role"}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-[11px] text-gray-500 font-medium truncate">{app.company || "Unknown Company"}</p>
+                              {isBot && (
+                                <span className="text-[9px] font-black uppercase tracking-wider text-violet-400 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded-full">Apex™</span>
+                              )}
+                            </div>
+                            {failReason && (
+                              <p className="text-[10px] text-red-400/70 mt-1 leading-snug truncate">{failReason}</p>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            <span className={cn("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", statusColor)}>
+                              {statusLabel}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-semibold">{dateLabel}</span>
+                          </div>
+                          {app.job_url && (
+                            <a href={app.job_url} target="_blank" rel="noopener noreferrer"
+                              title="View job posting"
+                              onClick={e => e.stopPropagation()}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                              <ExternalLink className="h-3.5 w-3.5 text-gray-400 hover:text-gray-900 transition-colors" />
+                            </a>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+
               {/* Application Activity — 7-day bar chart */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden"
+                className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm"
               >
                 <div className="flex items-center justify-between px-7 pt-6 pb-5">
                   <div>
-                    <h3 className="text-base font-bold text-white tracking-tight">Application Activity</h3>
-                    <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Last 7 days</p>
+                    <h3 className="text-base font-bold text-gray-900 tracking-tight">Application Activity</h3>
+                    <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Last 7 days</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowActivityDetails(true)}
-                    className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
                   >
                     View History
                     <ArrowUpRight className="h-3 w-3" />
@@ -289,7 +501,7 @@ export default function Dashboard() {
                       return (
                         <div key={i} className="relative group flex-1 flex flex-col items-center gap-2">
                           {/* Tooltip */}
-                          <div className="absolute bottom-full mb-2 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none text-white">
+                          <div className="absolute bottom-full mb-2 px-2.5 py-1.5 bg-gray-900 border border-gray-800 text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none text-white">
                             {count} application{count !== 1 ? 's' : ''}
                           </div>
                           {/* Bar */}
@@ -301,10 +513,10 @@ export default function Dashboard() {
                               className={cn(
                                 "w-full rounded-t-lg",
                                 isToday
-                                  ? "bg-white"
+                                  ? "bg-gray-900"
                                   : count > 0
-                                  ? "bg-zinc-500 group-hover:bg-zinc-300 transition-colors"
-                                  : "bg-zinc-800 group-hover:bg-zinc-700 transition-colors"
+                                  ? "bg-gray-400 group-hover:bg-gray-600 transition-colors"
+                                  : "bg-gray-100 group-hover:bg-gray-200 transition-colors"
                               )}
                             />
                           </div>
@@ -321,7 +533,7 @@ export default function Dashboard() {
                         <div key={i} className="flex-1 text-center">
                           <span className={cn(
                             "text-[10px] font-bold uppercase",
-                            isToday ? "text-white" : "text-zinc-600"
+                            isToday ? "text-gray-900" : "text-gray-400"
                           )}>
                             {isToday ? "Today" : getBarLabel(i)}
                           </span>
@@ -331,9 +543,9 @@ export default function Dashboard() {
                   </div>
 
                   {/* Total this week */}
-                  <div className="mt-5 pt-4 border-t border-zinc-800 flex items-center justify-between">
-                    <span className="text-[11px] text-zinc-600 font-medium">Total this week</span>
-                    <span className="text-sm font-extrabold text-white">
+                  <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-[11px] text-gray-400 font-medium">Total this week</span>
+                    <span className="text-sm font-extrabold text-gray-900">
                       {rawBars.reduce((a, b) => a + b, 0)} applications
                     </span>
                   </div>
@@ -348,23 +560,23 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+                  className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
                 >
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="text-base font-bold text-white tracking-tight">Daily Mission</h3>
-                      <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Today's goals</p>
+                      <h3 className="text-base font-bold text-gray-900 tracking-tight">Daily Mission</h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Today's goals</p>
                     </div>
                     <div className="relative h-11 w-11">
                       <svg className="h-11 w-11 -rotate-90" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="15" fill="none" stroke="#27272a" strokeWidth="3" />
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3" />
                         <circle
-                          cx="18" cy="18" r="15" fill="none" stroke="white" strokeWidth="3"
+                          cx="18" cy="18" r="15" fill="none" stroke="#111827" strokeWidth="3"
                           strokeDasharray={`${progressPct * 0.942} 94.2`}
                           strokeLinecap="round"
                         />
                       </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">
+                      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-gray-900">
                         {Math.round(progressPct)}%
                       </span>
                     </div>
@@ -378,19 +590,19 @@ export default function Dashboard() {
                         className={cn(
                           "flex items-center gap-3 rounded-xl px-4 py-3 border transition-all",
                           task.completed
-                            ? "bg-white/[0.04] border-white/[0.08] opacity-60"
-                            : "bg-zinc-800 border-zinc-700 hover:border-zinc-600"
+                            ? "bg-gray-50 border-gray-200 opacity-60"
+                            : "bg-gray-50 border-gray-200 hover:border-gray-300"
                         )}
                       >
                         <div className={cn(
                           "h-5 w-5 rounded-md flex items-center justify-center flex-shrink-0",
-                          task.completed ? "bg-white" : "bg-zinc-700 border border-zinc-600"
+                          task.completed ? "bg-gray-900" : "bg-white border border-gray-300"
                         )}>
-                          <CheckCircle2 className={cn("h-3 w-3", task.completed ? "text-black" : "text-zinc-600")} />
+                          <CheckCircle2 className={cn("h-3 w-3", task.completed ? "text-white" : "text-gray-400")} />
                         </div>
                         <span className={cn(
                           "text-[13px] font-semibold flex-1",
-                          task.completed ? "text-zinc-600 line-through" : "text-zinc-300"
+                          task.completed ? "text-gray-400 line-through" : "text-gray-700"
                         )}>
                           {task.label}
                         </span>
@@ -404,28 +616,28 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
-                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col"
+                  className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col shadow-sm"
                 >
                   <div className="mb-6">
-                    <h3 className="text-base font-bold text-white tracking-tight">AI Insights</h3>
-                    <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Tips to improve your search</p>
+                    <h3 className="text-base font-bold text-gray-900 tracking-tight">AI Insights</h3>
+                    <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Tips to improve your search</p>
                   </div>
 
                   <div className="space-y-3 flex-1">
-                    <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700">
-                      <p className="text-[9px] font-black text-white uppercase tracking-[0.2em] mb-1.5">Resume Tip</p>
-                      <p className="text-[13px] text-zinc-400 leading-relaxed">Keep your resume updated with your latest skills to improve match scores.</p>
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                      <p className="text-[9px] font-black text-gray-900 uppercase tracking-[0.2em] mb-1.5">Resume Tip</p>
+                      <p className="text-[13px] text-gray-500 leading-relaxed">Keep your resume updated with your latest skills to improve match scores.</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700">
-                      <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1.5">Search Tip</p>
-                      <p className="text-[13px] text-zinc-400 leading-relaxed">Candidates who apply daily get 3x more responses than those who apply in bursts.</p>
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                      <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1.5">Search Tip</p>
+                      <p className="text-[13px] text-gray-500 leading-relaxed">Candidates who apply daily get 3x more responses than those who apply in bursts.</p>
                     </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => navigate("/ai-mentor")}
-                    className="mt-4 w-full h-10 rounded-xl bg-white hover:bg-zinc-100 text-black font-bold text-xs uppercase tracking-widest transition-all"
+                    className="mt-4 w-full h-10 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs uppercase tracking-widest transition-all"
                   >
                     Open AI Mentor
                   </button>
@@ -437,17 +649,17 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
               >
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-base font-bold text-white tracking-tight">Recommended Roles</h3>
-                    <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Matched to your profile</p>
+                    <h3 className="text-base font-bold text-gray-900 tracking-tight">Recommended Roles</h3>
+                    <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Matched to your profile</p>
                   </div>
                   <button
                     type="button"
                     onClick={navigateToJobs}
-                    className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest"
                   >
                     Browse All
                     <ArrowUpRight className="h-3 w-3" />
@@ -457,10 +669,10 @@ export default function Dashboard() {
                 {loading ? (
                   <div className="grid sm:grid-cols-2 gap-3 animate-pulse">
                     {[1,2,3,4].map(i => (
-                      <div key={i} className="p-4 rounded-xl bg-zinc-800 border border-zinc-700 space-y-2.5">
-                        <div className="h-3 w-32 bg-zinc-700 rounded" />
-                        <div className="h-2.5 w-20 bg-zinc-700 rounded" />
-                        <div className="h-2.5 w-16 bg-zinc-700 rounded" />
+                      <div key={i} className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2.5">
+                        <div className="h-3 w-32 bg-gray-200 rounded" />
+                        <div className="h-2.5 w-20 bg-gray-200 rounded" />
+                        <div className="h-2.5 w-16 bg-gray-200 rounded" />
                       </div>
                     ))}
                   </div>
@@ -470,19 +682,19 @@ export default function Dashboard() {
                       <motion.div
                         key={idx}
                         whileHover={{ borderColor: "rgba(255,255,255,0.18)" }}
-                        className="p-4 rounded-xl bg-zinc-800 border border-zinc-700 cursor-pointer group transition-all"
+                        className="p-4 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer group transition-all hover:border-gray-300"
                         onClick={navigateToJobs}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <p className="text-sm font-bold text-white group-hover:text-white/80 leading-snug transition-colors">
+                          <p className="text-sm font-bold text-gray-900 group-hover:text-gray-700 leading-snug transition-colors">
                             {job.title}
                           </p>
-                          <span className="shrink-0 text-[10px] font-black text-white bg-white/10 border border-white/10 px-2 py-0.5 rounded-lg">
+                          <span className="shrink-0 text-[10px] font-black text-gray-700 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-lg">
                             {job.match}%
                           </span>
                         </div>
-                        <p className="text-[11px] text-zinc-500 font-medium mb-2.5">{job.company}</p>
-                        <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 font-semibold">
+                        <p className="text-[11px] text-gray-500 font-medium mb-2.5">{job.company}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-semibold">
                           <MapPin className="h-3 w-3 shrink-0" />
                           {job.location}
                         </div>
@@ -490,20 +702,21 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-12 text-center border border-dashed border-zinc-800 rounded-xl">
-                    <Briefcase className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
-                    <p className="text-sm font-semibold text-zinc-500 mb-1">No recommendations yet</p>
-                    <p className="text-xs text-zinc-600 mb-4">Complete your profile to get personalized job matches.</p>
+                  <div className="py-12 text-center border border-dashed border-gray-200 rounded-xl">
+                    <Briefcase className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm font-semibold text-gray-500 mb-1">No recommendations yet</p>
+                    <p className="text-xs text-gray-400 mb-4">Complete your profile to get personalized job matches.</p>
                     <button
                       type="button"
                       onClick={navigateToJobs}
-                      className="text-[11px] font-bold text-white hover:text-zinc-300 uppercase tracking-widest underline underline-offset-4 transition-colors"
+                      className="text-[11px] font-bold text-gray-900 hover:text-gray-600 uppercase tracking-widest underline underline-offset-4 transition-colors"
                     >
                       Browse Jobs
                     </button>
                   </div>
                 )}
               </motion.div>
+
             </div>
 
             {/* Right column — 4 */}
@@ -513,54 +726,145 @@ export default function Dashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
               >
                 <div className="mb-6">
-                  <h3 className="text-base font-bold text-white tracking-tight">Quick Actions</h3>
-                  <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Get things done fast</p>
+                  <h3 className="text-base font-bold text-gray-900 tracking-tight">Quick Actions</h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Get things done fast</p>
                 </div>
 
                 <div className="space-y-3">
                   <button
                     type="button"
                     onClick={() => hasFeature("auto_apply_access") ? setShowAutoApply(true) : navigate("/plans")}
-                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-white hover:bg-zinc-100 text-black font-bold text-sm transition-all group"
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm transition-all group"
                   >
                     <Bot className="h-4 w-4 shrink-0" />
                     <span className="flex-1 text-left">Launch Apex™</span>
-                    <Zap className="h-3.5 w-3.5 text-black/40 group-hover:text-black/70 transition-colors" />
+                    <Zap className="h-3.5 w-3.5 text-white/40 group-hover:text-white/70 transition-colors" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => navigate("/resume")}
-                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-sm transition-all"
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 font-bold text-sm transition-all"
                   >
-                    <FileText className="h-4 w-4 shrink-0 text-zinc-400" />
+                    <FileText className="h-4 w-4 shrink-0 text-gray-400" />
                     <span className="flex-1 text-left">View Resume</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
                   </button>
 
                   <button
                     type="button"
                     onClick={navigateToJobs}
-                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-sm transition-all"
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 font-bold text-sm transition-all"
                   >
-                    <Search className="h-4 w-4 shrink-0 text-zinc-400" />
+                    <Search className="h-4 w-4 shrink-0 text-gray-400" />
                     <span className="flex-1 text-left">Find Jobs</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => navigate("/ai-mentor")}
-                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-sm transition-all"
+                    className="w-full flex items-center gap-3 h-12 px-4 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 font-bold text-sm transition-all"
                   >
-                    <Sparkles className="h-4 w-4 shrink-0 text-zinc-400" />
+                    <Sparkles className="h-4 w-4 shrink-0 text-gray-400" />
                     <span className="flex-1 text-left">AI Mentor</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
                   </button>
                 </div>
+              </motion.div>
+
+              {/* Daily Auto-Apply */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Repeat2 className="h-4 w-4 text-teal-500" />
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 tracking-tight">Daily Auto-Apply</h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Bot applies 5 jobs for you every day</p>
+                    </div>
+                  </div>
+                  {/* Toggle */}
+                  <button
+                    type="button"
+                    disabled={dailyPrefLoading || dailyToggling}
+                    onClick={toggleDailyAutoApply}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50",
+                      dailyPref?.enabled ? "bg-teal-500" : "bg-gray-200"
+                    )}
+                    aria-label="Toggle daily auto-apply"
+                  >
+                    <span className={cn(
+                      "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform duration-200",
+                      dailyPref?.enabled ? "translate-x-5" : "translate-x-0"
+                    )} />
+                  </button>
+                </div>
+
+                {dailyPrefLoading ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-3 w-3/4 bg-gray-100 rounded" />
+                    <div className="h-2.5 w-1/2 bg-gray-100 rounded" />
+                  </div>
+                ) : (
+                  <>
+                    {/* Target roles */}
+                    {(dailyPref?.target_roles?.length ?? 0) > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {dailyPref!.target_roles.slice(0, 3).map(role => (
+                          <span key={role} className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 border border-gray-200 text-gray-600 px-2.5 py-1 rounded-full truncate max-w-[140px]">
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-amber-600 font-semibold mb-4 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
+                        Set a target role in your profile to enable daily apply.
+                      </p>
+                    )}
+
+                    {/* Today's progress */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-semibold">
+                        <span className="text-gray-500">Today's applications</span>
+                        <span className="text-gray-900">
+                          {dailyPref?.daily_applied_count ?? 0} / {dailyPref?.daily_limit ?? 5}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{
+                            width: `${Math.min(
+                              ((dailyPref?.daily_applied_count ?? 0) / (dailyPref?.daily_limit ?? 5)) * 100,
+                              100
+                            )}%`
+                          }}
+                          transition={{ duration: 0.5 }}
+                          className="h-full rounded-full bg-teal-500"
+                        />
+                      </div>
+                    </div>
+
+                    {dailyPref?.enabled ? (
+                      <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
+                        Apex™ will automatically apply to {dailyPref.daily_limit} matching jobs every morning at 8 AM.
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
+                        Toggle on to let Apex™ apply to new jobs every morning — completely hands-free.
+                      </p>
+                    )}
+                  </>
+                )}
               </motion.div>
 
               {/* Active Plan */}
@@ -569,16 +873,16 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 onClick={() => navigate("/plans")}
-                className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 cursor-pointer group transition-all"
+                className="bg-white border border-gray-200 hover:border-gray-300 rounded-2xl p-6 cursor-pointer group transition-all shadow-sm"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Active Plan</p>
-                  <ArrowUpRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-white transition-colors" />
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Active Plan</p>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-gray-900 transition-colors" />
                 </div>
-                <p className="text-xl font-extrabold text-white tracking-tight">
+                <p className="text-xl font-extrabold text-gray-900 tracking-tight">
                   {subscriptionSummary?.plan?.name ?? "Free Tier"}
                 </p>
-                <p className="text-[11px] text-zinc-600 mt-1 font-medium">Upgrade to unlock more features</p>
+                <p className="text-[11px] text-gray-400 mt-1 font-medium">Upgrade to unlock more features</p>
               </motion.div>
 
               {/* Feature Usage */}
@@ -586,11 +890,11 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
               >
                 <div className="mb-5">
-                  <h3 className="text-base font-bold text-white tracking-tight">Feature Usage</h3>
-                  <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">Current billing period</p>
+                  <h3 className="text-base font-bold text-gray-900 tracking-tight">Feature Usage</h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Current billing period</p>
                 </div>
 
                 {loadingSummary ? (
@@ -598,10 +902,10 @@ export default function Dashboard() {
                     {[1,2,3].map(i => (
                       <div key={i}>
                         <div className="flex justify-between mb-2">
-                          <div className="h-2.5 w-24 bg-zinc-800 rounded" />
-                          <div className="h-2.5 w-10 bg-zinc-800 rounded" />
+                          <div className="h-2.5 w-24 bg-gray-100 rounded" />
+                          <div className="h-2.5 w-10 bg-gray-100 rounded" />
                         </div>
-                        <div className="h-1.5 w-full bg-zinc-800 rounded-full" />
+                        <div className="h-1.5 w-full bg-gray-100 rounded-full" />
                       </div>
                     ))}
                   </div>
@@ -614,19 +918,19 @@ export default function Dashboard() {
                       return (
                         <div key={item.feature_key}>
                           <div className="flex justify-between text-[11px] font-semibold mb-2">
-                            <span className="text-zinc-400 capitalize">{label}</span>
-                            <span className={isHigh ? "text-white" : "text-zinc-600"}>
+                            <span className="text-gray-500 capitalize">{label}</span>
+                            <span className={isHigh ? "text-gray-900" : "text-gray-400"}>
                               {item.is_unlimited ? '∞' : `${item.used_count}/${item.limit}`}
                             </span>
                           </div>
-                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min(pct, 100)}%` }}
                               transition={{ delay: 0.3, duration: 0.6 }}
                               className={cn(
                                 "h-full rounded-full",
-                                isHigh ? "bg-white" : "bg-zinc-600"
+                                isHigh ? "bg-gray-900" : "bg-gray-300"
                               )}
                             />
                           </div>
@@ -634,32 +938,115 @@ export default function Dashboard() {
                       );
                     })}
                     {!subscriptionSummary?.current_usage?.length && (
-                      <p className="text-xs text-zinc-700 font-semibold">No usage data available</p>
+                      <p className="text-xs text-gray-400 font-semibold">No usage data available</p>
                     )}
                   </div>
                 )}
               </motion.div>
+
+              {/* Follow-up Reminders */}
+              {(() => {
+                const advancedStages = new Set(["interview", "offer", "hired", "rejected"]);
+                const reminders = applications
+                  .filter(a => {
+                    if (a.status === "failed" || a.status === "cancelled") return false;
+                    if (advancedStages.has(a.pipeline_status ?? "")) return false;
+                    return daysSince(a) >= 3;
+                  })
+                  .slice(0, 5)
+                  .map(a => {
+                    const days = daysSince(a);
+                    const type = days >= 21 ? "linkedin" : days >= 7 ? "week" : "email";
+                    return { ...a, days, type };
+                  });
+
+                if (reminders.length === 0) return null;
+
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.18 }}
+                    className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 mb-5">
+                      <Bell className="h-4 w-4 text-amber-400" />
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900 tracking-tight">Follow-up Reminders</h3>
+                        <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Time to check in</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {reminders.map(r => {
+                        const isLinkedIn = r.type === "linkedin";
+                        const isWeek = r.type === "week";
+                        const accent = isLinkedIn
+                          ? "border-violet-500/20 bg-violet-500/[0.06]"
+                          : isWeek
+                          ? "border-amber-500/20 bg-amber-500/[0.06]"
+                          : "border-blue-500/20 bg-blue-500/[0.06]";
+                        const iconBg = isLinkedIn
+                          ? "bg-violet-500/20 text-violet-400"
+                          : isWeek
+                          ? "bg-amber-500/20 text-amber-400"
+                          : "bg-blue-500/20 text-blue-400";
+                        const badgeColor = isLinkedIn
+                          ? "text-violet-400"
+                          : isWeek
+                          ? "text-amber-400"
+                          : "text-blue-400";
+                        const action = isLinkedIn
+                          ? "Connect on LinkedIn"
+                          : isWeek
+                          ? "Send a follow-up"
+                          : "Check your email";
+                        const Icon = isLinkedIn ? LinkedInIcon : isWeek ? Bell : Mail;
+                        return (
+                          <div key={r.id} className={cn("rounded-xl border p-3.5 transition-all", accent)}>
+                            <div className="flex items-start gap-3">
+                              <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5", iconBg)}>
+                                <Icon className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <p className="text-[12px] font-bold text-gray-900 truncate">{r.job_title || "Role"}</p>
+                                  <span className={cn("text-[9px] font-black uppercase tracking-wider shrink-0", badgeColor)}>
+                                    Day {r.days}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-gray-500 truncate mb-2">{r.company}</p>
+                                <p className="text-[11px] font-semibold text-gray-700">{action}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                );
+              })()}
 
               {/* Apex™ banner */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl p-6"
+                className="bg-gray-900 rounded-2xl p-6"
               >
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="h-9 w-9 rounded-xl bg-black flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
                     <Bot className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-extrabold text-black tracking-tight">Apex™ is ready</h4>
-                    <p className="text-[11px] text-black/50 mt-0.5 leading-relaxed">Your personal executive application delegate.</p>
+                    <h4 className="text-sm font-extrabold text-white tracking-tight">Apex™ is ready</h4>
+                    <p className="text-[11px] text-white/50 mt-0.5 leading-relaxed">Your personal executive application delegate.</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => hasFeature("auto_apply_access") ? setShowAutoApply(true) : navigate("/plans")}
-                  className="w-full h-10 rounded-xl bg-black hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-widest transition-all"
+                  className="w-full h-10 rounded-xl bg-white hover:bg-gray-100 text-gray-900 font-bold text-xs uppercase tracking-widest transition-all"
                 >
                   Start Applying
                 </button>

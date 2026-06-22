@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -368,7 +368,7 @@ export default function EmployerAuth() {
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Hiring Console</p>
-            <p className="text-base font-bold text-gray-900 leading-tight">JobAI Employers</p>
+            <p className="text-base font-bold text-gray-900 leading-tight">Hizorex Employers</p>
           </div>
         </Link>
         <Link to="/" className="text-sm text-gray-400 hover:text-gray-700 font-medium transition-colors">

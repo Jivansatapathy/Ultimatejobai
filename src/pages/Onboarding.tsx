@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { careerService } from '@/services/careerService';
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
@@ -46,6 +47,16 @@ export default function Onboarding() {
     }
     setFile(uploadedFile);
     setLoading(true);
+
+    // Store resume in S3 independently of parsing — a parse failure (e.g. an
+    // image-heavy or unusual layout) must not prevent the file from being saved.
+    try {
+      await careerService.analyzeResume(uploadedFile);
+    } catch (storageError) {
+      console.warn("Resume storage to S3 failed:", storageError);
+      // Non-blocking: don't fail onboarding if S3 sync fails
+    }
+
     try {
       const parsedData = await parseResumeFromFile(uploadedFile);
       const newResume = importResumeData(parsedData);

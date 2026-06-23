@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { careerService } from '@/services/careerService';
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
@@ -51,7 +52,16 @@ export default function Onboarding() {
       const newResume = importResumeData(parsedData);
       setTempResume(newResume);
       if (newResume.targetJobRole) setTargetRole(newResume.targetJobRole);
-      toast.success("Resume parsed successfully!");
+    
+    // Also store resume in S3 for later access
+    try {
+      await careerService.analyzeResume(uploadedFile);
+    } catch (storageError) {
+      console.warn("Resume storage to S3 failed:", storageError);
+      // Non-blocking: don't fail onboarding if S3 sync fails
+    }
+    
+    toast.success("Resume parsed successfully!");
       setStep(2);
     } catch {
       toast.error("Failed to parse resume. You can fill it manually later.");

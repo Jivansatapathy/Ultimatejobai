@@ -2,15 +2,7 @@ import { motion, useInView, animate } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { Search, MapPin, Crown, ArrowRight, Sparkles, Target, DollarSign, Network } from "lucide-react";
-
-const QUICK_ROLES = ["CEO", "CFO", "CTO", "COO", "VP Engineering", "VP Sales", "CHRO", "Director"];
-
-const STATS = [
-  { num: 100, suffix: "K+", label: "Executive roles listed",          sub: "Updated daily" },
-  { num: 500, suffix: "+",  label: "Top hiring companies",            sub: "F500 to high-growth" },
-  { num: 3,   suffix: "×",  label: "Faster applications with Apex™", sub: "AI handles the paperwork" },
-  { num: 92,  suffix: "%",  label: "Profile match accuracy",          sub: "Powered by AI scoring" },
-];
+import type { HeroContent } from "@/services/landingService";
 
 function CountUp({ to, suffix }: { to: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -31,7 +23,7 @@ function CountUp({ to, suffix }: { to: number; suffix: string }) {
   return <span ref={ref}>0{suffix}</span>;
 }
 
-export const HeroV2 = () => {
+export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
   const navigate = useNavigate();
   const [role, setRole] = useState("");
   const [location, setLocation] = useState("");
@@ -62,7 +54,7 @@ export const HeroV2 = () => {
           className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-600/10 border border-blue-200 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-blue-700"
         >
           <Crown className="h-3 w-3" />
-          The AI-Powered Executive Job Platform
+          {hero.badge_text}
         </motion.div>
 
         {/* Headline */}
@@ -73,17 +65,16 @@ export const HeroV2 = () => {
           className="mb-4 sm:mb-5 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.06] text-gray-900"
         >
           <span className="relative inline-block text-blue-600">
-            Executive Jobs
-            {/* Blue underline decoration */}
+            {hero.headline_line1}
             <svg className="absolute -bottom-1 sm:-bottom-2 left-0 w-full" height="6" viewBox="0 0 300 6" fill="none" preserveAspectRatio="none">
               <path d="M0 5 Q150 0 300 5" stroke="#2563EB" strokeWidth="3" fill="none" strokeLinecap="round" />
             </svg>
           </span>
           <span className="text-gray-900"> for </span>
           <br />
-          <span className="text-gray-800">C-Suite Leaders,</span>
+          <span className="text-gray-800">{hero.headline_line2}</span>
           <br />
-          <span className="text-gray-400 text-2xl sm:text-4xl md:text-5xl font-bold">For Senior Leaders, Worldwide</span>
+          <span className="text-gray-400 text-2xl sm:text-4xl md:text-5xl font-bold">{hero.headline_suffix}</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -93,8 +84,7 @@ export const HeroV2 = () => {
           transition={{ duration: 0.4, delay: 0.14 }}
           className="mx-auto mb-7 sm:mb-10 max-w-2xl text-base sm:text-lg md:text-xl text-gray-500 leading-relaxed"
         >
-          Curated CEO, CFO, CTO, COO &amp; VP roles from 500+ top employers.{" "}
-          Let <span className="font-semibold text-gray-800">Apex™</span> — your AI delegate — handle every application while you stay focused on leading.
+          {hero.subtitle}
         </motion.p>
 
         {/* Search bar */}
@@ -111,7 +101,7 @@ export const HeroV2 = () => {
               <Search className="h-4 w-4 text-gray-300 shrink-0" />
               <input
                 type="text"
-                placeholder="Job title, role or keyword"
+                placeholder={hero.search_role_placeholder}
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="w-full px-3 py-3 sm:py-3.5 bg-transparent text-sm sm:text-base text-gray-800 placeholder:text-gray-400 outline-none"
@@ -122,7 +112,7 @@ export const HeroV2 = () => {
               <MapPin className="h-4 w-4 text-gray-300 shrink-0" />
               <input
                 type="text"
-                placeholder="City, state or remote"
+                placeholder={hero.search_location_placeholder}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="w-full px-3 py-3 sm:py-3.5 bg-transparent text-sm sm:text-base text-gray-800 placeholder:text-gray-400 outline-none"
@@ -147,7 +137,7 @@ export const HeroV2 = () => {
           className="mb-10 sm:mb-14 flex flex-wrap items-center justify-center gap-2"
         >
           <span className="text-sm text-gray-400 font-medium mr-1">Popular:</span>
-          {QUICK_ROLES.map((r) => (
+          {hero.quick_roles.map((r) => (
             <button
               key={r}
               type="button"
@@ -186,10 +176,10 @@ export const HeroV2 = () => {
                   <span className="rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">Executive OS</span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
-                  Venus AI — Your Executive Career Operating System
+                  {hero.venus_banner_title}
                 </h3>
                 <p className="text-sm text-violet-300/80 mt-1 leading-relaxed">
-                  Company intelligence, compensation benchmarks, equity modeling, EOS™ scoring and live interview practice — built exclusively for C-suite leaders.
+                  {hero.venus_banner_subtitle}
                 </p>
                 {/* Feature pills */}
                 <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -226,7 +216,7 @@ export const HeroV2 = () => {
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4">
-            {STATS.map((s, i) => (
+            {hero.stats.map((s, i) => (
               <div
                 key={i}
                 className={`flex flex-col items-center justify-center text-center px-4 sm:px-6 py-6 sm:py-8 gap-1

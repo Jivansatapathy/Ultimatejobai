@@ -9,23 +9,28 @@ import { TestimonialsV2 } from "@/components/landing2/TestimonialsV2";
 import { PricingV2 } from "@/components/landing2/PricingV2";
 import { CTAV2 } from "@/components/landing2/CTAV2";
 import { FooterV2 } from "@/components/landing2/FooterV2";
+import { useLandingContent } from "@/hooks/useLandingContent";
 
-const Index2 = () => (
-  <div className="min-h-screen bg-white">
-    <NavbarV2 />
-    <main>
-      <HeroV2 />
-      <LatestJobsV2 />
-      <CategoriesV2 />
-      <TrustedCompaniesV2 />
-      <HowItWorksV2 />
-      <FeaturesV2 />
-      <TestimonialsV2 />
-      <PricingV2 />
-      <CTAV2 />
-    </main>
-    <FooterV2 />
-  </div>
-);
+const Index2 = () => {
+  const { content } = useLandingContent();
+
+  return (
+    <div className="min-h-screen bg-white">
+      <NavbarV2 />
+      <main>
+        <HeroV2 hero={content.hero} />
+        <LatestJobsV2 />
+        <CategoriesV2 />
+        <TrustedCompaniesV2 />
+        <HowItWorksV2 steps={content.how_it_works} />
+        <FeaturesV2 features={content.features} />
+        <TestimonialsV2 testimonials={content.testimonials} />
+        <PricingV2 />
+        <CTAV2 cta={content.cta} />
+      </main>
+      <FooterV2 />
+    </div>
+  );
+};
 
 export default Index2;

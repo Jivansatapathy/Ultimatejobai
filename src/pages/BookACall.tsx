@@ -114,7 +114,7 @@ const CALL_PLANS = [
     sessionLabel: "Sessions + Dedicated Recruiter",
     sessionsPerMonth: 3,
     totalMinutes: 90,
-    badge: "Premium",
+    badge: "Most Valuable",
     accent: "border-orange-300",
     headerBg: "bg-gradient-to-br from-orange-500 to-orange-600",
     badgeCls: "bg-orange-500 text-white",

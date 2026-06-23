@@ -47,21 +47,22 @@ export default function Onboarding() {
     }
     setFile(uploadedFile);
     setLoading(true);
-    try {
-      const parsedData = await parseResumeFromFile(uploadedFile);
-      const newResume = importResumeData(parsedData);
-      setTempResume(newResume);
-      if (newResume.targetJobRole) setTargetRole(newResume.targetJobRole);
-    
-    // Also store resume in S3 for later access
+
+    // Store resume in S3 independently of parsing — a parse failure (e.g. an
+    // image-heavy or unusual layout) must not prevent the file from being saved.
     try {
       await careerService.analyzeResume(uploadedFile);
     } catch (storageError) {
       console.warn("Resume storage to S3 failed:", storageError);
       // Non-blocking: don't fail onboarding if S3 sync fails
     }
-    
-    toast.success("Resume parsed successfully!");
+
+    try {
+      const parsedData = await parseResumeFromFile(uploadedFile);
+      const newResume = importResumeData(parsedData);
+      setTempResume(newResume);
+      if (newResume.targetJobRole) setTargetRole(newResume.targetJobRole);
+      toast.success("Resume parsed successfully!");
       setStep(2);
     } catch {
       toast.error("Failed to parse resume. You can fill it manually later.");

@@ -86,7 +86,7 @@ function Field({
   multiline?: boolean;
 }) {
   const cls =
-    "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+    "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</label>
@@ -122,7 +122,7 @@ function JsonField({
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label} (JSON)</label>
       <textarea
         rows={rows}
-        className={`w-full rounded-lg border px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${err ? "border-red-400" : "border-gray-200"}`}
+        className={`w-full rounded-lg border px-3 py-2 font-mono text-xs text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${err ? "border-red-400" : "border-gray-200"}`}
         value={raw}
         onChange={(e) => {
           setRaw(e.target.value);
@@ -497,7 +497,7 @@ function StepsTab({ token }: { token: string }) {
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Icon</label>
             <select
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
               value={editing.icon_name}
               onChange={(e) => setEditing((f) => f && { ...f, icon_name: e.target.value })}
             >
@@ -508,7 +508,7 @@ function StepsTab({ token }: { token: string }) {
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Checklist items (JSON array)</label>
             <textarea
               rows={4}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs text-gray-900"
               value={checklistRaw}
               onChange={(e) => setChecklistRaw(e.target.value)}
             />
@@ -625,7 +625,7 @@ function TestimonialsTab({ token }: { token: string }) {
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Avatar color</label>
               <select
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
                 value={editing.avatar_color}
                 onChange={(e) => setEditing((f) => f && { ...f, avatar_color: e.target.value })}
               >
@@ -672,7 +672,7 @@ function LoginForm({ onLogin }: { onLogin: (token: string, email: string) => voi
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4 [color-scheme:light]">
       <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-lg">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center">
@@ -689,7 +689,7 @@ function LoginForm({ onLogin }: { onLogin: (token: string, email: string) => voi
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -699,7 +699,7 @@ function LoginForm({ onLogin }: { onLogin: (token: string, email: string) => voi
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>

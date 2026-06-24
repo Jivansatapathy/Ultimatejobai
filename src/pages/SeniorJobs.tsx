@@ -521,8 +521,8 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
                 {job.seniority_level}
               </span>
               {job.is_venus_powered && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-gradient-to-r from-violet-50 to-indigo-50 text-violet-700 border-violet-200">
-                  <Sparkles className="h-3 w-3" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide border border-violet-700 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm shadow-violet-300">
+                  <Sparkles className="h-3.5 w-3.5" />
                   Venus Powered
                 </span>
               )}
@@ -616,6 +616,12 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${badge}`}>
                       <Icon className="h-3 w-3" />{job.seniority_level}
                     </span>
+                    {job.is_venus_powered && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide border border-violet-700 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm shadow-violet-300">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Venus Powered
+                      </span>
+                    )}
                     {job.industry && (
                       <span className="px-3 py-1 rounded-full text-xs border bg-gray-50 text-gray-500 border-gray-200 font-medium">
                         {job.industry}

@@ -37,6 +37,7 @@ export interface SeniorJobSearchFilters {
   workplace_type?: string;
   fractional?: boolean;
   has_salary?: boolean;
+  is_venus_powered?: boolean;
   page?: number;
   page_size?: number;
 }

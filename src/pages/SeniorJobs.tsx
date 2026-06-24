@@ -395,20 +395,22 @@ interface PageFilters {
   workplace: string;
   text: string;
   hasSalary: string;
+  venusPowered: string;
 }
 
 const EMPTY: PageFilters = {
-  country: "", industry: "", seniority: "", role: "", workplace: "", text: "", hasSalary: "",
+  country: "", industry: "", seniority: "", role: "", workplace: "", text: "", hasSalary: "", venusPowered: "",
 };
 
 function toApiFilters(f: PageFilters): SeniorJobSearchFilters {
   return {
-    q:               f.role || f.text || undefined,
-    country:         f.country || undefined,
-    industry:        f.industry || undefined,
-    seniority_level: f.seniority || undefined,
-    workplace_type:  f.workplace || undefined,
-    has_salary:      f.hasSalary === "true" || undefined,
+    q:                f.role || f.text || undefined,
+    country:          f.country || undefined,
+    industry:         f.industry || undefined,
+    seniority_level:  f.seniority || undefined,
+    workplace_type:   f.workplace || undefined,
+    has_salary:       f.hasSalary === "true" || undefined,
+    is_venus_powered: f.venusPowered === "true" || undefined,
   };
 }
 
@@ -883,6 +885,7 @@ export default function FindJobs() {
     ...(filters.role      ? [{ label: filters.role, clear: () => setFilters((f) => ({ ...f, role: "", seniority: "" })) }] : []),
     ...(filters.workplace ? [{ label: filters.workplace, clear: () => set("workplace", "") }] : []),
     ...(filters.hasSalary === "true" ? [{ label: "Salary listed", clear: () => set("hasSalary", "") }] : []),
+    ...(filters.venusPowered === "true" ? [{ label: "Venus Powered", clear: () => set("venusPowered", "") }] : []),
     ...(filters.text      ? [{ label: `"${filters.text}"`, clear: () => { set("text", ""); setTextInput(""); } }] : []),
   ];
 
@@ -987,6 +990,25 @@ export default function FindJobs() {
               Salary listed only
             </span>
             {filters.hasSalary === "true" && <X className="h-3.5 w-3.5 opacity-70" />}
+          </button>
+        </FilterSection>
+
+        {/* Venus Powered */}
+        <FilterSection title="Venus Powered" icon={Sparkles}>
+          <button
+            type="button"
+            onClick={() => toggle("venusPowered", "true")}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+              filters.venusPowered === "true"
+                ? "bg-gradient-to-r from-violet-600 to-indigo-600 border-violet-700 text-white shadow-sm shadow-violet-300"
+                : "bg-white border-gray-200 text-gray-600 hover:border-violet-200 hover:bg-violet-50"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5" />
+              Venus Powered only
+            </span>
+            {filters.venusPowered === "true" && <X className="h-3.5 w-3.5 opacity-70" />}
           </button>
         </FilterSection>
 

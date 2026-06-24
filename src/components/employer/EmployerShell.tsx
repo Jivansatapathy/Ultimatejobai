@@ -138,7 +138,7 @@ export function EmployerShell() {
   const unread = bootstrap?.summary?.unread_notifications || 0;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="light flex h-screen bg-gray-50 overflow-hidden">
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 xl:w-72 flex-col bg-white border-r border-gray-200 shrink-0">

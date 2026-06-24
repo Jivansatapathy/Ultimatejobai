@@ -12,8 +12,10 @@ import { toast } from "sonner";
 import {
   SeniorJob,
   SeniorJobSearchFilters,
+  SeniorJobSuggestion,
   fetchSeniorJobById,
   searchSeniorJobs,
+  suggestSeniorJobs,
 } from "@/services/seniorJobService";
 import { venusService } from "@/services/venusService";
 
@@ -715,6 +717,10 @@ export default function FindJobs() {
   const [expandedRoleLevels, setExpandedRoleLevels] = useState<Record<string, boolean>>({});
   const [venusPreFill, setVenusPreFill] = useState<{ role: string; industry: string } | null>(null);
   const [venusbannerDismissed, setVenusBannerDismissed] = useState(false);
+  const [suggestions, setSuggestions] = useState<SeniorJobSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setTimeSeed(Math.floor(Date.now() / (1000 * 60 * 12))), 1000 * 60 * 12);
@@ -760,6 +766,42 @@ export default function FindJobs() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [filters, runSearch]);
 
+  // Live type-ahead suggestions for the hero search box.
+  const suggestDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suggestAbortRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current);
+    const query = textInput.trim();
+    if (query.length < 2) {
+      setSuggestions([]);
+      setActiveSuggestion(-1);
+      return;
+    }
+    suggestDebounceRef.current = setTimeout(() => {
+      suggestAbortRef.current?.abort();
+      const controller = new AbortController();
+      suggestAbortRef.current = controller;
+      suggestSeniorJobs(query, controller.signal)
+        .then((results) => {
+          setSuggestions(results);
+          setActiveSuggestion(-1);
+        })
+        .catch(() => {});
+    }, 120);
+    return () => { if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current); };
+  }, [textInput]);
+
+  // Close the suggestions dropdown when clicking outside the search box.
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const set = (key: keyof PageFilters, value: string) => setFilters((f) => ({ ...f, [key]: value }));
   const toggle = (key: keyof PageFilters, value: string) => setFilters((f) => ({ ...f, [key]: f[key] === value ? "" : value }));
 
@@ -769,7 +811,34 @@ export default function FindJobs() {
     setTextInput("");
   };
 
-  const submitText = (e: React.FormEvent) => { e.preventDefault(); setFilters((f) => ({ ...f, text: textInput.trim(), role: "" })); };
+  const submitText = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowSuggestions(false);
+    setFilters((f) => ({ ...f, text: textInput.trim(), role: "" }));
+  };
+
+  const applySuggestion = (s: SeniorJobSuggestion) => {
+    setTextInput(s.value);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setFilters((f) => ({ ...f, text: s.value, role: "" }));
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveSuggestion((i) => (i + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveSuggestion((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+    } else if (e.key === "Enter" && activeSuggestion >= 0) {
+      e.preventDefault();
+      applySuggestion(suggestions[activeSuggestion]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
 
   const clearAll = () => {
     setFilters(EMPTY); setTextInput(""); setRoleSearch(""); setIndustrySearch("");
@@ -1064,26 +1133,82 @@ export default function FindJobs() {
               : "Over 100,000+ executive & senior leadership roles"}
           </p>
 
-          <form onSubmit={submitText} className="flex gap-2 items-stretch shadow-xl shadow-blue-900/30">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 sm:h-5 w-4 sm:w-5 text-gray-400 pointer-events-none" />
-              <input
-                value={textInput}
-                onChange={(e) => {
-                  setTextInput(e.target.value);
-                  if (!e.target.value) setFilters((f) => ({ ...f, text: "", role: "" }));
-                }}
-                placeholder="Search by title, company…"
-                className="w-full h-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-3.5 sm:py-4 bg-white rounded-xl text-gray-900 placeholder:text-gray-400 text-sm sm:text-base outline-none focus:ring-2 focus:ring-blue-300 transition-all"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-4 sm:px-8 py-3.5 sm:py-4 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-gray-900 rounded-xl font-black text-sm transition-colors shrink-0 shadow-sm"
-            >
-              Search
-            </button>
-          </form>
+          <div ref={searchBoxRef} className="relative">
+            <form onSubmit={submitText} className="flex gap-2 items-stretch shadow-xl shadow-blue-900/30">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 sm:h-5 w-4 sm:w-5 text-gray-400 pointer-events-none" />
+                <input
+                  value={textInput}
+                  onChange={(e) => {
+                    setTextInput(e.target.value);
+                    setShowSuggestions(true);
+                    if (!e.target.value) setFilters((f) => ({ ...f, text: "", role: "" }));
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search by title, company…"
+                  role="combobox"
+                  aria-expanded={showSuggestions && suggestions.length > 0}
+                  aria-autocomplete="list"
+                  autoComplete="off"
+                  className="w-full h-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-3.5 sm:py-4 bg-white rounded-xl text-gray-900 placeholder:text-gray-400 text-sm sm:text-base outline-none focus:ring-2 focus:ring-blue-300 transition-all"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-4 sm:px-8 py-3.5 sm:py-4 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-gray-900 rounded-xl font-black text-sm transition-colors shrink-0 shadow-sm"
+              >
+                Search
+              </button>
+            </form>
+
+            {/* Live type-ahead suggestions */}
+            <AnimatePresence>
+              {showSuggestions && suggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 right-0 top-full mt-2 z-30 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden text-left"
+                >
+                  <ul role="listbox" className="max-h-80 overflow-y-auto py-1.5">
+                    {suggestions.map((s, idx) => {
+                      const SIcon = s.type === "role" ? Crown : s.type === "company" ? Building2 : MapPin;
+                      const active = idx === activeSuggestion;
+                      return (
+                        <li key={`${s.type}-${s.value}-${idx}`} role="option" aria-selected={active}>
+                          <button
+                            type="button"
+                            onMouseEnter={() => setActiveSuggestion(idx)}
+                            onClick={() => applySuggestion(s)}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                              active ? "bg-blue-50" : "hover:bg-gray-50"
+                            }`}
+                          >
+                            <span className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-lg ${
+                              s.type === "role" ? "bg-amber-50 text-amber-600" :
+                              s.type === "company" ? "bg-blue-50 text-blue-600" :
+                              "bg-emerald-50 text-emerald-600"
+                            }`}>
+                              <SIcon className="h-4 w-4" />
+                            </span>
+                            <span className="flex-1 min-w-0 text-left">
+                              <span className="block text-gray-900 font-semibold truncate">{s.label}</span>
+                              <span className="block text-gray-400 text-xs capitalize">{s.type}</span>
+                            </span>
+                            {s.count > 0 && (
+                              <span className="shrink-0 text-xs text-gray-400 tabular-nums">{fmtCount(s.count)}</span>
+                            )}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Fractional quick-access button */}
           <div className="flex items-center justify-center gap-3 mt-5">

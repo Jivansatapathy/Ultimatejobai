@@ -5,6 +5,7 @@ import { ResumeProvider } from "@/hooks/useResume";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import React, { Suspense, lazy, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./context/AuthContext";
 import { EmployerAuthProvider } from "./context/EmployerAuthContext";
@@ -77,6 +78,13 @@ const ExecInterviewPrep = lazy(() => import("./pages/venus/ExecInterviewPrep"));
 const ExecutiveReadinessScore = lazy(() => import("./pages/venus/ExecutiveReadinessScore"));
 const AICareerTwin = lazy(() => import("./pages/venus/AICareerTwin"));
 
+// Resets the ErrorBoundary whenever the user navigates to a new route,
+// so a transient render error on one page never blocks subsequent pages.
+function RouteErrorBoundary({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  return <ErrorBoundary key={location.pathname}>{children}</ErrorBoundary>;
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -137,17 +145,18 @@ function AppChecklist() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appCount, setAppCount] = useState(0);
   const [interviewDone, setInterviewDone] = useState(false);
-  const userRole = localStorage.getItem("current_user_role");
-  if (userRole === "employer") return null;
+  const isEmployer = localStorage.getItem("current_user_role") === "employer";
 
+  // All hooks must run unconditionally — conditional logic goes inside each effect
   useEffect(() => {
-    // Fire daily reminder if conditions are met
+    if (isEmployer) return;
     import("./services/notificationService").then(({ notificationService }) => {
       notificationService.checkAndFireDailyReminder();
     });
-  }, []);
+  }, [isEmployer]);
 
   useEffect(() => {
+    if (isEmployer) return;
     const token = localStorage.getItem("access_token");
     if (!token) return;
     import("./services/api").then(({ default: api }) =>
@@ -160,7 +169,9 @@ function AppChecklist() {
         .then((logs: any[]) => setInterviewDone(logs.some(l => l.activity_type === "INTERVIEW")))
         .catch(() => {})
     );
-  }, []);
+  }, [isEmployer]);
+
+  if (isEmployer) return null;
 
   return (
     <>
@@ -185,7 +196,7 @@ const App = () => (
                   <GettingStartedPopup />
                   <NotificationSetupModal />
                   <AppChecklist />
-                  <ErrorBoundary>
+                  <RouteErrorBoundary>
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                   <Route path="/" element={<Index2 />} />
@@ -341,7 +352,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                  </ErrorBoundary>
+                  </RouteErrorBoundary>
                 </BrowserRouter>
               </ResumeProvider>
             </SubscriptionProvider>

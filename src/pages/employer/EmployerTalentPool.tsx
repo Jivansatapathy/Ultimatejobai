@@ -7,7 +7,6 @@ import { EmptyState } from "@/components/employer/EmptyState";
 import { LoadingState } from "@/components/employer/LoadingState";
 import { PageHeader } from "@/components/employer/PageHeader";
 import { Panel } from "@/components/employer/Panel";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployerAuth } from "@/context/EmployerAuthContext";
 import {
   createTalentFolder,
@@ -185,65 +184,77 @@ export default function EmployerTalentPool() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.04 }}
             >
-              <div className="h-full rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow p-5 space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900">{candidate.candidate_name}</h3>
-                    <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
-                      <Mail className="h-3.5 w-3.5 shrink-0" />
+              <div className="h-full rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all p-5 flex flex-col gap-3">
+
+                {/* Header row */}
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-blue-100 to-teal-100 flex items-center justify-center text-sm font-bold text-teal-700">
+                    {(candidate.candidate_name || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold text-gray-900 truncate">{candidate.candidate_name}</h3>
+                      <span className="shrink-0 inline-flex items-center rounded-full bg-teal-50 border border-teal-200 px-2 py-0.5 text-[10px] font-bold text-teal-700">
+                        {candidate.match_score}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate mt-0.5 flex items-center gap-1">
+                      <Mail className="h-3 w-3 shrink-0" />
                       {candidate.candidate_email}
                     </p>
                   </div>
-                  <span className="shrink-0 inline-flex items-center rounded-full bg-teal-50 border border-teal-200 px-2.5 py-0.5 text-xs font-bold text-teal-700">
-                    {candidate.match_score}% match
-                  </span>
                 </div>
 
+                {/* Applied for */}
                 {candidate.job_title ? (
-                  <p className="text-sm text-gray-500">Applied for: <span className="font-medium text-gray-700">{candidate.job_title}</span></p>
+                  <p className="text-xs text-gray-500">
+                    Applied for <span className="font-semibold text-gray-700">{candidate.job_title}</span>
+                  </p>
                 ) : null}
 
-                <div className="flex flex-wrap gap-1.5">
-                  {candidate.skills.slice(0, 6).map((skill) => (
-                    <span key={skill} className="inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-                      {skill}
-                    </span>
-                  ))}
-                  {candidate.skills.length > 6 ? (
-                    <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-500">
-                      +{candidate.skills.length - 6}
-                    </span>
-                  ) : null}
-                </div>
+                {/* Skills */}
+                {candidate.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {candidate.skills.slice(0, 5).map((skill) => (
+                      <span key={skill} className="inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                        {skill}
+                      </span>
+                    ))}
+                    {candidate.skills.length > 5 ? (
+                      <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500">
+                        +{candidate.skills.length - 5}
+                      </span>
+                    ) : null}
+                  </div>
+                )}
 
+                {/* Folder badge */}
                 {candidate.folder_name ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                  <span className="self-start inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-600">
                     <FolderOpen className="h-3 w-3" />
                     {candidate.folder_name}
                   </span>
                 ) : null}
 
-                <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+                {/* Actions */}
+                <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
                   {folders.length ? (
-                    <Select
+                    <select
+                      aria-label="Move to folder"
                       value={candidate.folder || "none"}
-                      onValueChange={(value) => handleMoveToFolder(candidate, value === "none" ? null : value)}
+                      onChange={(e) => handleMoveToFolder(candidate, e.target.value === "none" ? null : e.target.value)}
+                      className="h-8 flex-1 max-w-[160px] rounded-xl border border-gray-200 bg-white px-2.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                     >
-                      <SelectTrigger className="h-8 w-auto min-w-[140px] rounded-xl text-xs bg-white border-gray-200 text-gray-700">
-                        <SelectValue placeholder="Move to folder" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No folder</SelectItem>
-                        {folders.map((folder) => (
-                          <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <option value="none">Move to folder…</option>
+                      {folders.map((folder) => (
+                        <option key={folder.id} value={folder.id}>{folder.name}</option>
+                      ))}
+                    </select>
                   ) : (
-                    <span className="text-xs text-gray-400">Create folders to organize</span>
+                    <span className="text-xs text-gray-400">No folders yet</span>
                   )}
 
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     {candidate.resume_link ? (
                       <button
                         type="button"
@@ -255,7 +266,7 @@ export default function EmployerTalentPool() {
                     ) : null}
                     <button
                       type="button"
-                      aria-label="Remove bookmark"
+                      aria-label="Remove from talent pool"
                       onClick={() => handleRemoveBookmark(candidate)}
                       className="p-1.5 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                     >
@@ -264,8 +275,8 @@ export default function EmployerTalentPool() {
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-400">
-                  Bookmarked {candidate.bookmarked_at ? new Date(candidate.bookmarked_at).toLocaleDateString() : "recently"}
+                <p className="text-[10px] text-gray-400">
+                  Saved {candidate.bookmarked_at ? new Date(candidate.bookmarked_at).toLocaleDateString() : "recently"}
                 </p>
               </div>
             </motion.div>

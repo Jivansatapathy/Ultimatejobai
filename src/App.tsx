@@ -9,8 +9,10 @@ import { useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./context/AuthContext";
 import { EmployerAuthProvider } from "./context/EmployerAuthContext";
+import { VenusAuthProvider } from "./context/VenusAuthContext";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { VenusProtectedRoute } from "./components/venus/VenusProtectedRoute";
 import CandidateRoute from "./components/auth/CandidateRoute";
 import FeatureRoute from "./components/auth/FeatureRoute";
 import { ActivityAuditObserver } from "./components/activity/ActivityAuditObserver";
@@ -77,6 +79,7 @@ const ExecutiveBranding = lazy(() => import("./pages/venus/ExecutiveBranding"));
 const ExecInterviewPrep = lazy(() => import("./pages/venus/ExecInterviewPrep"));
 const ExecutiveReadinessScore = lazy(() => import("./pages/venus/ExecutiveReadinessScore"));
 const AICareerTwin = lazy(() => import("./pages/venus/AICareerTwin"));
+const VenusAuth = lazy(() => import("./pages/venus/VenusAuth"));
 
 // Resets the ErrorBoundary whenever the user navigates to a new route,
 // so a transient render error on one page never blocks subsequent pages.
@@ -279,7 +282,8 @@ const App = () => (
         <Sonner />
         <AuthProvider>
           <EmployerAuthProvider>
-            <SubscriptionProvider>
+            <VenusAuthProvider>
+              <SubscriptionProvider>
               <ResumeProvider>
                   <BrowserRouter>
                   <ActivityAuditObserver />
@@ -418,7 +422,8 @@ const App = () => (
                     </Route>
                   </Route>
                   {/* Venus AI Executive Career OS */}
-                  <Route path="/venus" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
+                  <Route path="/venus/auth" element={<VenusAuth />} />
+                  <Route path="/venus" element={<VenusProtectedRoute><VenusShell /></VenusProtectedRoute>}>
                     <Route index element={<VenusDashboard />} />
                     <Route path="profile" element={<ExecutiveProfileBuilder />} />
                     <Route path="opportunities" element={<ExecutiveOpportunityEngine />} />
@@ -446,6 +451,7 @@ const App = () => (
                 </BrowserRouter>
               </ResumeProvider>
             </SubscriptionProvider>
+            </VenusAuthProvider>
           </EmployerAuthProvider>
         </AuthProvider>
       </TooltipProvider>

@@ -96,49 +96,139 @@ const queryClient = new QueryClient({
   },
 });
 
-// Elegant Loading Placeholder
 const PageLoader = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 select-none">
-    {/* Multi-ring spinner */}
-    <div className="relative flex items-center justify-center mb-8">
-      {/* Outermost — slow dashed orbit */}
-      <div className="absolute w-28 h-28 rounded-full border-2 border-dashed border-blue-100 animate-[spin_5s_linear_infinite]" />
-      {/* Middle — fast arc */}
-      <div className="absolute w-20 h-20 rounded-full border-[3px] border-transparent border-t-blue-600 border-r-blue-300 animate-spin" />
-      {/* Inner — counter-spin arc */}
-      <div className="absolute w-14 h-14 rounded-full border-2 border-transparent border-b-blue-400 border-l-blue-200 animate-[spin_1.8s_linear_infinite_reverse]" />
-      {/* Center badge */}
-      <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-300/40">
-        {/* Inline bot/AI icon */}
-        <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="8" width="18" height="13" rx="2"/>
-          <path d="M9 8V6a3 3 0 016 0v2"/>
-          <circle cx="9" cy="14" r="1" fill="white" stroke="none"/>
-          <circle cx="15" cy="14" r="1" fill="white" stroke="none"/>
-          <path d="M9 18h6" strokeWidth="1.5"/>
+  <>
+    <style>{`
+      @keyframes pl-float {
+        0%,100% { transform: translateY(0px) rotate(-1deg); }
+        50%      { transform: translateY(-22px) rotate(1deg); }
+      }
+      @keyframes pl-glow {
+        0%,100% { box-shadow: 0 24px 64px rgba(59,130,246,.30), 0 0 0 8px rgba(59,130,246,.08); }
+        50%      { box-shadow: 0 36px 96px rgba(59,130,246,.55), 0 0 0 12px rgba(59,130,246,.14); }
+      }
+      @keyframes pl-orbit1 { to { transform: rotate(360deg);  } }
+      @keyframes pl-orbit2 { to { transform: rotate(-360deg); } }
+      @keyframes pl-ripple {
+        0%   { transform: scale(.9); opacity:.7; }
+        100% { transform: scale(2.6); opacity:0;  }
+      }
+      @keyframes pl-fadein {
+        from { opacity:0; transform:translateY(14px); }
+        to   { opacity:1; transform:translateY(0);    }
+      }
+      @keyframes pl-bar {
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(300%);  }
+      }
+      @keyframes pl-text-shine {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+      }
+      .pl-float  { animation: pl-float 3.4s ease-in-out infinite, pl-glow 3.4s ease-in-out infinite; }
+      .pl-o1     { animation: pl-orbit1 5s linear infinite; }
+      .pl-o2     { animation: pl-orbit2 7s linear infinite; }
+      .pl-r1     { animation: pl-ripple 2.2s ease-out infinite; }
+      .pl-r2     { animation: pl-ripple 2.2s ease-out .75s infinite; }
+      .pl-brand  { animation: pl-fadein .8s ease-out .2s both; }
+      .pl-bar    { animation: pl-bar 1.9s cubic-bezier(.4,0,.2,1) infinite; }
+      .pl-shine  {
+        background: linear-gradient(90deg, #1e40af 0%, #2563eb 30%, #60a5fa 50%, #2563eb 70%, #1e40af 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: pl-text-shine 3s linear infinite;
+      }
+    `}</style>
+
+    <div
+      className="fixed inset-0 flex flex-col items-center justify-center select-none overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse 70% 60% at 50% -10%, #dbeafe 0%, transparent 70%), radial-gradient(ellipse 50% 40% at 80% 110%, #e0e7ff 0%, transparent 60%), #f8fafc' }}
+    >
+      {/* Ambient blobs */}
+      <div className="absolute w-[520px] h-[520px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(59,130,246,.07) 0%, transparent 70%)', top: '-15%', right: '-10%' }} />
+      <div className="absolute w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,.06) 0%, transparent 70%)', bottom: '-8%', left: '-5%' }} />
+
+      {/* Orb area */}
+      <div className="relative flex items-center justify-center mb-10">
+
+        {/* Ripple rings */}
+        <div className="pl-r1 absolute w-32 h-32 rounded-full border border-blue-400/25 pointer-events-none" />
+        <div className="pl-r2 absolute w-32 h-32 rounded-full border border-blue-400/15 pointer-events-none" />
+
+        {/* Outer orbit ring + travelling dot */}
+        <div className="pl-o1 absolute w-52 h-52 pointer-events-none">
+          <svg width="208" height="208" viewBox="0 0 208 208">
+            <circle cx="104" cy="104" r="100" fill="none" stroke="url(#g1)" strokeWidth="1" strokeDasharray="5 7" opacity=".35" />
+            <circle cx="104" cy="4" r="5" fill="#3b82f6" opacity=".8">
+              <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#3b82f6"/>
+                <stop offset="100%" stopColor="#6366f1"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        {/* Inner orbit ring + dot */}
+        <div className="pl-o2 absolute w-36 h-36 pointer-events-none">
+          <svg width="144" height="144" viewBox="0 0 144 144">
+            <circle cx="72" cy="72" r="68" fill="none" stroke="#c7d2fe" strokeWidth="1" strokeDasharray="3 9" opacity=".5" />
+            <circle cx="72" cy="4" r="3.5" fill="#818cf8" opacity=".9"/>
+          </svg>
+        </div>
+
+        {/* SVG progress arc */}
+        <svg className="absolute w-28 h-28" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#e0e7ff" strokeWidth="2.5" />
+          <circle cx="50" cy="50" r="44" fill="none" stroke="url(#g2)" strokeWidth="2.5"
+            strokeLinecap="round" strokeDasharray="276"
+            style={{ strokeDashoffset: 0 }}
+          >
+            <animate attributeName="stroke-dashoffset" values="276;55;276" dur="2.4s" ease="ease-in-out" repeatCount="indefinite"/>
+          </circle>
+          <defs>
+            <linearGradient id="g2" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#2563eb"/>
+              <stop offset="100%" stopColor="#6366f1"/>
+            </linearGradient>
+          </defs>
         </svg>
+
+        {/* Floating main card */}
+        <div
+          className="pl-float relative w-[72px] h-[72px] flex items-center justify-center"
+          style={{
+            borderRadius: '22px',
+            background: 'linear-gradient(140deg, #2563eb 0%, #4f46e5 100%)',
+          }}
+        >
+          {/* Glass highlight */}
+          <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: '22px', background: 'linear-gradient(150deg, rgba(255,255,255,.28) 0%, transparent 55%)' }} />
+          <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8 relative z-10 drop-shadow-sm" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="8" width="18" height="13" rx="2"/>
+            <path d="M9 8V6a3 3 0 016 0v2"/>
+            <circle cx="9" cy="14" r="1" fill="white" stroke="none"/>
+            <circle cx="15" cy="14" r="1" fill="white" stroke="none"/>
+            <path d="M9 18h6" strokeWidth="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* Brand + progress */}
+      <div className="pl-brand flex flex-col items-center gap-1">
+        <span className="pl-shine text-[22px] font-black tracking-tight leading-none">Hizorex</span>
+        <span className="text-[9px] font-bold uppercase tracking-[.28em] text-gray-400">Powered by Apex™</span>
+
+        <div className="mt-5 w-32 h-[3px] bg-blue-100/80 rounded-full overflow-hidden">
+          <div className="pl-bar w-1/3 h-full rounded-full bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
+        </div>
       </div>
     </div>
-
-    {/* Brand */}
-    <p className="text-lg font-black text-gray-900 tracking-tight mb-0.5">Hizorex</p>
-    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-2">Powered by Apex™</p>
-
-    {/* "Priming System" label with bouncing dots */}
-    <div className="flex items-center gap-2 mb-6">
-      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Priming System</span>
-      <span className="flex gap-1 items-center">
-        <span className="h-1 w-1 rounded-full bg-blue-400 animate-bounce [animation-delay:0ms]" />
-        <span className="h-1 w-1 rounded-full bg-blue-500 animate-bounce [animation-delay:150ms]" />
-        <span className="h-1 w-1 rounded-full bg-blue-600 animate-bounce [animation-delay:300ms]" />
-      </span>
-    </div>
-
-    {/* Sweep progress bar */}
-    <div className="w-44 h-0.5 bg-blue-50 rounded-full overflow-hidden">
-      <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-[loader-sweep_1.6s_ease-in-out_infinite]" />
-    </div>
-  </div>
+  </>
 );
 
 function AppChecklist() {

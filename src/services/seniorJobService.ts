@@ -24,6 +24,7 @@ export interface SeniorJob {
   posted_at: string | null;
   source: string | null;
   platform: string | null;
+  is_venus_powered: boolean;
   description?: string;
 }
 
@@ -36,6 +37,7 @@ export interface SeniorJobSearchFilters {
   workplace_type?: string;
   fractional?: boolean;
   has_salary?: boolean;
+  is_venus_powered?: boolean;
   page?: number;
   page_size?: number;
 }

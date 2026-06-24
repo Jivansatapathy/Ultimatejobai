@@ -55,7 +55,13 @@ export function EmployerAuthProvider({ children }: { children: React.ReactNode }
   const value = useMemo(
     () => ({
       user: isAuthenticated ? { email: userEmail } : null,
-      profile: bootstrap?.profile || null,
+      // The bootstrap API returns `permissions` as a sibling of `profile`,
+      // but EmployerProfile's type (and every page that reads
+      // profile.permissions.*) expects it nested inside profile — merge it
+      // in here once so every consumer gets the real value.
+      profile: bootstrap?.profile
+        ? { ...bootstrap.profile, permissions: bootstrap.permissions }
+        : null,
       bootstrap: bootstrap,
       loading: authLoading || loading,
       isEmployer:

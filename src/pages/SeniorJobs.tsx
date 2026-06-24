@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import {
   Search, X, MapPin, Building2, Briefcase, Globe2,
   Loader2, Crown, TrendingUp, Users2, ChevronDown,
-  SlidersHorizontal, CalendarDays, ExternalLink, ArrowRight, Zap, DollarSign,
+  SlidersHorizontal, CalendarDays, ExternalLink, ArrowRight, Zap, DollarSign, Sparkles,
 } from "lucide-react";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
@@ -395,20 +395,22 @@ interface PageFilters {
   workplace: string;
   text: string;
   hasSalary: string;
+  venusPowered: string;
 }
 
 const EMPTY: PageFilters = {
-  country: "", industry: "", seniority: "", role: "", workplace: "", text: "", hasSalary: "",
+  country: "", industry: "", seniority: "", role: "", workplace: "", text: "", hasSalary: "", venusPowered: "",
 };
 
 function toApiFilters(f: PageFilters): SeniorJobSearchFilters {
   return {
-    q:               f.role || f.text || undefined,
-    country:         f.country || undefined,
-    industry:        f.industry || undefined,
-    seniority_level: f.seniority || undefined,
-    workplace_type:  f.workplace || undefined,
-    has_salary:      f.hasSalary === "true" || undefined,
+    q:                f.role || f.text || undefined,
+    country:          f.country || undefined,
+    industry:         f.industry || undefined,
+    seniority_level:  f.seniority || undefined,
+    workplace_type:   f.workplace || undefined,
+    has_salary:       f.hasSalary === "true" || undefined,
+    is_venus_powered: f.venusPowered === "true" || undefined,
   };
 }
 
@@ -520,6 +522,12 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
                 <SenIcon className="h-3 w-3" />
                 {job.seniority_level}
               </span>
+              {job.is_venus_powered && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide border border-violet-700 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm shadow-violet-300">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Venus Powered
+                </span>
+              )}
               {job.workplace_type && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border bg-gray-50 text-gray-600 border-gray-200 font-medium">
                   <Globe2 className="h-3 w-3" />
@@ -537,15 +545,16 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
       </div>
 
       {/* Apply bot footer */}
-      {job.apply_url && (
+      {(job.apply_url || job.source === "employer") && (
         <div className="px-4 sm:px-6 pb-4 sm:pb-5" onClick={(e) => e.stopPropagation()}>
           <div className="border-t border-gray-100 pt-3 sm:pt-4">
             <ApplyBotButton
               variant="light"
-              jobUrl={job.apply_url}
+              jobUrl={job.apply_url ?? ""}
               jobTitle={job.title}
               company={job.company_name ?? ""}
               jobId={String(job.id)}
+              directApplyUrl={job.source === "employer" ? `/api/search/senior/${job.id}/apply/` : undefined}
             />
           </div>
         </div>
@@ -609,6 +618,12 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${badge}`}>
                       <Icon className="h-3 w-3" />{job.seniority_level}
                     </span>
+                    {job.is_venus_powered && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide border border-violet-700 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm shadow-violet-300">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Venus Powered
+                      </span>
+                    )}
                     {job.industry && (
                       <span className="px-3 py-1 rounded-full text-xs border bg-gray-50 text-gray-500 border-gray-200 font-medium">
                         {job.industry}
@@ -674,19 +689,22 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
             </div>
 
             {/* Footer */}
-            {job.apply_url && (
+            {(job.apply_url || job.source === "employer") && (
               <div className="p-4 sm:p-5 border-t border-gray-100 shrink-0 bg-gray-50/50 space-y-2.5">
                 <ApplyBotButton
                   variant="light"
-                  jobUrl={job.apply_url}
+                  jobUrl={job.apply_url ?? ""}
                   jobTitle={job.title}
                   company={job.company_name ?? ""}
                   jobId={String(job.id)}
+                  directApplyUrl={job.source === "employer" ? `/api/search/senior/${job.id}/apply/` : undefined}
                 />
-                <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-2.5 border border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-gray-300 hover:text-gray-700 transition-colors">
-                  Apply manually <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+                {job.apply_url && (
+                  <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 border border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-gray-300 hover:text-gray-700 transition-colors">
+                    Apply manually <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
               </div>
             )}
           </motion.aside>
@@ -867,6 +885,7 @@ export default function FindJobs() {
     ...(filters.role      ? [{ label: filters.role, clear: () => setFilters((f) => ({ ...f, role: "", seniority: "" })) }] : []),
     ...(filters.workplace ? [{ label: filters.workplace, clear: () => set("workplace", "") }] : []),
     ...(filters.hasSalary === "true" ? [{ label: "Salary listed", clear: () => set("hasSalary", "") }] : []),
+    ...(filters.venusPowered === "true" ? [{ label: "Venus Powered", clear: () => set("venusPowered", "") }] : []),
     ...(filters.text      ? [{ label: `"${filters.text}"`, clear: () => { set("text", ""); setTextInput(""); } }] : []),
   ];
 
@@ -971,6 +990,25 @@ export default function FindJobs() {
               Salary listed only
             </span>
             {filters.hasSalary === "true" && <X className="h-3.5 w-3.5 opacity-70" />}
+          </button>
+        </FilterSection>
+
+        {/* Venus Powered */}
+        <FilterSection title="Venus Powered" icon={Sparkles}>
+          <button
+            type="button"
+            onClick={() => toggle("venusPowered", "true")}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+              filters.venusPowered === "true"
+                ? "bg-gradient-to-r from-violet-600 to-indigo-600 border-violet-700 text-white shadow-sm shadow-violet-300"
+                : "bg-white border-gray-200 text-gray-600 hover:border-violet-200 hover:bg-violet-50"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5" />
+              Venus Powered only
+            </span>
+            {filters.venusPowered === "true" && <X className="h-3.5 w-3.5 opacity-70" />}
           </button>
         </FilterSection>
 

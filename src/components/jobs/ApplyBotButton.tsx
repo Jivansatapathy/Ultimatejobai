@@ -22,6 +22,12 @@ interface ApplyBotButtonProps {
   onApplied?: (jobId: string) => void;
   onDismiss?: () => void;
   variant?: "dark" | "light";
+  /**
+   * When set, skips the bot-apply automation (there's no external apply_url
+   * to run it against) and instead POSTs here to hand the candidate's
+   * resume straight to the employer — used for employer-posted jobs.
+   */
+  directApplyUrl?: string;
 }
 
 function getWsUrl(taskId: string): string {
@@ -38,9 +44,10 @@ function getWsUrl(taskId: string): string {
 }
 
 const APPLY_MS = 4000;
+const DIRECT_APPLY_MS = 900;
 const CONFIRM_MS = 2000;
 
-export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResumeId, alreadyApplied, onApplied, variant = "dark" }: ApplyBotButtonProps) {
+export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResumeId, alreadyApplied, onApplied, variant = "dark", directApplyUrl }: ApplyBotButtonProps) {
   const [phase, setPhase] = useState<Phase>(alreadyApplied ? "applied" : "idle");
   const [progress, setProgress] = useState(0);
 
@@ -97,6 +104,40 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResum
     if (phase !== "idle") return;
     setPhase("applying");
     setProgress(0);
+
+    if (directApplyUrl) {
+      const startTime = Date.now();
+      intervalRef.current = setInterval(() => {
+        setProgress(Math.min(95, ((Date.now() - startTime) / DIRECT_APPLY_MS) * 100));
+      }, 40);
+      const minDelay = new Promise((resolve) => setTimeout(resolve, DIRECT_APPLY_MS));
+
+      try {
+        const [res] = await Promise.all([
+          api.post<{ status: string; error?: string }>(directApplyUrl),
+          minDelay,
+        ]);
+        stopTimers();
+        if (res.data.status === "applied" || res.data.status === "already_applied") {
+          markConfirmed();
+        } else {
+          setPhase("idle");
+          toast.error("Could not submit application. Please try again.");
+        }
+      } catch (err: any) {
+        stopTimers();
+        setPhase("idle");
+        const errorCode = err?.response?.data?.error;
+        if (errorCode === "missing_resume") {
+          toast.error("Upload a resume first to apply.", { description: "Add a resume in your profile, then try again." });
+        } else if (errorCode === "job_closed") {
+          toast.error("This job posting is no longer available.", { description: "The listing may have been filled or removed." });
+        } else {
+          toast.error("Could not submit application. Please try again.");
+        }
+      }
+      return;
+    }
 
     const startTime = Date.now();
     intervalRef.current = setInterval(() => {

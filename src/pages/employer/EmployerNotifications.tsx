@@ -1,38 +1,35 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Bell, BellOff, Check, CheckCheck, ExternalLink, Loader2, Trash2 } from "lucide-react";
+import { Bell, BellOff, Check, CheckCheck, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/employer/EmptyState";
 import { LoadingState } from "@/components/employer/LoadingState";
 import { PageHeader } from "@/components/employer/PageHeader";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useEmployerAuth } from "@/context/EmployerAuthContext";
 import { getEmployerNotifications, markAllNotificationsRead, markNotificationRead } from "@/services/employerService";
 import { EmployerNotification } from "@/types/employer";
 
 const typeIcons: Record<string, string> = {
-  new_applicant: "👤",
-  status_change: "🔄",
+  new_applicant:      "👤",
+  status_change:      "🔄",
   interview_reminder: "📅",
-  job_expiring: "⏰",
-  message_received: "💬",
-  offer_accepted: "🎉",
-  offer_rejected: "❌",
-  system: "⚙️",
+  job_expiring:       "⏰",
+  message_received:   "💬",
+  offer_accepted:     "🎉",
+  offer_rejected:     "❌",
+  system:             "⚙️",
 };
 
-const typeColors: Record<string, string> = {
-  new_applicant: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  status_change: "bg-purple-500/10 text-purple-700 dark:text-purple-300",
-  interview_reminder: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  job_expiring: "bg-red-500/10 text-red-700 dark:text-red-300",
-  message_received: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  offer_accepted: "bg-green-500/10 text-green-700 dark:text-green-300",
-  offer_rejected: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
-  system: "bg-secondary text-muted-foreground",
+const typeBg: Record<string, string> = {
+  new_applicant:      "bg-blue-50 text-blue-700",
+  status_change:      "bg-purple-50 text-purple-700",
+  interview_reminder: "bg-amber-50 text-amber-700",
+  job_expiring:       "bg-red-50 text-red-700",
+  message_received:   "bg-emerald-50 text-emerald-700",
+  offer_accepted:     "bg-green-50 text-green-700",
+  offer_rejected:     "bg-rose-50 text-rose-700",
+  system:             "bg-gray-100 text-gray-500",
 };
 
 export default function EmployerNotifications() {
@@ -42,41 +39,27 @@ export default function EmployerNotifications() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
   useEffect(() => {
-    if (!user || !isEmployer) {
-      return;
-    }
+    if (!user || !isEmployer) return;
     const load = async () => {
       try {
         setLoading(true);
         const items = await getEmployerNotifications();
         setNotifications(items);
-      } catch {
-        setNotifications([]);
-      } finally {
-        setLoading(false);
-      }
+      } catch { setNotifications([]); }
+      finally { setLoading(false); }
     };
     load();
   }, [isEmployer, user]);
 
-  const filtered = filter === "unread"
-    ? notifications.filter((n) => !n.is_read)
-    : notifications;
-
+  const filtered = filter === "unread" ? notifications.filter((n) => !n.is_read) : notifications;
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const handleMarkRead = async (notification: EmployerNotification) => {
-    if (notification.is_read) {
-      return;
-    }
+    if (notification.is_read) return;
     try {
       await markNotificationRead(notification.id);
-      setNotifications((current) =>
-        current.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n)),
-      );
-    } catch {
-      toast.error("Unable to mark notification as read.");
-    }
+      setNotifications((current) => current.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n)));
+    } catch { toast.error("Unable to mark notification as read."); }
   };
 
   const handleMarkAllRead = async () => {
@@ -84,77 +67,58 @@ export default function EmployerNotifications() {
       await markAllNotificationsRead();
       setNotifications((current) => current.map((n) => ({ ...n, is_read: true })));
       toast.success("All notifications marked as read.");
-    } catch {
-      toast.error("Unable to mark all as read.");
-    }
+    } catch { toast.error("Unable to mark all as read."); }
   };
 
-  if (loading) {
-    return <LoadingState label="Loading notifications..." />;
-  }
+  if (loading) return <LoadingState label="Loading notifications..." />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
         eyebrow="Notifications"
         title="Smart Notifications"
         description="Stay updated on new applicants, interview reminders, candidate activity, and pending actions."
         actions={(
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="rounded-2xl"
+            <button
+              type="button"
               onClick={() => setFilter(filter === "all" ? "unread" : "all")}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 transition-colors shadow-sm"
             >
               {filter === "unread" ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
               {filter === "unread" ? "Show all" : `Unread (${unreadCount})`}
-            </Button>
-            <Button
-              variant="outline"
-              className="rounded-2xl"
+            </button>
+            <button
+              type="button"
               onClick={handleMarkAllRead}
               disabled={unreadCount === 0}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-40 transition-colors shadow-sm"
             >
               <CheckCheck className="h-4 w-4" />
               Mark all read
-            </Button>
+            </button>
           </div>
         )}
       />
 
+      {/* Stat strip */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-3xl border-border/70">
-          <CardContent className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total</p>
-            <p className="mt-2 text-3xl font-bold">{notifications.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-3xl border-border/70">
-          <CardContent className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Unread</p>
-            <p className="mt-2 text-3xl font-bold text-accent">{unreadCount}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-3xl border-border/70">
-          <CardContent className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">New Applicants</p>
-            <p className="mt-2 text-3xl font-bold">
-              {notifications.filter((n) => n.notification_type === "new_applicant").length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-3xl border-border/70">
-          <CardContent className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pending Actions</p>
-            <p className="mt-2 text-3xl font-bold">
-              {notifications.filter((n) => !n.is_read && (n.notification_type === "interview_reminder" || n.notification_type === "job_expiring")).length}
-            </p>
-          </CardContent>
-        </Card>
+        {[
+          { label: "Total",         value: notifications.length,                                                               color: "text-gray-900" },
+          { label: "Unread",        value: unreadCount,                                                                        color: "text-blue-600" },
+          { label: "New Applicants",value: notifications.filter((n) => n.notification_type === "new_applicant").length,        color: "text-emerald-600" },
+          { label: "Pending Actions",value: notifications.filter((n) => !n.is_read && (n.notification_type === "interview_reminder" || n.notification_type === "job_expiring")).length, color: "text-amber-600" },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">{stat.label}</p>
+            <p className={`mt-2 text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
       </div>
 
+      {/* Notification list */}
       {filtered.length ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filtered.map((notification, index) => (
             <motion.div
               key={notification.id}
@@ -162,43 +126,43 @@ export default function EmployerNotifications() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.03 }}
             >
-              <Card
-                className={`rounded-3xl border-border/70 transition-all cursor-pointer hover:shadow-md ${
-                  !notification.is_read ? "border-l-4 border-l-accent bg-accent/[0.03]" : ""
+              <div
+                className={`cursor-pointer rounded-2xl border bg-white shadow-sm transition-all hover:shadow-md ${
+                  !notification.is_read
+                    ? "border-l-4 border-l-blue-500 border-t-gray-200 border-r-gray-200 border-b-gray-200"
+                    : "border-gray-200"
                 }`}
                 onClick={() => handleMarkRead(notification)}
               >
-                <CardContent className="flex items-start gap-4 p-5">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg ${typeColors[notification.notification_type] || typeColors.system}`}>
+                <div className="flex items-start gap-4 p-5">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg ${typeBg[notification.notification_type] || typeBg.system}`}>
                     {typeIcons[notification.notification_type] || "📋"}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className={`font-medium ${!notification.is_read ? "text-foreground" : "text-muted-foreground"}`}>
+                        <p className={`font-semibold text-sm ${!notification.is_read ? "text-gray-900" : "text-gray-500"}`}>
                           {notification.title}
                         </p>
-                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                          {notification.message}
-                        </p>
+                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{notification.message}</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         {!notification.is_read ? (
-                          <span className="h-2.5 w-2.5 rounded-full bg-accent" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
                         ) : null}
-                        <Badge variant="outline" className="capitalize text-xs whitespace-nowrap">
+                        <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500 capitalize whitespace-nowrap">
                           {notification.notification_type.replace(/_/g, " ")}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                     <div className="mt-3 flex items-center gap-4">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-gray-400">
                         {notification.created_at ? new Date(notification.created_at).toLocaleString() : "recently"}
                       </span>
                       {notification.action_url ? (
                         <a
                           href={notification.action_url}
-                          className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-teal-600 hover:underline"
                           onClick={(e) => e.stopPropagation()}
                         >
                           View <ExternalLink className="h-3 w-3" />
@@ -206,7 +170,8 @@ export default function EmployerNotifications() {
                       ) : null}
                       {!notification.is_read ? (
                         <button
-                          className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                          type="button"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
                           onClick={(e) => { e.stopPropagation(); handleMarkRead(notification); }}
                         >
                           <Check className="h-3 w-3" /> Mark read
@@ -214,8 +179,8 @@ export default function EmployerNotifications() {
                       ) : null}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>

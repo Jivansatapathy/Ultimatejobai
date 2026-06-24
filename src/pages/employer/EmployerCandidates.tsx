@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import { Bookmark, BookmarkCheck, CalendarDays, CheckCheck, ChevronDown, ChevronUp, FileText, Filter, LayoutGrid, List, Mail, MessageSquare, Search, Sparkles, Star, UserRoundSearch, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -418,34 +416,31 @@ export default function EmployerCandidates() {
         description="Review applicants by role, open resumes, and update pipeline decisions in realtime."
         actions={(
           <div className="flex gap-2">
-            <Button
-              variant={viewMode === "list" ? "default" : "outline"}
-              size="sm"
-              className="rounded-2xl"
+            <button
+              type="button"
+              className={`inline-flex items-center gap-2 rounded-2xl text-sm font-semibold px-4 py-2 transition-colors ${viewMode === "list" ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
               onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
               List
-            </Button>
-            <Button
-              variant={viewMode === "kanban" ? "default" : "outline"}
-              size="sm"
-              className="rounded-2xl"
+            </button>
+            <button
+              type="button"
+              className={`inline-flex items-center gap-2 rounded-2xl text-sm font-semibold px-4 py-2 transition-colors ${viewMode === "kanban" ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
               onClick={() => setViewMode("kanban")}
             >
               <LayoutGrid className="h-4 w-4" />
               Kanban
-            </Button>
+            </button>
           </div>
         )}
       />
 
       <div className="grid gap-6">
-        <Card className="rounded-3xl border-border/70 overflow-visible">
-          <CardContent className="p-5">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-visible p-5">
             <div className="grid gap-4 lg:grid-cols-[1fr_220px_220px_100px]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                 <Input
                   className="pl-10"
                   placeholder="Search candidates, jobs, or skills"
@@ -455,7 +450,7 @@ export default function EmployerCandidates() {
               </div>
               <Select value={jobFilter} onValueChange={setJobFilter}>
                 <SelectTrigger>
-                  <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <Filter className="mr-2 h-4 w-4 text-gray-500" />
                   <SelectValue placeholder="Filter by job" />
                 </SelectTrigger>
                 <SelectContent>
@@ -488,14 +483,16 @@ export default function EmployerCandidates() {
                     <Bookmark className="h-4 w-4" />
                   </SelectTrigger>
                   <SelectContent>
-                    <div className="px-2 py-1 text-xs font-bold text-muted-foreground uppercase tracking-wider">Saved Searches</div>
-                    {savedSearches.length === 0 && <div className="px-2 py-4 text-center text-xs text-muted-foreground">No saved searches</div>}
+                    <div className="px-2 py-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Saved Searches</div>
+                    {savedSearches.length === 0 && <div className="px-2 py-4 text-center text-xs text-gray-500">No saved searches</div>}
                     {savedSearches.map((s) => (
                       <div key={s.id} className="flex items-center justify-between group">
                         <SelectItem value={s.id} className="flex-1 capitalize">{s.name}</SelectItem>
-                        <button 
+                        <button
+                          type="button"
+                          aria-label="Delete saved search"
                           onClick={(e) => { e.stopPropagation(); handleDeleteSavedSearch(s.id, s.name); }}
-                          className="opacity-0 group-hover:opacity-100 p-1 mr-2 hover:text-destructive transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 p-1 mr-2 text-gray-400 hover:text-red-500 transition-opacity"
                         >
                           <XCircle className="h-3 w-3" />
                         </button>
@@ -506,30 +503,27 @@ export default function EmployerCandidates() {
               </div>
             </div>
 
-            <div className="mt-4 flex items-center gap-2 pt-4 border-t border-border/50">
+            <div className="mt-4 flex items-center gap-2 pt-4 border-t border-gray-100">
               <Input 
                 placeholder="Name current filters to save..." 
                 className="max-w-[240px] h-9 text-xs rounded-xl"
                 value={newSearchName}
                 onChange={(e) => setNewSearchName(e.target.value)}
               />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-9 px-4 rounded-xl text-xs gap-2"
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 transition-colors"
                 onClick={handleSaveSearch}
                 disabled={isSavingSearch}
               >
                 {isSavingSearch ? "Saving..." : <><Bookmark className="h-3 w-3" /> Save current search</>}
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
-      <Card className="rounded-3xl border-border/70">
-        <CardContent className="flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3 text-sm text-gray-500">
             <Checkbox
               checked={allVisibleSelected}
               onCheckedChange={(checked) => {
@@ -544,45 +538,41 @@ export default function EmployerCandidates() {
             <span>{selectedApplicationIds.length} candidates selected</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="rounded-2xl" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("screening")}>
+            <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("screening")}>
               <CheckCheck className="h-4 w-4" />
               Move to screening
-            </Button>
-            <Button variant="outline" className="rounded-2xl" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("shortlisted")}>
+            </button>
+            <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("shortlisted")}>
               <CheckCheck className="h-4 w-4" />
               Shortlist selected
-            </Button>
-            <Button variant="outline" className="rounded-2xl" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("rejected")}>
+            </button>
+            <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("rejected")}>
               <XCircle className="h-4 w-4" />
               Reject selected
-            </Button>
+            </button>
           </div>
-          {!canManageCandidates ? <p className="text-sm text-muted-foreground">Your current role can view candidates, but cannot change the hiring pipeline.</p> : null}
-        </CardContent>
-      </Card>
+          {!canManageCandidates ? <p className="text-sm text-gray-500">Your current role can view candidates, but cannot change the hiring pipeline.</p> : null}
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
         {PIPELINE_STATUSES.map((status) => (
-          <Card key={status} className="rounded-3xl border-border/70">
-            <CardContent className="p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{status}</p>
+          <div key={status} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{status}</p>
               <p className="mt-2 text-2xl font-semibold">{pipelineCounts[status] || 0}</p>
-            </CardContent>
-          </Card>
+          </div>
         ))}
       </div>
 
       {/* AI Top Candidates */}
       {topCandidates.length > 0 && (
-        <Card className="rounded-3xl border-border/70 border-l-4 border-l-accent">
-          <CardContent className="p-5">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm border-l-4 border-l-teal-600 p-5">
             <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10">
-                <Sparkles className="h-4 w-4 text-accent" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50">
+                <Sparkles className="h-4 w-4 text-teal-600" />
               </div>
               <div>
                 <p className="font-semibold">🤖 Top Recommended Candidates</p>
-                <p className="text-xs text-muted-foreground">AI-ranked by skill match, experience relevance, and keyword matching</p>
+                <p className="text-xs text-gray-500">AI-ranked by skill match, experience relevance, and keyword matching</p>
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -592,14 +582,14 @@ export default function EmployerCandidates() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
-                  className="rounded-2xl border border-border/60 bg-background/80 p-3 hover:shadow-sm transition-shadow"
+                  className="rounded-2xl border border-gray-200 bg-white p-3 hover:shadow-sm transition-shadow"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 text-xs font-bold text-accent">#{i + 1}</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-xs font-bold text-teal-600">#{i + 1}</span>
                     <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{c.match_score}%</span>
                   </div>
                   <p className="mt-2 font-medium text-sm truncate">{c.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{c.job_title}</p>
+                  <p className="text-xs text-gray-500 truncate">{c.job_title}</p>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {c.matched_skills?.slice(0, 3).map((s) => (
                       <span key={s} className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">{s}</span>
@@ -608,8 +598,7 @@ export default function EmployerCandidates() {
                 </motion.div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+        </div>
       )}
 
       {/* Kanban View */}
@@ -620,13 +609,13 @@ export default function EmployerCandidates() {
             return (
               <div
                 key={status}
-                className={`min-w-[240px] flex-shrink-0 rounded-2xl border-t-4 ${PIPELINE_COLORS[status]} bg-secondary/30 p-3`}
+                className={`min-w-[240px] flex-shrink-0 rounded-2xl border-t-4 ${PIPELINE_COLORS[status]} bg-gray-50 p-3`}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, status)}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{status}</p>
-                  <span className="rounded-full bg-background px-2 py-0.5 text-xs font-bold">{columnApps.length}</span>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{status}</p>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold">{columnApps.length}</span>
                 </div>
                 <div className="space-y-2">
                   {columnApps.map((application) => (
@@ -634,7 +623,7 @@ export default function EmployerCandidates() {
                       key={application.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, application.id)}
-                      className={`cursor-grab rounded-xl border border-border/60 bg-background p-3 transition-all hover:shadow-md active:cursor-grabbing ${
+                      className={`cursor-grab rounded-xl border border-gray-200 bg-white p-3 transition-all hover:shadow-md active:cursor-grabbing ${
                         draggedCandidate === application.id ? "opacity-50 scale-95" : ""
                       }`}
                       onClick={() => setExpandedCard(expandedCard === application.id ? "" : application.id)}
@@ -642,47 +631,51 @@ export default function EmployerCandidates() {
                       <div className="flex items-center justify-between gap-2">
                         <p className="font-medium text-sm truncate">{application.name}</p>
                         <button
+                          type="button"
+                          aria-label={application.is_bookmarked ? "Remove bookmark" : "Bookmark candidate"}
                           className="shrink-0"
                           onClick={(e) => { e.stopPropagation(); handleBookmark(application); }}
                         >
                           {application.is_bookmarked
-                            ? <BookmarkCheck className="h-4 w-4 text-accent" />
-                            : <Bookmark className="h-4 w-4 text-muted-foreground hover:text-accent" />}
+                            ? <BookmarkCheck className="h-4 w-4 text-teal-600" />
+                            : <Bookmark className="h-4 w-4 text-gray-500 hover:text-teal-600" />}
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">{application.job_title}</p>
+                      <p className="text-xs text-gray-500 truncate">{application.job_title}</p>
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                        <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-600">
                           {application.match_score}% match
                         </span>
                         <div className="flex gap-0.5">
                           {[1, 2, 3, 4, 5].map((s) => (
                             <button
                               key={s}
+                              type="button"
+                              aria-label={`Rate ${s} star${s > 1 ? "s" : ""}`}
                               onClick={(e) => { e.stopPropagation(); handleRating(application, s); }}
                               className="p-0"
                             >
                               <Star
-                                className={`h-3 w-3 ${s <= (application.rating || 0) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`}
+                                className={`h-3 w-3 ${s <= (application.rating || 0) ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
                               />
                             </button>
                           ))}
                         </div>
                       </div>
                       {expandedCard === application.id ? (
-                        <div className="mt-3 space-y-2 border-t border-border/40 pt-3">
+                        <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
                           <div className="flex flex-wrap gap-1">
                             {(application.skills || []).slice(0, 4).map((skill) => (
-                              <span key={skill} className="rounded-full bg-secondary px-2 py-0.5 text-[10px]">{skill}</span>
+                              <span key={skill} className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px]">{skill}</span>
                             ))}
                           </div>
-                          <a href={application.resume_link} target="_blank" rel="noreferrer" className="text-xs text-accent hover:underline block">View resume →</a>
+                          <a href={application.resume_link} target="_blank" rel="noreferrer" className="text-xs text-teal-600 hover:underline block">View resume →</a>
                         </div>
                       ) : null}
                     </div>
                   ))}
                   {columnApps.length === 0 && (
-                    <p className="text-center text-xs text-muted-foreground py-6">Drop candidates here</p>
+                    <p className="text-center text-xs text-gray-500 py-6">Drop candidates here</p>
                   )}
                 </div>
               </div>
@@ -695,8 +688,7 @@ export default function EmployerCandidates() {
       {viewMode === "list" && filteredApplications.length ? (
         <div className="grid gap-4">
           {filteredApplications.map((application) => (
-            <Card key={application.id} className="rounded-3xl border-border/70">
-              <CardContent className="p-6">
+            <div key={application.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
                 <div className="flex flex-wrap items-center gap-3">
                   <Checkbox
                     checked={selectedApplicationIds.includes(application.id)}
@@ -717,35 +709,33 @@ export default function EmployerCandidates() {
                     />
                     <h3 className="text-xl font-semibold">{application.name}</h3>
                     <CandidateStatusBadge status={application.status} />
-                    <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                    <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-600">
                       Match {application.match_score}%
                     </span>
                     {/* Star rating */}
                     <div className="ml-auto flex gap-0.5">
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <button key={s} onClick={(e) => { e.stopPropagation(); handleRating(application, s); }} className="p-0.5">
-                          <Star className={`h-4 w-4 ${s <= (application.rating || 0) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+                        <button key={s} type="button" aria-label={`Rate ${s} star${s > 1 ? "s" : ""}`} onClick={(e) => { e.stopPropagation(); handleRating(application, s); }} className="p-0.5">
+                          <Star className={`h-4 w-4 ${s <= (application.rating || 0) ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} />
                         </button>
                       ))}
                     </div>
                   </button>
-                  <button onClick={() => handleBookmark(application)} className="p-1">
+                  <button type="button" aria-label={application.is_bookmarked ? "Remove bookmark" : "Bookmark candidate"} onClick={() => handleBookmark(application)} className="p-1">
                       {application.is_bookmarked
-                        ? <BookmarkCheck className="h-5 w-5 text-accent" />
-                        : <Bookmark className="h-5 w-5 text-muted-foreground hover:text-accent" />}
+                        ? <BookmarkCheck className="h-5 w-5 text-teal-600" />
+                        : <Bookmark className="h-5 w-5 text-gray-500 hover:text-teal-600" />}
                   </button>
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-2xl"
+                    className="inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                     onClick={() => setExpandedCard(expandedCard === application.id ? "" : application.id)}
                   >
                     {expandedCard === application.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     {expandedCard === application.id ? "Hide details" : "View details"}
-                  </Button>
+                  </button>
                 </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                     <span className="inline-flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       {application.email}
@@ -757,7 +747,7 @@ export default function EmployerCandidates() {
                       <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {(application.skills || []).map((skill) => (
-                      <span key={skill} className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
+                      <span key={skill} className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium">
                         {skill}
                       </span>
                     ))}
@@ -767,20 +757,20 @@ export default function EmployerCandidates() {
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">Matched skills</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {application.matched_skills?.length ? application.matched_skills.map((skill) => (
-                          <span key={skill} className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium">
+                          <span key={skill} className="rounded-full bg-white px-3 py-1 text-xs font-medium">
                             {skill}
                           </span>
-                        )) : <span className="text-sm text-muted-foreground">No direct matches yet.</span>}
+                        )) : <span className="text-sm text-gray-500">No direct matches yet.</span>}
                       </div>
                     </div>
                     <div className="rounded-2xl bg-amber-500/10 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">Missing skills</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {application.missing_skills?.length ? application.missing_skills.map((skill) => (
-                          <span key={skill} className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium">
+                          <span key={skill} className="rounded-full bg-white px-3 py-1 text-xs font-medium">
                             {skill}
                           </span>
-                        )) : <span className="text-sm text-muted-foreground">Strong fit on listed job skills.</span>}
+                        )) : <span className="text-sm text-gray-500">Strong fit on listed job skills.</span>}
                       </div>
                     </div>
                   </div>
@@ -788,27 +778,27 @@ export default function EmployerCandidates() {
                     href={application.resume_link}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center text-sm font-medium text-accent hover:underline"
+                    className="inline-flex items-center text-sm font-medium text-teal-600 hover:underline"
                   >
                     View resume
                   </a>
-                  <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-4 text-xs text-gray-500">
                     <span>Applied {application.created_at ? new Date(application.created_at).toLocaleDateString() : "recently"}</span>
                     <span>Stage updated {application.stage_changed_at ? new Date(application.stage_changed_at).toLocaleDateString() : "recently"}</span>
                   </div>
                   {application.notes ? (
-                    <div className="rounded-2xl bg-secondary/50 p-4 text-sm text-muted-foreground whitespace-pre-wrap">
+                    <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500 whitespace-pre-wrap">
                       {application.notes}
                     </div>
                   ) : null}
                   {application.application_answers && Object.keys(application.application_answers).length ? (
-                    <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Quick apply details</p>
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Quick apply details</p>
                       <div className="mt-3 space-y-3">
                         {Object.entries(application.application_answers).map(([question, answer]) => (
                           <div key={question}>
                             <p className="text-sm font-medium">{question}</p>
-                            <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">{answer || "No answer provided."}</p>
+                            <p className="mt-1 text-sm text-gray-500 whitespace-pre-wrap">{answer || "No answer provided."}</p>
                           </div>
                         ))}
                       </div>
@@ -816,20 +806,20 @@ export default function EmployerCandidates() {
                   ) : null}
                       </div>
 
-                      <div className="space-y-4 rounded-3xl bg-secondary/60 p-4">
-                  <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4">
-                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+                      <div className="space-y-4 rounded-3xl bg-gray-100 p-4">
+                  <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4">
+                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-teal-600">
                       <Sparkles className="h-3.5 w-3.5" />
                       Match recommendation
                     </p>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <p className="mt-2 text-sm text-gray-500">
                       {application.recommendation === "shortlist" && "High-signal match. Recommend moving this candidate to shortlist."}
                       {application.recommendation === "screening" && "Promising overlap. Recommend recruiter screening next."}
                       {application.recommendation === "review" && "Needs manual review. Resume shows partial skill alignment."}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">ATS stage</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">ATS stage</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <Select value={application.status} onValueChange={(value) => handleStatusChange(application, value as ApplicationStatus)} disabled={!canManageCandidates}>
                         <SelectTrigger className="rounded-2xl">
@@ -843,18 +833,18 @@ export default function EmployerCandidates() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
-                        variant="outline"
-                        className="rounded-2xl"
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 transition-colors"
                         onClick={() => window.open(application.resume_link, "_blank")}
                       >
                         Resume
-                      </Button>
+                      </button>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">ATS note</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">ATS note</p>
                     <Textarea
                       className="mt-3 min-h-28 rounded-2xl"
                       placeholder="Add recruiter notes, interview outcomes, or follow-up context."
@@ -863,35 +853,35 @@ export default function EmployerCandidates() {
                         setDraftNotes((current) => ({ ...current, [application.id]: event.target.value }))
                       }
                     />
-                    <Button className="mt-3 rounded-2xl" onClick={() => handleNoteSave(application)} disabled={!canManageCandidates}>
+                    <button type="button" className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors shadow-sm" onClick={() => handleNoteSave(application)} disabled={!canManageCandidates}>
                       Save note
-                    </Button>
+                    </button>
                   </div>
 
                   <div>
-                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                       <FileText className="h-3.5 w-3.5" />
                       Recent timeline
                     </p>
                     <div className="mt-3 space-y-3">
                       {application.history?.length ? application.history.slice(0, 4).map((item) => (
-                        <div key={item.id} className="rounded-2xl border border-border/60 bg-background/70 p-3">
+                        <div key={item.id} className="rounded-2xl border border-gray-200 bg-white p-3">
                           <p className="text-sm font-medium">
                             {(item.from_status || "new")} to {item.to_status}
                           </p>
-                          {item.note ? <p className="mt-1 text-sm text-muted-foreground">{item.note}</p> : null}
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          {item.note ? <p className="mt-1 text-sm text-gray-500">{item.note}</p> : null}
+                          <p className="mt-1 text-xs text-gray-500">
                             {item.created_at ? new Date(item.created_at).toLocaleString() : "recently"}
                           </p>
                         </div>
                       )) : (
-                        <p className="text-sm text-muted-foreground">No ATS events yet.</p>
+                        <p className="text-sm text-gray-500">No ATS events yet.</p>
                       )}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                       <CalendarDays className="h-3.5 w-3.5" />
                       Interview scheduling
                     </p>
@@ -956,18 +946,18 @@ export default function EmployerCandidates() {
                           })
                         }
                       />
-                      <Button variant="outline" className="rounded-2xl" onClick={() => handleInterviewSchedule(application)} disabled={!canManageCandidates}>
+                      <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" onClick={() => handleInterviewSchedule(application)} disabled={!canManageCandidates}>
                         Schedule interview
-                      </Button>
+                      </button>
                       {application.interviews?.length ? (
                         <div className="space-y-2">
                           {application.interviews.slice(0, 2).map((item) => (
-                            <div key={item.id} className="rounded-2xl border border-border/60 p-3 text-sm">
+                            <div key={item.id} className="rounded-2xl border border-gray-200 p-3 text-sm">
                               <p className="font-medium">{item.title}</p>
-                              <p className="text-muted-foreground">{new Date(item.starts_at).toLocaleString()} | {item.mode}</p>
-                              <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                              <p className="text-gray-500">{new Date(item.starts_at).toLocaleString()} | {item.mode}</p>
+                              <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
                                 <span>Invite {item.invite_sent_at ? `sent ${new Date(item.invite_sent_at).toLocaleString()}` : "pending"}</span>
-                                {item.meeting_link ? <a href={item.meeting_link} target="_blank" rel="noreferrer" className="text-accent hover:underline">Open link</a> : null}
+                                {item.meeting_link ? <a href={item.meeting_link} target="_blank" rel="noreferrer" className="text-teal-600 hover:underline">Open link</a> : null}
                               </div>
                             </div>
                           ))}
@@ -976,8 +966,8 @@ export default function EmployerCandidates() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                       <Mail className="h-3.5 w-3.5" />
                       Candidate communication
                     </p>
@@ -1028,22 +1018,22 @@ export default function EmployerCandidates() {
                           })
                         }
                       />
-                      <Button variant="outline" className="rounded-2xl" onClick={() => handleCommunicationLog(application)} disabled={!canManageCandidates}>
+                      <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" onClick={() => handleCommunicationLog(application)} disabled={!canManageCandidates}>
                         Save communication
-                      </Button>
+                      </button>
                       {application.communications?.length ? (
                         <div className="space-y-2">
                           {application.communications.slice(0, 2).map((item) => (
-                            <div key={item.id} className="rounded-2xl border border-border/60 p-3 text-sm">
+                            <div key={item.id} className="rounded-2xl border border-gray-200 p-3 text-sm">
                               <p className="font-medium">{item.subject || item.communication_type}</p>
-                              <p className="mt-1 text-muted-foreground">{item.message}</p>
-                              <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                              <p className="mt-1 text-gray-500">{item.message}</p>
+                              <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
                                 <span className="capitalize">Type: {item.communication_type}</span>
                                 <span className="capitalize">Direction: {item.direction}</span>
                                 {item.delivery_status ? <span className="capitalize">Delivery: {item.delivery_status}</span> : null}
                               </div>
                               {item.delivery_error ? <p className="mt-1 text-xs text-destructive">{item.delivery_error}</p> : null}
-                              <p className="mt-1 text-xs text-muted-foreground">{item.created_at ? new Date(item.created_at).toLocaleString() : "recently"}</p>
+                              <p className="mt-1 text-xs text-gray-500">{item.created_at ? new Date(item.created_at).toLocaleString() : "recently"}</p>
                             </div>
                           ))}
                         </div>
@@ -1051,8 +1041,8 @@ export default function EmployerCandidates() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                       <MessageSquare className="h-3.5 w-3.5" />
                       Firestore chat
                     </p>
@@ -1069,7 +1059,7 @@ export default function EmployerCandidates() {
                         />
                       ) : (
                         <div className="space-y-3">
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-gray-500">
                             Only employers can initiate chat. Send the first message here to open the conversation with this aspirant.
                           </p>
                           <Textarea
@@ -1081,9 +1071,9 @@ export default function EmployerCandidates() {
                             }
                           />
                           <div className="flex justify-end">
-                            <Button className="rounded-2xl" onClick={() => handleStartConversation(application)} disabled={startingChatFor === application.id}>
+                            <button type="button" className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors shadow-sm" onClick={() => handleStartConversation(application)} disabled={startingChatFor === application.id}>
                               {startingChatFor === application.id ? "Starting..." : "Start conversation"}
-                            </Button>
+                            </button>
                           </div>
                         </div>
                       )}
@@ -1092,8 +1082,7 @@ export default function EmployerCandidates() {
                       </div>
                     </div>
                   ) : null}
-              </CardContent>
-            </Card>
+            </div>
           ))}
         </div>
       ) : (

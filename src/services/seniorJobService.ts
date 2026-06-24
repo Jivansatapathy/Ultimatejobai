@@ -98,3 +98,22 @@ export const fetchSeniorJobFilterOptions = async (): Promise<SeniorJobFilterOpti
   const response = await api.get('/api/search/senior/filters/');
   return response.data;
 };
+
+export interface SeniorJobSuggestion {
+  type: 'role' | 'company' | 'location';
+  label: string;
+  value: string;
+  count: number;
+}
+
+export const suggestSeniorJobs = async (
+  q: string,
+  signal?: AbortSignal
+): Promise<SeniorJobSuggestion[]> => {
+  if (q.trim().length < 2) return [];
+  const response = await api.get('/api/search/senior/suggest/', {
+    params: { q },
+    signal,
+  });
+  return response.data.suggestions ?? [];
+};

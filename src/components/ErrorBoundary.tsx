@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { CHUNK_RELOAD_KEY, isChunkLoadError } from "@/lib/chunkReload";
 
 interface State {
   hasError: boolean;
@@ -19,6 +20,14 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("ErrorBoundary caught:", error, info);
+
+    // Fallback for stale-chunk failures that reach the boundary without
+    // tripping the `vite:preloadError` listener in main.tsx — recover with
+    // one hard reload instead of stranding the user on this screen.
+    if (isChunkLoadError(error) && !sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+      window.location.reload();
+    }
   }
 
   render() {

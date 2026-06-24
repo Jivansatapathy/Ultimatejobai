@@ -7,8 +7,6 @@ import { EmptyState } from "@/components/employer/EmptyState";
 import { LoadingState } from "@/components/employer/LoadingState";
 import { PageHeader } from "@/components/employer/PageHeader";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useEmployerAuth } from "@/context/EmployerAuthContext";
 import {
   generateOfferLetter,
@@ -70,9 +68,10 @@ export default function EmployerOfferLetters() {
           getOfferTemplates().catch(() => []),
           getEmployerCandidates({ status: "offer" }).catch(() => []),
         ]);
-        setOffers(offerList);
-        setTemplates(templateList);
-        setCandidates(candidateList);
+        const toArray = (v: any) => Array.isArray(v) ? v : (Array.isArray(v?.results) ? v.results : []);
+        setOffers(toArray(offerList));
+        setTemplates(toArray(templateList));
+        setCandidates(toArray(candidateList));
       } finally { setLoading(false); }
     };
     load();
@@ -121,6 +120,7 @@ export default function EmployerOfferLetters() {
 
   const handleLoadTemplate = (templateId: string) => {
     setSelectedTemplate(templateId);
+    if (!templateId) return;
     const template = templates.find((t) => t.id === templateId);
     if (template) {
       let content = template.content;
@@ -248,28 +248,30 @@ export default function EmployerOfferLetters() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Candidate</label>
-              <Select value={selectedCandidate} onValueChange={setSelectedCandidate}>
-                <SelectTrigger className="bg-white border-gray-200 text-gray-900 rounded-xl">
-                  <SelectValue placeholder="Choose a candidate in offer stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  {candidates.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name} — {c.job_title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label htmlFor="select-candidate" className="text-xs font-semibold uppercase tracking-wider text-gray-500">Candidate</label>
+              <select
+                id="select-candidate"
+                value={selectedCandidate}
+                onChange={(e) => setSelectedCandidate(e.target.value)}
+                className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+              >
+                <option value="">Choose a candidate in offer stage</option>
+                {candidates.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name} — {c.job_title}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Template (optional)</label>
-              <Select value={selectedTemplate} onValueChange={handleLoadTemplate}>
-                <SelectTrigger className="bg-white border-gray-200 text-gray-900 rounded-xl">
-                  <SelectValue placeholder="Choose a template" />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <label htmlFor="select-template" className="text-xs font-semibold uppercase tracking-wider text-gray-500">Template (optional)</label>
+              <select
+                id="select-template"
+                value={selectedTemplate}
+                onChange={(e) => handleLoadTemplate(e.target.value)}
+                className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+              >
+                <option value="">Choose a template</option>
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -283,12 +285,12 @@ export default function EmployerOfferLetters() {
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Letter content</label>
-              <Textarea
+              <textarea
                 rows={12}
                 value={customContent || defaultTemplate}
                 onChange={(e) => setCustomContent(e.target.value)}
                 placeholder="Write or edit the offer letter content..."
-                className="font-mono text-sm bg-white border-gray-200 text-gray-900"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-mono text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-y"
               />
               <p className="text-xs text-gray-400">
                 Use placeholders: {"{{candidate_name}}"}, {"{{job_title}}"}, {"{{salary}}"}, {"{{start_date}}"}, {"{{company_name}}"}, {"{{employer_name}}"}

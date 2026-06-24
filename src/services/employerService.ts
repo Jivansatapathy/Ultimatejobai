@@ -447,12 +447,12 @@ export async function moveCandidateToFolder(applicationId: string, folderId: str
 
 // ─── Offer Letters ──────────────────────────────────────────────
 export async function getOfferTemplates() {
-  const response = await api.get<OfferTemplate[]>("/api/employer/offer-templates/");
+  const response = await api.get<OfferTemplate[]>("/api/employer/offers/templates/");
   return response.data;
 }
 
 export async function getOfferLetters() {
-  const response = await api.get<OfferLetter[]>("/api/employer/offer-letters/");
+  const response = await api.get<OfferLetter[]>("/api/employer/offers/letters/");
   return response.data;
 }
 
@@ -463,12 +463,18 @@ export async function generateOfferLetter(payload: {
   start_date: string;
   custom_content?: string;
 }) {
-  const response = await api.post<OfferLetter>("/api/employer/offer-letters/", payload);
+  const response = await api.post<OfferLetter>("/api/employer/offers/letters/", {
+    application: payload.application_id,
+    template: payload.template_id || null,
+    salary: payload.salary,
+    start_date: payload.start_date,
+    content_html: payload.custom_content || "",
+  });
   return response.data;
 }
 
 export async function sendOfferLetter(offerId: string) {
-  const response = await api.post<OfferLetter>(`/api/employer/offer-letters/${offerId}/send/`);
+  const response = await api.patch<OfferLetter>(`/api/employer/offers/letters/${offerId}/`, { status: "sent" });
   return response.data;
 }
 

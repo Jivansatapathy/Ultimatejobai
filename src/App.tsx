@@ -137,6 +137,8 @@ function AppChecklist() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appCount, setAppCount] = useState(0);
   const [interviewDone, setInterviewDone] = useState(false);
+  const userRole = localStorage.getItem("current_user_role");
+  if (userRole === "employer") return null;
 
   useEffect(() => {
     // Fire daily reminder if conditions are met

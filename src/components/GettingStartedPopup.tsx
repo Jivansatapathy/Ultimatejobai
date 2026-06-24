@@ -79,7 +79,7 @@ const TASKS: TaskDef[] = [
 
 export default function GettingStartedPopup() {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isEmployer } = useAuth();
     const { resumes } = useResume();
     const [visible, setVisible] = useState(false);
     const [appCount, setAppCount] = useState(0);
@@ -147,7 +147,7 @@ export default function GettingStartedPopup() {
     const completedCount = TASKS.filter(t => isChecked(t)).length;
     const progress = Math.round((completedCount / TASKS.length) * 100);
 
-    if (!visible) return null;
+    if (!visible || isEmployer) return null;
 
     return (
         <AnimatePresence>

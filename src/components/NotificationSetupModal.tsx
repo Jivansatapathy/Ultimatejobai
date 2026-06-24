@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 
 export default function NotificationSetupModal() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isEmployer } = useAuth();
   const { activeResume } = useResume();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"intro" | "prefs" | "done">("intro");
@@ -72,6 +72,8 @@ export default function NotificationSetupModal() {
 
   const inputCls =
     "w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-black placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all";
+
+  if (isEmployer) return null;
 
   return (
     <AnimatePresence>

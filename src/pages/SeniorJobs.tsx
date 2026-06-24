@@ -883,7 +883,7 @@ export default function FindJobs() {
               const active = filters.country === c.value;
               const cnt = c.code === "CA"
                 ? fmtCount(liveCount("Canada", timeSeed, 100_000, 112_000))
-                : fmtCount(liveCount("UnitedStates", timeSeed, 185_000, 190_000));
+                : fmtCount(liveCount("UnitedStates", timeSeed, 500_000, 600_000));
               return (
                 <button
                   key={c.value}

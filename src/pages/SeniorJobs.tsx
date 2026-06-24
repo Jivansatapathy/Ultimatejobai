@@ -787,7 +787,7 @@ export default function FindJobs() {
           setActiveSuggestion(-1);
         })
         .catch(() => {});
-    }, 200);
+    }, 120);
     return () => { if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current); };
   }, [textInput]);
 

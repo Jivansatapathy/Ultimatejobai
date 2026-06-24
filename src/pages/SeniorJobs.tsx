@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import {
   Search, X, MapPin, Building2, Briefcase, Globe2,
   Loader2, Crown, TrendingUp, Users2, ChevronDown,
-  SlidersHorizontal, CalendarDays, ExternalLink, ArrowRight, Zap, DollarSign,
+  SlidersHorizontal, CalendarDays, ExternalLink, ArrowRight, Zap, DollarSign, Sparkles,
 } from "lucide-react";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { ApplyBotButton } from "@/components/jobs/ApplyBotButton";
@@ -520,6 +520,12 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
                 <SenIcon className="h-3 w-3" />
                 {job.seniority_level}
               </span>
+              {job.is_venus_powered && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-gradient-to-r from-violet-50 to-indigo-50 text-violet-700 border-violet-200">
+                  <Sparkles className="h-3 w-3" />
+                  Venus Powered
+                </span>
+              )}
               {job.workplace_type && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border bg-gray-50 text-gray-600 border-gray-200 font-medium">
                   <Globe2 className="h-3 w-3" />
@@ -537,15 +543,16 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
       </div>
 
       {/* Apply bot footer */}
-      {job.apply_url && (
+      {(job.apply_url || job.source === "employer") && (
         <div className="px-4 sm:px-6 pb-4 sm:pb-5" onClick={(e) => e.stopPropagation()}>
           <div className="border-t border-gray-100 pt-3 sm:pt-4">
             <ApplyBotButton
               variant="light"
-              jobUrl={job.apply_url}
+              jobUrl={job.apply_url ?? ""}
               jobTitle={job.title}
               company={job.company_name ?? ""}
               jobId={String(job.id)}
+              directApplyUrl={job.source === "employer" ? `/api/search/senior/${job.id}/apply/` : undefined}
             />
           </div>
         </div>
@@ -674,19 +681,22 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
             </div>
 
             {/* Footer */}
-            {job.apply_url && (
+            {(job.apply_url || job.source === "employer") && (
               <div className="p-4 sm:p-5 border-t border-gray-100 shrink-0 bg-gray-50/50 space-y-2.5">
                 <ApplyBotButton
                   variant="light"
-                  jobUrl={job.apply_url}
+                  jobUrl={job.apply_url ?? ""}
                   jobTitle={job.title}
                   company={job.company_name ?? ""}
                   jobId={String(job.id)}
+                  directApplyUrl={job.source === "employer" ? `/api/search/senior/${job.id}/apply/` : undefined}
                 />
-                <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-2.5 border border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-gray-300 hover:text-gray-700 transition-colors">
-                  Apply manually <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+                {job.apply_url && (
+                  <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 border border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-gray-300 hover:text-gray-700 transition-colors">
+                    Apply manually <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
               </div>
             )}
           </motion.aside>

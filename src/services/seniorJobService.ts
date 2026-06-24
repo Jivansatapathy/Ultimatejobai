@@ -24,6 +24,7 @@ export interface SeniorJob {
   posted_at: string | null;
   source: string | null;
   platform: string | null;
+  is_venus_powered: boolean;
   description?: string;
 }
 

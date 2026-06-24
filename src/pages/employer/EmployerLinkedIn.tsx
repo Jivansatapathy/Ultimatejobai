@@ -199,7 +199,7 @@ export default function EmployerLinkedIn() {
 
   const loadPage = async (jobId?: string) => {
     const [jobData, connectionData, analyticsData, postsData] = await Promise.all([
-      getEmployerJobs(),
+      getEmployerJobs().catch(() => []),
       getLinkedInConnection().catch(() => ({ status: "disconnected", connected: false })),
       getLinkedInGlobalAnalytics().catch(() => emptyGlobalAnalytics),
       getLinkedInPublishedPosts().catch(() => []),

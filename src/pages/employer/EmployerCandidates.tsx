@@ -88,8 +88,12 @@ export default function EmployerCandidates() {
           }),
           getEmployerJobs(),
         ]);
-        setApplications(applicationItems);
-        setJobs(jobItems);
+        setApplications(Array.isArray(applicationItems) ? applicationItems : []);
+        setJobs(Array.isArray(jobItems) ? jobItems : []);
+      } catch (err) {
+        console.error("Failed to load candidates:", err);
+        setApplications([]);
+        setJobs([]);
       } finally {
         setLoading(false);
       }
@@ -141,7 +145,7 @@ export default function EmployerCandidates() {
     return applications.filter((application) => {
       const matchesSearch =
         !query ||
-        [application.name, application.email, application.job_title, application.skills.join(" ")]
+        [application.name, application.email, application.job_title, (application.skills || []).join(" ")]
           .join(" ")
           .toLowerCase()
           .includes(query);
@@ -668,7 +672,7 @@ export default function EmployerCandidates() {
                       {expandedCard === application.id ? (
                         <div className="mt-3 space-y-2 border-t border-border/40 pt-3">
                           <div className="flex flex-wrap gap-1">
-                            {application.skills.slice(0, 4).map((skill) => (
+                            {(application.skills || []).slice(0, 4).map((skill) => (
                               <span key={skill} className="rounded-full bg-secondary px-2 py-0.5 text-[10px]">{skill}</span>
                             ))}
                           </div>
@@ -752,7 +756,7 @@ export default function EmployerCandidates() {
                     <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
                       <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
-                    {application.skills.map((skill) => (
+                    {(application.skills || []).map((skill) => (
                       <span key={skill} className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
                         {skill}
                       </span>

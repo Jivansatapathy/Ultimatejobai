@@ -81,7 +81,7 @@ const PLANS = [
     description: "Three monthly sessions plus a dedicated executive recruiter assigned exclusively to your search.",
     icon: Crown,
     style: "orange" as const,
-    badge: "Premium",
+    badge: "Most Valuable",
     cta: "Go Personal",
     highlights: [
       "Three 30-min sessions per month (90 min total)",

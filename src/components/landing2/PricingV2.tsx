@@ -43,12 +43,12 @@ const PLAN_CONFIG: Record<string, {
   free:         { icon: Sparkles, callout: "15-min call · Free forever" },
   beginner:     { icon: Phone, callout: "1 session/mo · 30 min" },
   professional: { icon: Briefcase, featured: true, badge: "Most Popular", callout: "2 sessions/mo · 60 min total" },
-  personal:     { icon: Crown, badge: "Premium", callout: "3 sessions/mo + dedicated recruiter" },
+  personal:     { icon: Crown, badge: "Most Valuable", callout: "3 sessions/mo + dedicated recruiter" },
   // legacy slugs
   starter:      { icon: Phone, callout: "1 session/mo · 30 min" },
   premium:      { icon: Briefcase, featured: true, badge: "Most Popular", callout: "2 sessions/mo · 60 min total" },
-  premium_tier: { icon: Crown, badge: "Premium", callout: "3 sessions/mo + dedicated recruiter" },
-  executive:    { icon: Crown, badge: "Premium", callout: "3 sessions/mo + dedicated recruiter" },
+  premium_tier: { icon: Crown, badge: "Most Valuable", callout: "3 sessions/mo + dedicated recruiter" },
+  executive:    { icon: Crown, badge: "Most Valuable", callout: "3 sessions/mo + dedicated recruiter" },
 };
 
 const fallbackConfig = { icon: Phone };

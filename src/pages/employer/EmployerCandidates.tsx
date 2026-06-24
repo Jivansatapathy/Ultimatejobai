@@ -4,7 +4,6 @@ import { Bookmark, BookmarkCheck, CalendarDays, CheckCheck, ChevronDown, Chevron
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CandidateStatusBadge } from "@/components/employer/CandidateStatusBadge";
 import { EmptyState } from "@/components/employer/EmptyState";
@@ -409,7 +408,7 @@ export default function EmployerCandidates() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <PageHeader
         eyebrow="Candidates"
         title="Candidate Management"
@@ -430,135 +429,124 @@ export default function EmployerCandidates() {
               onClick={() => setViewMode("kanban")}
             >
               <LayoutGrid className="h-4 w-4" />
-              Kanban
+              Board
             </button>
           </div>
         )}
       />
 
-      <div className="grid gap-6">
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-visible p-5">
-            <div className="grid gap-4 lg:grid-cols-[1fr_220px_220px_100px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                <Input
-                  className="pl-10"
-                  placeholder="Search candidates, jobs, or skills"
-                  value={search}
-                  onChange={(event) => startTransition(() => setSearch(event.target.value))}
-                />
-              </div>
-              <Select value={jobFilter} onValueChange={setJobFilter}>
-                <SelectTrigger>
-                  <Filter className="mr-2 h-4 w-4 text-gray-500" />
-                  <SelectValue placeholder="Filter by job" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All jobs</SelectItem>
-                  {jobs.map((job) => (
-                    <SelectItem key={job.id} value={job.id}>
-                      {job.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ApplicationStatus | "all")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  {PIPELINE_STATUSES.map(s => (
-                    <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <div className="flex items-center gap-2">
-                <Select onValueChange={(val) => {
-                  const saved = savedSearches.find(s => s.id === val);
-                  if (saved) handleApplySavedSearch(saved);
-                }}>
-                  <SelectTrigger className="px-3" title="Saved Searches">
-                    <Bookmark className="h-4 w-4" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <div className="px-2 py-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Saved Searches</div>
-                    {savedSearches.length === 0 && <div className="px-2 py-4 text-center text-xs text-gray-500">No saved searches</div>}
-                    {savedSearches.map((s) => (
-                      <div key={s.id} className="flex items-center justify-between group">
-                        <SelectItem value={s.id} className="flex-1 capitalize">{s.name}</SelectItem>
-                        <button
-                          type="button"
-                          aria-label="Delete saved search"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteSavedSearch(s.id, s.name); }}
-                          className="opacity-0 group-hover:opacity-100 p-1 mr-2 text-gray-400 hover:text-red-500 transition-opacity"
-                        >
-                          <XCircle className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5 space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_180px_180px]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search candidates, jobs, or skills"
+              value={search}
+              onChange={(event) => startTransition(() => setSearch(event.target.value))}
+              className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+            />
+          </div>
+          <select
+            aria-label="Filter by job"
+            value={jobFilter}
+            onChange={(e) => setJobFilter(e.target.value)}
+            className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+          >
+            <option value="all">All jobs</option>
+            {jobs.map((job) => (
+              <option key={job.id} value={job.id}>{job.title}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Filter by status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as ApplicationStatus | "all")}
+            className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 capitalize focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+          >
+            <option value="all">All statuses</option>
+            {PIPELINE_STATUSES.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
 
-            <div className="mt-4 flex items-center gap-2 pt-4 border-t border-gray-100">
-              <Input 
-                placeholder="Name current filters to save..." 
-                className="max-w-[240px] h-9 text-xs rounded-xl"
-                value={newSearchName}
-                onChange={(e) => setNewSearchName(e.target.value)}
-              />
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100">
+          <input
+            type="text"
+            placeholder="Name current filters to save..."
+            value={newSearchName}
+            onChange={(e) => setNewSearchName(e.target.value)}
+            className="h-9 w-52 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+          />
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 transition-colors"
+            onClick={handleSaveSearch}
+            disabled={isSavingSearch}
+          >
+            {isSavingSearch ? "Saving..." : <><Bookmark className="h-3 w-3" /> Save filters</>}
+          </button>
+          {savedSearches.map((s) => (
+            <div key={s.id} className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 pl-3 pr-1 h-9">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 transition-colors"
-                onClick={handleSaveSearch}
-                disabled={isSavingSearch}
+                className="text-xs font-medium text-gray-600 hover:text-gray-900"
+                onClick={() => handleApplySavedSearch(s)}
               >
-                {isSavingSearch ? "Saving..." : <><Bookmark className="h-3 w-3" /> Save current search</>}
+                {s.name}
+              </button>
+              <button
+                type="button"
+                aria-label="Delete saved search"
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                onClick={() => handleDeleteSavedSearch(s.id, s.name)}
+              >
+                <XCircle className="h-3 w-3" />
               </button>
             </div>
+          ))}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <Checkbox
-              checked={allVisibleSelected}
-              onCheckedChange={(checked) => {
-                setSelectedApplicationIds((current) => {
-                  if (checked) {
-                    return [...new Set([...current, ...filteredApplications.map((application) => application.id)])];
-                  }
-                  return current.filter((id) => !filteredApplications.some((application) => application.id === id));
-                });
-              }}
-            />
-            <span>{selectedApplicationIds.length} candidates selected</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("screening")}>
-              <CheckCheck className="h-4 w-4" />
-              Move to screening
-            </button>
-            <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("shortlisted")}>
-              <CheckCheck className="h-4 w-4" />
-              Shortlist selected
-            </button>
-            <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-50 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("rejected")}>
-              <XCircle className="h-4 w-4" />
-              Reject selected
-            </button>
-          </div>
-          {!canManageCandidates ? <p className="text-sm text-gray-500">Your current role can view candidates, but cannot change the hiring pipeline.</p> : null}
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm flex flex-wrap items-center gap-3 px-5 py-3">
+        <Checkbox
+          checked={allVisibleSelected}
+          onCheckedChange={(checked) => {
+            setSelectedApplicationIds((current) => {
+              if (checked) {
+                return [...new Set([...current, ...filteredApplications.map((application) => application.id)])];
+              }
+              return current.filter((id) => !filteredApplications.some((application) => application.id === id));
+            });
+          }}
+        />
+        <span className="text-sm font-medium text-gray-600 mr-1">
+          {selectedApplicationIds.length > 0 ? `${selectedApplicationIds.length} selected` : "Select all"}
+        </span>
+        <div className="h-4 w-px bg-gray-200" />
+        <button type="button" className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-2 disabled:opacity-40 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("screening")}>
+          <CheckCheck className="h-3.5 w-3.5" />
+          Move to screening
+        </button>
+        <button type="button" className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-2 disabled:opacity-40 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("shortlisted")}>
+          <CheckCheck className="h-3.5 w-3.5" />
+          Shortlist
+        </button>
+        <button type="button" className="inline-flex items-center gap-1.5 rounded-xl border border-red-100 bg-white hover:bg-red-50 text-red-600 text-xs font-semibold px-3 py-2 disabled:opacity-40 transition-colors" disabled={!selectedApplicationIds.length || !canManageCandidates} onClick={() => handleBulkStatus("rejected")}>
+          <XCircle className="h-3.5 w-3.5" />
+          Reject
+        </button>
+        {!canManageCandidates && (
+          <p className="ml-auto text-xs text-gray-400">View-only access — pipeline changes require recruiter role.</p>
+        )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
         {PIPELINE_STATUSES.map((status) => (
-          <div key={status} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{status}</p>
-              <p className="mt-2 text-2xl font-semibold">{pipelineCounts[status] || 0}</p>
+          <div key={status} className={`rounded-2xl border-t-[3px] ${PIPELINE_COLORS[status]} border border-gray-200 bg-white shadow-sm p-4`}>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{status}</p>
+            <p className="mt-1.5 text-3xl font-bold text-gray-900">{pipelineCounts[status] || 0}</p>
           </div>
         ))}
       </div>
@@ -601,21 +589,21 @@ export default function EmployerCandidates() {
         </div>
       )}
 
-      {/* Kanban View */}
+      {/* Board View */}
       {viewMode === "kanban" ? (
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-3 overflow-x-auto pb-4">
           {PIPELINE_STATUSES.map((status) => {
             const columnApps = filteredApplications.filter((a) => a.status === status);
             return (
               <div
                 key={status}
-                className={`min-w-[240px] flex-shrink-0 rounded-2xl border-t-4 ${PIPELINE_COLORS[status]} bg-gray-50 p-3`}
+                className={`min-w-[220px] flex-shrink-0 rounded-2xl border-t-[3px] ${PIPELINE_COLORS[status]} border border-gray-200 bg-gray-50/70 p-3`}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, status)}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{status}</p>
-                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold">{columnApps.length}</span>
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{status}</p>
+                  <span className="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-[10px] font-bold text-gray-700">{columnApps.length}</span>
                 </div>
                 <div className="space-y-2">
                   {columnApps.map((application) => (
@@ -886,9 +874,11 @@ export default function EmployerCandidates() {
                       Interview scheduling
                     </p>
                     <div className="mt-3 grid gap-3">
-                      <Input
+                      <input
+                        type="text"
                         placeholder="Interview title"
                         value={interviewDrafts[application.id]?.title ?? ""}
+                        className="h-9 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                         onChange={(event) =>
                           setInterviewDrafts((current) => {
                             const existing = current[application.id] ?? { title: "", mode: "virtual" as const, starts_at: "", meeting_link: "" };
@@ -919,9 +909,11 @@ export default function EmployerCandidates() {
                             <SelectItem value="onsite">On-site</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Input
+                        <input
                           type="datetime-local"
+                          aria-label="Interview date and time"
                           value={interviewDrafts[application.id]?.starts_at ?? ""}
+                          className="h-9 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                           onChange={(event) =>
                             setInterviewDrafts((current) => {
                               const existing = current[application.id] ?? { title: "", mode: "virtual" as const, starts_at: "", meeting_link: "" };
@@ -933,9 +925,11 @@ export default function EmployerCandidates() {
                           }
                         />
                       </div>
-                      <Input
-                        placeholder="Meeting link"
+                      <input
+                        type="text"
+                        placeholder="Meeting link (e.g. Zoom URL)"
                         value={interviewDrafts[application.id]?.meeting_link ?? ""}
+                        className="h-9 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                         onChange={(event) =>
                           setInterviewDrafts((current) => {
                             const existing = current[application.id] ?? { title: "", mode: "virtual" as const, starts_at: "", meeting_link: "" };
@@ -991,9 +985,11 @@ export default function EmployerCandidates() {
                           <SelectItem value="note">Note</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Input
+                      <input
+                        type="text"
                         placeholder="Subject"
                         value={communicationDrafts[application.id]?.subject ?? ""}
+                        className="h-9 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                         onChange={(event) =>
                           setCommunicationDrafts((current) => {
                             const existing = current[application.id] ?? { communication_type: "email" as const, subject: "", message: "" };

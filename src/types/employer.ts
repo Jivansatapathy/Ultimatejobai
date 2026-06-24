@@ -1,6 +1,14 @@
 export type UserRole = "admin" | "employer" | "candidate";
 export type JobStatus = "draft" | "published" | "closed";
+export type ReviewStatus = "pending" | "approved" | "rejected";
 export type ApplicationStatus = "applied" | "screening" | "shortlisted" | "interview" | "offer" | "rejected" | "hired";
+
+export interface JobReviewMessageItem {
+  id: string;
+  message: string;
+  created_at: string;
+  is_from_employer: boolean;
+}
 
 export interface CandidateStatusHistoryItem {
   id: string;
@@ -102,6 +110,9 @@ export interface JobPosting {
   skills: string[];
   deadline: string;
   employer_status: JobStatus;
+  review_status: ReviewStatus;
+  admin_seniority_level?: string | null;
+  review_messages?: JobReviewMessageItem[];
   company_name: string;
   applications_count: number;
   created_at?: string | null;

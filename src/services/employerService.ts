@@ -198,6 +198,11 @@ export async function updateEmployerJob(jobId: string, payload: EmployerJobPaylo
   return response.data;
 }
 
+export async function sendJobReviewMessage(jobId: string, message: string) {
+  const response = await api.post<JobPosting>(`/api/employer/jobs/${jobId}/messages/`, { message });
+  return response.data;
+}
+
 export async function bulkEmployerJobAction(action: "publish" | "close", jobIds: string[]) {
   const response = await api.post<{ action: string; updated: number }>("/api/employer/jobs/bulk-action/", {
     action,

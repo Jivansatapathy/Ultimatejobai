@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, Pencil, Plus, Search, Trash2, UploadCloud, XCircle } from "lucide-react";
+import { BriefcaseBusiness, Pencil, Plus, Search, Send, Trash2, UploadCloud, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/employer/EmptyState";
@@ -28,6 +28,7 @@ import {
   getExternalPostingRequests,
   getEmployerJobs,
   prepareExternalPosting,
+  sendJobReviewMessage,
   updateEmployerJob,
 } from "@/services/employerService";
 import { ExternalPostingRequest, JobPosting } from "@/types/employer";
@@ -38,6 +39,18 @@ const statusColors: Record<string, string> = {
   published: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   draft:     "bg-amber-50 text-amber-700 border border-amber-200",
   closed:    "bg-gray-100 text-gray-500 border border-gray-200",
+};
+
+const reviewStatusLabels: Record<string, string> = {
+  pending:  "Pending Review",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
+const reviewStatusColors: Record<string, string> = {
+  pending:  "bg-amber-50 text-amber-700 border border-amber-200",
+  approved: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  rejected: "bg-red-50 text-red-700 border border-red-200",
 };
 
 export default function EmployerJobs() {
@@ -52,6 +65,8 @@ export default function EmployerJobs() {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [postingRequests, setPostingRequests] = useState<ExternalPostingRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [sendingReplyJobId, setSendingReplyJobId] = useState<string | null>(null);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -131,7 +146,7 @@ export default function EmployerJobs() {
     };
     try {
       if (editingJob) { await updateEmployerJob(editingJob.id, payload); toast.success("Job updated successfully."); }
-      else { await createEmployerJob(payload); toast.success("Job created successfully."); }
+      else { await createEmployerJob(payload); toast.success("Submitted for review — you'll be notified once it's approved."); }
       await refreshJobs();
       setDialogOpen(false);
       setEditingJob(null);
@@ -140,6 +155,22 @@ export default function EmployerJobs() {
       toast.error("Unable to save the job right now.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendReply = async (job: JobPosting) => {
+    const message = (replyDrafts[job.id] || "").trim();
+    if (!message) return;
+    setSendingReplyJobId(job.id);
+    try {
+      const updated = await sendJobReviewMessage(job.id, message);
+      setJobs((current) => current.map((j) => (j.id === job.id ? updated : j)));
+      setReplyDrafts((current) => ({ ...current, [job.id]: "" }));
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to send your reply right now.");
+    } finally {
+      setSendingReplyJobId(null);
     }
   };
 
@@ -314,6 +345,14 @@ export default function EmployerJobs() {
                           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusColors[job.employer_status] || statusColors.draft}`}>
                             {job.employer_status}
                           </span>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${reviewStatusColors[job.review_status] || reviewStatusColors.pending}`}>
+                            {reviewStatusLabels[job.review_status] || job.review_status}
+                          </span>
+                          {job.review_status === "approved" && job.admin_seniority_level && (
+                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+                              {job.admin_seniority_level}
+                            </span>
+                          )}
                           <span className="text-xs uppercase tracking-widest text-gray-400">{job.company_name}</span>
                         </div>
                         <h3 className="mt-2 text-lg font-bold text-gray-900">{job.title}</h3>
@@ -351,6 +390,43 @@ export default function EmployerJobs() {
                       </span>
                     ))}
                   </div>
+
+                  {(!!job.review_messages?.length || job.review_status !== "approved") && (
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3.5 space-y-2.5">
+                      <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Review thread</p>
+                      {job.review_messages?.length ? (
+                        job.review_messages.map((m) => (
+                          <div key={m.id} className={`max-w-[85%] rounded-xl px-3 py-2 ${m.is_from_employer ? "ml-auto bg-blue-600 text-white" : "bg-white border border-blue-100 text-gray-700"}`}>
+                            <p className="text-sm leading-relaxed">{m.message}</p>
+                            <p className={`mt-1 text-[11px] ${m.is_from_employer ? "text-blue-100" : "text-gray-400"}`}>
+                              {m.is_from_employer ? "You" : "Review team"} · {new Date(m.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-400">No messages yet — you'll be notified here if the review team needs anything.</p>
+                      )}
+
+                      <div className="flex gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="text"
+                          value={replyDrafts[job.id] || ""}
+                          onChange={(e) => setReplyDrafts((current) => ({ ...current, [job.id]: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleSendReply(job); }}
+                          placeholder="Reply to the review team…"
+                          className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-400"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSendReply(job)}
+                          disabled={sendingReplyJobId === job.id || !(replyDrafts[job.id] || "").trim()}
+                          className="flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-2 text-sm font-bold text-white transition-colors"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-3 gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4 text-sm">
                     <div>

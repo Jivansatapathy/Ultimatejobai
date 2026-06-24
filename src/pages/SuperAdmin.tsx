@@ -4,10 +4,11 @@ import {
   Bot, CheckCircle2, XCircle, Clock, Search, ChevronDown,
   ChevronRight, ExternalLink, RefreshCw, AlertTriangle, Loader2,
   TrendingUp, Filter, X, ShieldAlert, Eye, EyeOff,
-  Users, ArrowLeft, Calendar, Mail, Shield,
+  Users, ArrowLeft, Calendar, Mail, Shield, Briefcase, Send,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
+import { toast } from "sonner";
 
 // ─── Hardcoded superadmin credentials (frontend gate only) ───────────────────
 // The backend API endpoints are still protected by Django IsAdminUser.
@@ -188,6 +189,46 @@ interface UserDetail {
   is_active: boolean;
   bot_task_count: number;
   bot_tasks: BotTask[];
+}
+
+type ReviewStatus = "pending" | "approved" | "rejected";
+
+const SENIORITY_LEVEL_OPTIONS = [
+  "C-Suite", "SVP", "VP", "Director", "Managing Director",
+  "Head of", "Executive", "General Manager", "Senior", "Manager",
+] as const;
+
+interface JobRequestMessage {
+  id: string;
+  message: string;
+  sender: string | null;
+  is_from_employer: boolean;
+  created_at: string;
+}
+
+interface JobRequest {
+  id: string;
+  title: string;
+  description: string | null;
+  company: string;
+  location: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  employment_type: string | null;
+  workplace_type: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  skills: string[];
+  created_by: string | null;
+  review_status: ReviewStatus;
+  admin_seniority_level: string | null;
+  suggested_seniority_level: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  messages: JobRequestMessage[];
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -657,13 +698,315 @@ function UsersTab({ onSelectUser }: { onSelectUser: (id: number) => void }) {
   );
 }
 
+// ─── Job listing requests ───────────────────────────────────────────────────────
+
+const jobReviewStatusColors: Record<ReviewStatus, string> = {
+  pending:  "bg-amber-50 text-amber-700",
+  approved: "bg-emerald-50 text-emerald-700",
+  rejected: "bg-red-50 text-red-700",
+};
+
+function JobRequestsTab({ onSelectJob }: { onSelectJob: (job: JobRequest) => void }) {
+  const [statusFilter, setStatusFilter] = useState<ReviewStatus>("pending");
+  const [jobs, setJobs] = useState<JobRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api.get<JobRequest[]>("/api/admin/dashboard/job-requests/", { params: { status: statusFilter } })
+      .then(r => setJobs(r.data))
+      .catch(() => setJobs([]))
+      .finally(() => setLoading(false));
+  }, [statusFilter]);
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-2 flex-1">
+          <Briefcase className="h-5 w-5 text-blue-600" />
+          <h2 className="text-base font-extrabold text-gray-900">Job Listing Requests</h2>
+          <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-600">{jobs.length}</span>
+        </div>
+        <div className="flex items-center gap-1 rounded-xl bg-gray-100 p-1">
+          {(["pending", "approved", "rejected"] as const).map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+                statusFilter === s ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-xs font-black uppercase tracking-widest text-gray-400">Job</th>
+              <th className="px-4 py-3 text-xs font-black uppercase tracking-widest text-gray-400">Company</th>
+              <th className="px-4 py-3 text-xs font-black uppercase tracking-widest text-gray-400">Posted By</th>
+              <th className="px-4 py-3 text-xs font-black uppercase tracking-widest text-gray-400">Suggested</th>
+              <th className="px-4 py-3 text-xs font-black uppercase tracking-widest text-gray-400">Created</th>
+              <th className="px-3 py-3"><span className="sr-only">Open</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <tr key={i} className="border-b border-gray-50">
+                  {[1, 2, 3, 4, 5].map(j => (
+                    <td key={j} className="px-4 py-4"><div className="h-4 rounded-lg bg-gray-100 animate-pulse" /></td>
+                  ))}
+                </tr>
+              ))
+            ) : jobs.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-gray-400 text-sm">No {statusFilter} job requests.</td>
+              </tr>
+            ) : (
+              jobs.map(job => (
+                <tr
+                  key={job.id}
+                  className="border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer transition-colors"
+                  onClick={() => onSelectJob(job)}
+                >
+                  <td className="px-4 py-3">
+                    <p className="text-sm font-semibold text-gray-900">{job.title}</p>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{job.company}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{job.created_by || "—"}</td>
+                  <td className="px-4 py-3">
+                    {job.suggested_seniority_level
+                      ? <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-bold text-violet-700">{job.suggested_seniority_level}</span>
+                      : <span className="text-xs text-gray-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-400 whitespace-nowrap">{relativeTime(job.created_at)}</td>
+                  <td className="px-3 py-3 text-gray-300">
+                    <ChevronRight className="h-4 w-4" />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function JobRequestDetailPanel({ job: initialJob, onBack }: { job: JobRequest; onBack: () => void }) {
+  const [job, setJob] = useState(initialJob);
+  const [seniorityLevel, setSeniorityLevel] = useState(initialJob.admin_seniority_level || initialJob.suggested_seniority_level || "");
+  const [rejectReason, setRejectReason] = useState("");
+  const [clarification, setClarification] = useState("");
+  const [busy, setBusy] = useState<"approve" | "reject" | "message" | null>(null);
+  const [showRejectBox, setShowRejectBox] = useState(false);
+
+  const handleApprove = async () => {
+    if (!seniorityLevel) { toast.error("Pick a seniority category first."); return; }
+    setBusy("approve");
+    try {
+      const { data } = await api.post<JobRequest>(`/api/admin/dashboard/job-requests/${job.id}/approve/`, { seniority_level: seniorityLevel });
+      setJob(data);
+      toast.success("Job approved and published.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || "Failed to approve job.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectReason.trim()) { toast.error("A rejection reason is required."); return; }
+    setBusy("reject");
+    try {
+      const { data } = await api.post<JobRequest>(`/api/admin/dashboard/job-requests/${job.id}/reject/`, { message: rejectReason.trim() });
+      setJob(data);
+      setRejectReason("");
+      setShowRejectBox(false);
+      toast.success("Job rejected.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || "Failed to reject job.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!clarification.trim()) return;
+    setBusy("message");
+    try {
+      const { data } = await api.post<JobRequest>(`/api/admin/dashboard/job-requests/${job.id}/message/`, { message: clarification.trim() });
+      setJob(data);
+      setClarification("");
+      toast.success("Message sent to employer.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || "Failed to send message.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const salaryLabel = job.salary_min || job.salary_max
+    ? `${job.salary_currency || "USD"} ${job.salary_min ?? "?"} – ${job.salary_max ?? "?"}`
+    : null;
+
+  return (
+    <div className="space-y-6">
+      <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+        <ArrowLeft className="h-4 w-4" /> Back to Job Requests
+      </button>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ${jobReviewStatusColors[job.review_status]}`}>
+              {job.review_status}
+            </span>
+            <h2 className="mt-2 text-xl font-extrabold text-gray-900">{job.title}</h2>
+            <p className="mt-1 text-sm text-gray-500">{job.company} · {job.created_by || "unknown"}</p>
+          </div>
+          <div className="text-right text-sm text-gray-500">
+            {[job.city, job.region, job.country].filter(Boolean).join(", ") || job.location}
+            {salaryLabel && <p className="font-bold text-emerald-600 mt-1">{salaryLabel}</p>}
+          </div>
+        </div>
+
+        {job.description && (
+          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap border-t border-gray-100 pt-4">{job.description}</p>
+        )}
+
+        {job.skills.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {job.skills.map(s => (
+              <span key={s} className="rounded-full bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">{s}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Categorize + approve/reject */}
+      {job.review_status === "pending" && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+          <h3 className="font-extrabold text-gray-900">Review Decision</h3>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Seniority Category</label>
+            <select
+              value={seniorityLevel}
+              onChange={e => setSeniorityLevel(e.target.value)}
+              className="w-full max-w-xs rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-400"
+            >
+              <option value="">Select a category…</option>
+              {SENIORITY_LEVEL_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            {job.suggested_seniority_level && (
+              <p className="mt-1.5 text-xs text-gray-400">Suggested: {job.suggested_seniority_level}</p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleApprove}
+              disabled={busy !== null}
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-4 py-2.5 text-sm font-bold text-white transition-colors"
+            >
+              <CheckCircle2 className="h-4 w-4" /> Approve
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowRejectBox(v => !v)}
+              disabled={busy !== null}
+              className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 disabled:opacity-50 px-4 py-2.5 text-sm font-bold text-red-600 transition-colors"
+            >
+              <XCircle className="h-4 w-4" /> Reject
+            </button>
+          </div>
+
+          {showRejectBox && (
+            <div className="space-y-2 border-t border-gray-100 pt-4">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Rejection reason (sent to employer)</label>
+              <textarea
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                rows={3}
+                placeholder="Explain why this listing is being rejected…"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-red-400"
+              />
+              <button
+                type="button"
+                onClick={handleReject}
+                disabled={busy !== null}
+                className="rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 px-4 py-2 text-sm font-bold text-white transition-colors"
+              >
+                Confirm Rejection
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Message thread */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+        <h3 className="font-extrabold text-gray-900">Messages</h3>
+        {job.messages.length === 0 ? (
+          <p className="text-sm text-gray-400">No messages yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {job.messages.map(m => (
+              <div
+                key={m.id}
+                className={`max-w-[85%] rounded-xl p-3.5 ${
+                  m.is_from_employer ? "bg-emerald-50 border border-emerald-100" : "ml-auto bg-blue-600 text-white"
+                }`}
+              >
+                <p className="text-sm leading-relaxed">{m.message}</p>
+                <p className={`mt-1.5 text-xs ${m.is_from_employer ? "text-emerald-600" : "text-blue-100"}`}>
+                  {m.is_from_employer ? `Employer (${m.sender || "unknown"})` : (m.sender || "Admin")} · {relativeTime(m.created_at)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2 border-t border-gray-100 pt-4">
+          <input
+            type="text"
+            value={clarification}
+            onChange={e => setClarification(e.target.value)}
+            placeholder="Ask for clarification…"
+            className="flex-1 rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-400"
+            onKeyDown={e => { if (e.key === "Enter") handleSendMessage(); }}
+          />
+          <button
+            type="button"
+            onClick={handleSendMessage}
+            disabled={busy !== null || !clarification.trim()}
+            className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-2.5 text-sm font-bold text-white transition-colors"
+          >
+            <Send className="h-3.5 w-3.5" /> Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 function SuperAdminDashboard({ authLoading }: { authLoading: boolean }) {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<"tasks" | "users">("tasks");
+  const [activeTab, setActiveTab] = useState<"tasks" | "users" | "job_requests">("tasks");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedJobRequest, setSelectedJobRequest] = useState<JobRequest | null>(null);
 
   const [summary, setSummary] = useState<BotSummary | null>(null);
   const [summaryError, setSummaryError] = useState("");
@@ -775,19 +1118,19 @@ function SuperAdminDashboard({ authLoading }: { authLoading: boolean }) {
 
         {/* ── Tabs ── */}
         <div className="flex items-center gap-1 rounded-xl bg-gray-100 p-1 w-fit">
-          {(["tasks", "users"] as const).map(tab => (
+          {(["tasks", "users", "job_requests"] as const).map(tab => (
             <button
               key={tab}
               type="button"
-              onClick={() => { setActiveTab(tab); setSelectedUserId(null); }}
+              onClick={() => { setActiveTab(tab); setSelectedUserId(null); setSelectedJobRequest(null); }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                 activeTab === tab
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {tab === "tasks" ? <Bot className="h-4 w-4" /> : <Users className="h-4 w-4" />}
-              {tab === "tasks" ? "Bot Tasks" : "Users"}
+              {tab === "tasks" ? <Bot className="h-4 w-4" /> : tab === "users" ? <Users className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />}
+              {tab === "tasks" ? "Bot Tasks" : tab === "users" ? "Users" : "Job Listing Requests"}
             </button>
           ))}
         </div>
@@ -819,6 +1162,12 @@ function SuperAdminDashboard({ authLoading }: { authLoading: boolean }) {
           selectedUserId !== null
             ? <UserDetailPanel userId={selectedUserId} onBack={() => setSelectedUserId(null)} />
             : <UsersTab onSelectUser={(id) => { setSelectedUserId(id); }} />
+        ) : null}
+
+        {activeTab === "job_requests" ? (
+          selectedJobRequest !== null
+            ? <JobRequestDetailPanel job={selectedJobRequest} onBack={() => setSelectedJobRequest(null)} />
+            : <JobRequestsTab onSelectJob={(job) => setSelectedJobRequest(job)} />
         ) : null}
 
         {/* ── Bot Tasks Table (tasks tab only) ── */}

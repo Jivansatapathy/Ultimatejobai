@@ -56,8 +56,7 @@
     --sidebar-ring: 173 80% 36%;
   }
 
-  :root {
-    /* Dark theme (default when no .light/.dark class present) */
+  .dark {
     --background: 222 47% 11%;
     --foreground: 0 0% 100%;
 

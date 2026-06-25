@@ -16,18 +16,6 @@ function _drainQueue(err: unknown, token?: string) {
   _refreshQueue = [];
 }
 
-let _isVenusRefreshing = false;
-let _venusRefreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
-
-function _redirectToVenusAuth() {
-  window.location.href = '/venus/auth';
-}
-
-function _drainVenusQueue(err: unknown, token?: string) {
-  _venusRefreshQueue.forEach(p => (err ? p.reject(err) : p.resolve(token!)));
-  _venusRefreshQueue = [];
-}
-
 // ---------------------------------------------------------------------------
 // In-memory GET cache — survives React route changes (component unmount/remount)
 // ---------------------------------------------------------------------------
@@ -114,10 +102,7 @@ api.interceptors.request.use(
         const url = config.url || '';
         const isAuthEndpoint = url.includes('/api/auth/') || url.includes('/api/token/');
         if (!isAuthEndpoint) {
-            const isVenus = url.includes('/api/venus/');
-            const token = isVenus
-                ? localStorage.getItem('venus_access_token')
-                : localStorage.getItem('access_token');
+            const token = localStorage.getItem('access_token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
@@ -178,103 +163,53 @@ api.interceptors.response.use(
             }
 
             const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-            const isVenus = url.includes('/api/venus/');
 
             // If already retried, give up
             if (originalRequest._retry) {
-                if (isVenus) {
-                    localStorage.removeItem('venus_access_token');
-                    localStorage.removeItem('venus_refresh_token');
-                    localStorage.removeItem('venus_user_email');
-                    localStorage.removeItem('venus_user_name');
-                    _redirectToVenusAuth();
-                } else {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    _redirectToAuth();
-                }
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                _redirectToAuth();
                 return Promise.reject(error);
             }
 
             originalRequest._retry = true;
 
-            if (isVenus) {
-                // Queue parallel requests while refresh is in flight
-                if (_isVenusRefreshing) {
-                    return new Promise<string>((resolve, reject) => {
-                        _venusRefreshQueue.push({ resolve, reject });
-                    }).then(token => {
-                        originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${token}` };
-                        return api(originalRequest);
-                    });
-                }
-
-                _isVenusRefreshing = true;
-
-                const refreshToken = localStorage.getItem('venus_refresh_token');
-                if (!refreshToken) {
-                    _isVenusRefreshing = false;
-                    localStorage.removeItem('venus_access_token');
-                    _redirectToVenusAuth();
-                    return Promise.reject(error);
-                }
-
-                try {
-                    const { data } = await axios.post(`${API_BASE_URL}/api/token/refresh/`, { refresh: refreshToken });
-                    const newToken: string = data.access;
-                    localStorage.setItem('venus_access_token', newToken);
-                    originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${newToken}` };
-                    _drainVenusQueue(null, newToken);
-                    _isVenusRefreshing = false;
+            // Queue parallel requests while refresh is in flight
+            if (_isRefreshing) {
+                return new Promise<string>((resolve, reject) => {
+                    _refreshQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${token}` };
                     return api(originalRequest);
-                } catch (refreshErr) {
-                    _drainVenusQueue(refreshErr);
-                    _isVenusRefreshing = false;
-                    localStorage.removeItem('venus_access_token');
-                    localStorage.removeItem('venus_refresh_token');
-                    localStorage.removeItem('venus_user_email');
-                    localStorage.removeItem('venus_user_name');
-                    _redirectToVenusAuth();
-                    return Promise.reject(refreshErr);
-                }
-            } else {
-                // Queue parallel requests while refresh is in flight
-                if (_isRefreshing) {
-                    return new Promise<string>((resolve, reject) => {
-                        _refreshQueue.push({ resolve, reject });
-                    }).then(token => {
-                        originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${token}` };
-                        return api(originalRequest);
-                    });
-                }
+                });
+            }
 
-                _isRefreshing = true;
+            _isRefreshing = true;
 
-                const refreshToken = localStorage.getItem('refresh_token');
-                if (!refreshToken) {
-                    _isRefreshing = false;
-                    localStorage.removeItem('access_token');
-                    _redirectToAuth();
-                    return Promise.reject(error);
-                }
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) {
+                _isRefreshing = false;
+                localStorage.removeItem('access_token');
+                _redirectToAuth();
+                return Promise.reject(error);
+            }
 
-                try {
-                    const { data } = await axios.post(`${API_BASE_URL}/api/token/refresh/`, { refresh: refreshToken });
-                    const newToken: string = data.access;
-                    localStorage.setItem('access_token', newToken);
-                    api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-                    originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${newToken}` };
-                    _drainQueue(null, newToken);
-                    _isRefreshing = false;
-                    return api(originalRequest);
-                } catch (refreshErr) {
-                    _drainQueue(refreshErr);
-                    _isRefreshing = false;
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    _redirectToAuth();
-                    return Promise.reject(refreshErr);
-                }
+            try {
+                const { data } = await axios.post(`${API_BASE_URL}/api/token/refresh/`, { refresh: refreshToken });
+                const newToken: string = data.access;
+                localStorage.setItem('access_token', newToken);
+                api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${newToken}` };
+                _drainQueue(null, newToken);
+                _isRefreshing = false;
+                return api(originalRequest);
+            } catch (refreshErr) {
+                _drainQueue(refreshErr);
+                _isRefreshing = false;
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                _redirectToAuth();
+                return Promise.reject(refreshErr);
             }
         }
         return Promise.reject(error);

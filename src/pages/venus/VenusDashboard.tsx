@@ -4,7 +4,7 @@ import { Sparkles, Star, Building2, TrendingUp, ArrowRight, Loader2, RefreshCw, 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { venusService, DailyBriefing, ExecutiveOpportunity } from "@/services/venusService";
-import { useVenusAuth } from "@/context/VenusAuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
@@ -51,8 +51,7 @@ function OpportunityCard({ opp, onClick }: { opp: ExecutiveOpportunity; onClick:
 }
 
 export default function VenusDashboard() {
-  const { user } = useVenusAuth();
-  const userEmail = user?.email;
+  const { userEmail } = useAuth();
   const navigate = useNavigate();
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [topOpps, setTopOpps] = useState<ExecutiveOpportunity[]>([]);

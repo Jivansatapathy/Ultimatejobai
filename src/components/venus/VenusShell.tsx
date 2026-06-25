@@ -7,7 +7,7 @@ import {
   LogOut, Menu, X, ChevronRight, Crown, Mic, Target, Bot, Loader2,
   Sparkles, Calendar, Handshake,
 } from "lucide-react";
-import { useVenusAuth } from "@/context/VenusAuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 function ContentLoader() {
   return (
@@ -61,11 +61,10 @@ function NavItem({ item, onClick }: { item: typeof NAV[0]; onClick?: () => void 
 }
 
 function Sidebar({ onNav }: { onNav?: () => void }) {
-  const { logout, user } = useVenusAuth();
+  const { logout, userEmail } = useAuth();
   const navigate = useNavigate();
 
-  const userEmail = user?.email;
-  const initials = (user?.name || user?.email || "VE").slice(0, 2).toUpperCase();
+  const initials = (userEmail || "VE").slice(0, 2).toUpperCase();
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-white border-r border-gray-200">
@@ -100,7 +99,7 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
         </div>
         <button
           type="button"
-          onClick={() => { logout(); navigate("/venus/auth"); }}
+          onClick={() => { logout(); navigate("/auth"); }}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all"
         >
           <LogOut className="h-4 w-4" />

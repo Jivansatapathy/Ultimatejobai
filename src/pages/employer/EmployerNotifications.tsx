@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Bell, BellOff, Check, CheckCheck, ExternalLink } from "lucide-react";
+import { Bell, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/employer/EmptyState";
 import { LoadingState } from "@/components/employer/LoadingState";
 import { PageHeader } from "@/components/employer/PageHeader";
 import { useEmployerAuth } from "@/context/EmployerAuthContext";
-import { getEmployerNotifications, markAllNotificationsRead, markNotificationRead } from "@/services/employerService";
+import { getEmployerNotifications, markNotificationRead } from "@/services/employerService";
 import { EmployerNotification } from "@/types/employer";
 
 const typeIcons: Record<string, string> = {
@@ -36,7 +36,6 @@ export default function EmployerNotifications() {
   const { user, isEmployer } = useEmployerAuth();
   const [notifications, setNotifications] = useState<EmployerNotification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "unread">("all");
 
   useEffect(() => {
     if (!user || !isEmployer) return;
@@ -51,7 +50,6 @@ export default function EmployerNotifications() {
     load();
   }, [isEmployer, user]);
 
-  const filtered = filter === "unread" ? notifications.filter((n) => !n.is_read) : notifications;
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const handleMarkRead = async (notification: EmployerNotification) => {
@@ -62,14 +60,6 @@ export default function EmployerNotifications() {
     } catch { toast.error("Unable to mark notification as read."); }
   };
 
-  const handleMarkAllRead = async () => {
-    try {
-      await markAllNotificationsRead();
-      setNotifications((current) => current.map((n) => ({ ...n, is_read: true })));
-      toast.success("All notifications marked as read.");
-    } catch { toast.error("Unable to mark all as read."); }
-  };
-
   if (loading) return <LoadingState label="Loading notifications..." />;
 
   return (
@@ -78,27 +68,6 @@ export default function EmployerNotifications() {
         eyebrow="Notifications"
         title="Smart Notifications"
         description="Stay updated on new applicants, interview reminders, candidate activity, and pending actions."
-        actions={(
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setFilter(filter === "all" ? "unread" : "all")}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 transition-colors shadow-sm"
-            >
-              {filter === "unread" ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-              {filter === "unread" ? "Show all" : `Unread (${unreadCount})`}
-            </button>
-            <button
-              type="button"
-              onClick={handleMarkAllRead}
-              disabled={unreadCount === 0}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2 disabled:opacity-40 transition-colors shadow-sm"
-            >
-              <CheckCheck className="h-4 w-4" />
-              Mark all read
-            </button>
-          </div>
-        )}
       />
 
       {/* Stat strip */}
@@ -117,9 +86,9 @@ export default function EmployerNotifications() {
       </div>
 
       {/* Notification list */}
-      {filtered.length ? (
+      {notifications.length ? (
         <div className="space-y-2">
-          {filtered.map((notification, index) => (
+          {notifications.map((notification, index) => (
             <motion.div
               key={notification.id}
               initial={{ opacity: 0, y: 12 }}
@@ -168,15 +137,6 @@ export default function EmployerNotifications() {
                           View <ExternalLink className="h-3 w-3" />
                         </a>
                       ) : null}
-                      {!notification.is_read ? (
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors"
-                          onClick={(e) => { e.stopPropagation(); handleMarkRead(notification); }}
-                        >
-                          <Check className="h-3 w-3" /> Mark read
-                        </button>
-                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -188,7 +148,7 @@ export default function EmployerNotifications() {
         <EmptyState
           icon={<Bell className="h-6 w-6" />}
           title="No notifications"
-          description={filter === "unread" ? "All caught up! No unread notifications." : "Notifications will appear here when candidates apply, interviews are due, or jobs expire."}
+          description="Notifications will appear here when candidates apply, interviews are due, or jobs expire."
         />
       )}
     </div>

@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, Heart, Loader2, MoonStar, Paintbrush2, Plus, ShieldCheck, Sparkles, Trash2, X } from "lucide-react";
+import { ExternalLink, Heart, Loader2, Paintbrush2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Panel } from "@/components/employer/Panel";
 import { PageHeader } from "@/components/employer/PageHeader";
 import { useEmployerAuth } from "@/context/EmployerAuthContext";
-import { useTheme } from "@/hooks/use-theme";
-import { createEmployerTeamMember, getEmployerTeamMembers, seedEmployerDemoData, updateEmployerPreferences } from "@/services/employerService";
+import { createEmployerTeamMember, getEmployerTeamMembers, updateEmployerPreferences } from "@/services/employerService";
 import { EmployerTeamMember } from "@/types/employer";
 
 const roleColors: Record<string, string> = {
@@ -26,8 +25,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function EmployerSettings() {
   const { profile, refreshProfile, user, isEmployer } = useEmployerAuth();
-  const { theme, toggleTheme } = useTheme();
-  const [displayName, setDisplayName] = useState(profile?.full_name || "");
+const [displayName, setDisplayName] = useState(profile?.full_name || "");
   const [companyName, setCompanyName] = useState(profile?.company_name || "");
   const [website, setWebsite] = useState(profile?.website || "");
   const [contactEmail, setContactEmail] = useState(profile?.contact_email || "");
@@ -38,7 +36,6 @@ export default function EmployerSettings() {
   const [linkedinSyncEnabled, setLinkedinSyncEnabled] = useState(profile?.integrations?.linkedin_sync_enabled || false);
   const [externalPostingEnabled, setExternalPostingEnabled] = useState(profile?.integrations?.external_posting_enabled || false);
   const [saving, setSaving] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [teamMembers, setTeamMembers] = useState<EmployerTeamMember[]>([]);
   const [teamLoading, setTeamLoading] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -91,15 +88,7 @@ export default function EmployerSettings() {
     finally { setSaving(false); }
   };
 
-  const handleSeed = async () => {
-    if (!profile) return;
-    setSeeding(true);
-    try { await seedEmployerDemoData(); toast.success("Sample jobs and applicants created."); }
-    catch (error) { console.error(error); toast.error("Unable to create sample data."); }
-    finally { setSeeding(false); }
-  };
-
-  const handleInvite = async () => {
+const handleInvite = async () => {
     if (!inviteEmail.trim() || !inviteName.trim()) { toast.error("Add a name and email first."); return; }
     try {
       const member = await createEmployerTeamMember({ email: inviteEmail.trim(), full_name: inviteName.trim(), role: inviteRole });
@@ -116,66 +105,61 @@ export default function EmployerSettings() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Settings"
-        title="Workspace settings"
-        description="Manage employer profile details, integrations, and team members."
+        title="Profile"
+        description="Manage your employer profile, branding, integrations, and team members."
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_0.8fr]">
-        {/* Profile form */}
-        <Panel title="Employer profile and branding">
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Display name">
-                <input aria-label="Display name" placeholder="Your name" className={inputCls} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-              </Field>
-              <Field label="Company name">
-                <input aria-label="Company name" placeholder="Acme Corp" className={inputCls} value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
-              </Field>
-              <Field label="Contact email">
-                <input aria-label="Contact email" placeholder="you@company.com" className={inputCls} value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
-              </Field>
-              <Field label="Contact phone">
-                <input aria-label="Contact phone" placeholder="+1 555 000 0000" className={inputCls} value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
-              </Field>
-            </div>
-            <Field label="Company website">
-              <input className={inputCls} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://company.com" />
-            </Field>
-            <Field label="Brand tagline">
-              <input className={inputCls} value={brandTagline} onChange={(e) => setBrandTagline(e.target.value)} placeholder="What makes your team special?" />
-            </Field>
-            <Field label="Brand summary">
-              <input className={inputCls} value={brandSummary} onChange={(e) => setBrandSummary(e.target.value)} placeholder="Short employer story for company pages." />
-            </Field>
-            <Field label="LinkedIn company URL">
-              <input className={inputCls} value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/company/your-brand" />
-            </Field>
-            <div className="flex items-center justify-between pt-2">
-              {!canManageTeam && <p className="text-sm text-gray-400">Only admins can change workspace settings.</p>}
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || !canManageTeam}
-                className="ml-auto inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 disabled:opacity-50 transition-colors shadow-sm"
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Save profile
-              </button>
-            </div>
-          </div>
-        </Panel>
-
+      <div className="grid gap-6 xl:grid-cols-[1fr_0.8fr] items-start">
+        {/* LEFT column */}
         <div className="space-y-6">
+          {/* Profile form */}
+          <Panel title="Employer profile and branding">
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Display name">
+                  <input aria-label="Display name" placeholder="Your name" className={inputCls} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+                </Field>
+                <Field label="Company name">
+                  <input aria-label="Company name" placeholder="Acme Corp" className={inputCls} value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                </Field>
+                <Field label="Contact email">
+                  <input aria-label="Contact email" placeholder="you@company.com" className={inputCls} value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+                </Field>
+                <Field label="Contact phone">
+                  <input aria-label="Contact phone" placeholder="+1 555 000 0000" className={inputCls} value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+                </Field>
+              </div>
+              <Field label="Company website">
+                <input className={inputCls} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://company.com" />
+              </Field>
+              <Field label="Brand tagline">
+                <input className={inputCls} value={brandTagline} onChange={(e) => setBrandTagline(e.target.value)} placeholder="What makes your team special?" />
+              </Field>
+              <Field label="Brand summary">
+                <input className={inputCls} value={brandSummary} onChange={(e) => setBrandSummary(e.target.value)} placeholder="Short employer story for company pages." />
+              </Field>
+              <Field label="LinkedIn company URL">
+                <input className={inputCls} value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/company/your-brand" />
+              </Field>
+              <div className="flex items-center justify-between pt-2">
+                {!canManageTeam && <p className="text-sm text-gray-400">Only admins can change workspace settings.</p>}
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving || !canManageTeam}
+                  className="ml-auto inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 disabled:opacity-50 transition-colors shadow-sm"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Save profile
+                </button>
+              </div>
+            </div>
+          </Panel>
+
           {/* Appearance & integrations */}
           <Panel title="Appearance & integrations">
             <div className="space-y-3">
               {[
-                {
-                  icon: <MoonStar className="h-4 w-4 text-gray-400" />,
-                  label: "Dark mode",
-                  sub: "Switch the workspace between light and dark themes.",
-                  control: <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />,
-                },
                 {
                   icon: <Paintbrush2 className="h-4 w-4 text-gray-400" />,
                   label: "LinkedIn sync readiness",
@@ -209,7 +193,10 @@ export default function EmployerSettings() {
               </div>
             </div>
           </Panel>
+        </div>
 
+        {/* RIGHT column */}
+        <div className="space-y-6">
           {/* Culture & perks */}
           <Panel title="Company Culture & Perks">
             <div className="space-y-4">
@@ -266,71 +253,6 @@ export default function EmployerSettings() {
                   </button>
                 ))}
               </div>
-            </div>
-          </Panel>
-
-          {/* Role-Based Access */}
-          <Panel title="Role-Based Access Control">
-            <div className="space-y-4">
-              <div className="rounded-xl bg-gray-50 border border-gray-100 p-3">
-                <p className="text-sm text-gray-500">
-                  Your role: <span className="font-bold text-gray-900 capitalize">{(profile?.workspace_role || "admin").replace("_", " ")}</span>
-                </p>
-              </div>
-              <div className="overflow-x-auto rounded-xl border border-gray-200">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="p-3 text-left font-semibold text-gray-600">Permission</th>
-                      <th className="p-3 text-center font-semibold text-gray-600">Admin</th>
-                      <th className="p-3 text-center font-semibold text-gray-600">Recruiter</th>
-                      <th className="p-3 text-center font-semibold text-gray-600">Hiring Mgr</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {[
-                      { label: "Manage jobs",        admin: true,  recruiter: true,  manager: false },
-                      { label: "Manage candidates",  admin: true,  recruiter: true,  manager: true  },
-                      { label: "Manage team",        admin: true,  recruiter: false, manager: false },
-                      { label: "Manage integrations",admin: true,  recruiter: false, manager: false },
-                      { label: "View analytics",     admin: true,  recruiter: true,  manager: true  },
-                      { label: "Send offers",        admin: true,  recruiter: true,  manager: false },
-                      { label: "Talent pool",        admin: true,  recruiter: true,  manager: true  },
-                    ].map((row) => (
-                      <tr key={row.label} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-3 text-gray-700">{row.label}</td>
-                        <td className="p-3 text-center">{row.admin     ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-gray-300">—</span>}</td>
-                        <td className="p-3 text-center">{row.recruiter ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-gray-300">—</span>}</td>
-                        <td className="p-3 text-center">{row.manager   ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-gray-300">—</span>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </Panel>
-
-          {/* Sample data */}
-          <Panel title="Sample backend integration">
-            <div className="space-y-4">
-              <div className="rounded-xl bg-gray-50 border border-gray-100 p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <ShieldCheck className="h-4 w-4 text-teal-600" />
-                  <p className="text-sm font-semibold text-gray-900">Django API integration</p>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Use the sample data generator to create example jobs, applicants, and activity records.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleSeed}
-                disabled={seeding}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2.5 disabled:opacity-50 transition-colors"
-              >
-                {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Load sample data
-              </button>
             </div>
           </Panel>
 
@@ -397,7 +319,7 @@ export default function EmployerSettings() {
               </div>
             </div>
           </Panel>
-        </div>
+        </div>{/* end RIGHT column */}
       </div>
     </div>
   );

@@ -40,6 +40,7 @@ const NO_CACHE_PREFIXES = [
   '/api/notifications/',
   '/api/auth/',
   '/api/token',
+  '/api/linkedin/',
   '/ws/',
   '/api/search/senior/',
   '/api/search/senior/filters/',

@@ -167,11 +167,12 @@ export default function EmployerLinkedIn() {
       getLinkedInGlobalAnalytics().catch(() => emptyGlobalAnalytics),
       getLinkedInPublishedPosts().catch(() => []),
     ]);
-    setJobs(jobData);
+    const approvedJobs = jobData.filter((job) => job.review_status === "approved");
+    setJobs(approvedJobs);
     setConnection(connectionData);
     setGlobalAnalytics(analyticsData);
     setPublishedPosts(postsData);
-    const nextJobId = jobId || selectedJobId || jobData[0]?.id || "";
+    const nextJobId = jobId || selectedJobId || approvedJobs[0]?.id || "";
     if (nextJobId) { setSelectedJobId(nextJobId); await loadJobData(nextJobId); }
     else { setSelectedJobId(""); setVariations([]); setCampaign(null); setJobAnalytics(emptyJobAnalytics); setPrimaryVariationId(""); }
   };

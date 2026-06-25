@@ -490,8 +490,8 @@ export async function getEmployerNotifications() {
 }
 
 export async function markNotificationRead(notificationId: string) {
-  const response = await api.patch<EmployerNotification>(
-    `/api/employer/notifications/${notificationId}/read/`,
+  const response = await api.post<EmployerNotification>(
+    `/api/employer/notifications/${notificationId}/mark-read/`,
   );
   return response.data;
 }

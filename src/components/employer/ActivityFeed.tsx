@@ -14,18 +14,17 @@ export function ActivityFeed({ items }: { items: EmployerActivity[] }) {
       {items.map((item) => {
         const Icon = icons[item.activity_type] || Sparkles;
         return (
-          <div key={item.id} className="flex gap-4 rounded-2xl border border-border/60 bg-background/70 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+          <div key={item.id} className="flex gap-4 rounded-2xl border border-gray-200 bg-white p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
               <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium">{item.activity_type.replace(/_/g, " ")}</p>
-                <span className="text-xs text-muted-foreground">
+                <p className="font-semibold text-sm text-gray-900">{item.description || item.activity_type.replace(/_/g, " ")}</p>
+                <span className="text-xs text-gray-400">
                   {item.timestamp ? formatDistanceToNow(new Date(item.timestamp), { addSuffix: true }) : "Just now"}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
             </div>
           </div>
         );

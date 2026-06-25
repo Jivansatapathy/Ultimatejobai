@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Star, Building2, DollarSign,
   TrendingUp, Network, Megaphone,
   LogOut, Menu, X, ChevronRight, Crown, Mic, Target, Bot, Loader2,
+  Sparkles, Calendar, Handshake,
 } from "lucide-react";
 import { useVenusAuth } from "@/context/VenusAuthContext";
 
@@ -17,16 +18,19 @@ function ContentLoader() {
 }
 
 const NAV = [
-  { label: "Dashboard",     href: "/venus",                   icon: LayoutDashboard, exact: true },
-  { label: "Opportunities", href: "/venus/opportunities",     icon: Star },
-  { label: "Company Intel", href: "/venus/company-intel",     icon: Building2 },
-  { label: "Compensation",  href: "/venus/compensation",      icon: DollarSign },
-  { label: "Equity Calc",   href: "/venus/equity",            icon: TrendingUp },
-  { label: "Network",       href: "/venus/network",           icon: Network },
-  { label: "Branding",      href: "/venus/branding",          icon: Megaphone },
-  { label: "Interview Prep", href: "/venus/interview-prep",   icon: Mic },
-  { label: "Readiness Score", href: "/venus/readiness-score", icon: Target },
-  { label: "Career Twin",   href: "/venus/career-twin",       icon: Bot },
+  { label: "Dashboard",        href: "/venus",                    icon: LayoutDashboard, exact: true },
+  { label: "Opportunities",    href: "/venus/opportunities",      icon: Star },
+  { label: "Company Intel",    href: "/venus/company-intel",      icon: Building2 },
+  { label: "Compensation",     href: "/venus/compensation",       icon: DollarSign },
+  { label: "Equity Calc",      href: "/venus/equity",             icon: TrendingUp },
+  { label: "Network",          href: "/venus/network",            icon: Network },
+  { label: "Branding",         href: "/venus/branding",           icon: Megaphone },
+  { label: "Interview Prep",   href: "/venus/interview-prep",     icon: Mic },
+  { label: "Readiness Score",  href: "/venus/readiness-score",    icon: Target },
+  { label: "Career Twin",      href: "/venus/career-twin",        icon: Bot },
+  { label: "AI Insights",      href: "/venus/ai-insights",        icon: Sparkles },
+  { label: "Job Fairs",        href: "/venus/job-fairs",          icon: Calendar },
+  { label: "Salary Negotiation", href: "/venus/salary-negotiation", icon: Handshake },
 ];
 
 function NavItem({ item, onClick }: { item: typeof NAV[0]; onClick?: () => void }) {
@@ -142,7 +146,7 @@ export default function VenusShell() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile topbar */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 lg:hidden">
-          <button type="button" onClick={() => setMobileOpen(true)} className="text-gray-500 hover:text-gray-900">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-label="Open navigation" className="text-gray-500 hover:text-gray-900">
             <Menu className="h-5 w-5" />
           </button>
           <Crown className="h-4 w-4 text-blue-600" />

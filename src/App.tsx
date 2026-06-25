@@ -80,6 +80,9 @@ const ExecInterviewPrep = lazy(() => import("./pages/venus/ExecInterviewPrep"));
 const ExecutiveReadinessScore = lazy(() => import("./pages/venus/ExecutiveReadinessScore"));
 const AICareerTwin = lazy(() => import("./pages/venus/AICareerTwin"));
 const VenusAuth = lazy(() => import("./pages/venus/VenusAuth"));
+const VenusAIInsights = lazy(() => import("./pages/venus/VenusAIInsights"));
+const VenusJobFairs = lazy(() => import("./pages/venus/VenusJobFairs"));
+const VenusSalaryNegotiation = lazy(() => import("./pages/venus/VenusSalaryNegotiation"));
 
 // Resets the ErrorBoundary whenever the user navigates to a new route,
 // so a transient render error on one page never blocks subsequent pages.
@@ -435,6 +438,9 @@ const App = () => (
                     <Route path="interview-prep" element={<ExecInterviewPrep />} />
                     <Route path="readiness-score" element={<ExecutiveReadinessScore />} />
                     <Route path="career-twin" element={<AICareerTwin />} />
+                    <Route path="ai-insights" element={<VenusAIInsights />} />
+                    <Route path="job-fairs" element={<VenusJobFairs />} />
+                    <Route path="salary-negotiation" element={<VenusSalaryNegotiation />} />
                   </Route>
 
                   <Route path="/privacy" element={<PrivacyPolicy />} />

@@ -268,12 +268,24 @@ export default function Dashboard() {
     : "Dashboard";
 
   const featureLabels: Record<string, string> = {
-    auto_apply_access: "Auto Apply",
-    ats_optimizer_access: "ATS Optimizer",
-    text_interview_access: "Interview Practice",
-    video_interview_access: "Video Interview",
+    job_detail_access: "Job Detail Access",
+    job_apply_access: "Job Apply Access",
+    job_save_access: "Job Save Access",
+    dashboard_access: "Dashboard Access",
     resume_builder_access: "Resume Builder",
-    career_insights_access: "Career Insights",
+    ats_optimizer_access: "Resume Audits",
+    career_insights_access: "Executive Profile Review",
+    gap_analysis_access: "Skill Gap Analyses",
+    text_interview_access: "AI Interview Simulations",
+    video_interview_access: "Live Mock Interviews",
+    salary_negotiation_access: "Salary Negotiation Simulations",
+    live_salary_negotiation_call: "Live Salary Negotiation Call",
+    career_strategy_access: "Career Strategy Access",
+    auto_apply_access: "Executive Role Applications",
+    job_fairs_access: "C-Suite Networking Events",
+    career_roadmap: "Executive Career Roadmaps",
+    salary_range_research: "Salary Benchmark",
+    success_manager: "Dedicated Executive Recruiter",
   };
 
   return (
@@ -910,8 +922,8 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-5">
-                    {(subscriptionSummary?.current_usage?.slice(0, 4) ?? []).map(item => {
+                  <div className="space-y-5 max-h-[420px] overflow-y-auto pr-1">
+                    {(subscriptionSummary?.current_usage ?? []).map(item => {
                       const label = featureLabels[item.feature_key] ?? item.feature_key.replace(/_access$/, '').replace(/_/g, ' ');
                       const pct = item.is_unlimited ? 100 : (item.used_count / item.limit) * 100;
                       const isHigh = !item.is_unlimited && pct > 80;

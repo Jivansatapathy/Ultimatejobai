@@ -12,10 +12,13 @@ import {
   Sparkles,
   CheckCircle2,
   Bot,
+  CreditCard,
+  Check,
 } from "lucide-react";
 import { useResume } from "@/hooks/useResume";
 import { parseResumeFromFile } from "@/services/aiService";
 import { activityService } from "@/services/activityService";
+import { useSubscription } from "@/context/SubscriptionContext";
 import { toast } from "sonner";
 
 const QUICK_ROLES = ["CEO", "CFO", "CTO", "COO", "VP Engineering", "VP Finance", "Director", "CHRO"];
@@ -31,7 +34,9 @@ export default function Onboarding() {
   const [tempResume, setTempResume] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
   const [targetRole, setTargetRole] = useState("");
+  const [selectingPlanSlug, setSelectingPlanSlug] = useState<string | null>(null);
   const { importResumeData, analyzeFileATS, updateTargetJobRole } = useResume();
+  const { plans, loadingPlans, selectPlan, initiateCheckout } = useSubscription();
   const navigate = useNavigate();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +77,7 @@ export default function Onboarding() {
     }
   };
 
-  const handleCompleteOnboarding = async () => {
+  const handleSaveTargetRole = async () => {
     if (!targetRole) {
       toast.error("Please set a target job role.");
       return;
@@ -84,19 +89,39 @@ export default function Onboarding() {
         toast.info("Analysing your resume…");
         await analyzeFileATS(file, { ...tempResume, targetJobRole: targetRole });
       }
-      toast.success("All set! Welcome to Hizorex.");
       activityService.logActivity({
         activity_type: "ONBOARDING",
         description: `Completed onboarding with target role: ${targetRole}`,
         metadata: { targetRole },
       });
-      markOnboardingDone();
-      navigate("/dashboard");
+      setStep(3);
     } catch {
-      markOnboardingDone();
-      navigate("/dashboard");
+      setStep(3);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const finishOnboarding = () => {
+    toast.success("All set! Welcome to Hizorex.");
+    markOnboardingDone();
+    navigate("/dashboard");
+  };
+
+  const handleChoosePlan = async (slug: string, isPaid: boolean) => {
+    setSelectingPlanSlug(slug);
+    try {
+      if (isPaid) {
+        await initiateCheckout(slug);
+        return; // redirects to Stripe — onboarding completes on return via success_url
+      }
+      await selectPlan(slug);
+      finishOnboarding();
+    } catch {
+      toast.error("Failed to select plan. You can change it later in Settings.");
+      finishOnboarding();
+    } finally {
+      setSelectingPlanSlug(null);
     }
   };
 
@@ -114,7 +139,7 @@ export default function Onboarding() {
 
         {/* Progress bar */}
         <div className="flex gap-2 mb-8">
-          {[1, 2].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div
               key={s}
               className={`h-1 flex-1 rounded-full transition-all duration-300 ${
@@ -190,14 +215,14 @@ export default function Onboarding() {
 
                 <button
                   type="button"
-                  onClick={() => { markOnboardingDone(); navigate("/dashboard"); }}
+                  onClick={finishOnboarding}
                   className="w-full mt-5 h-11 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-sm font-semibold transition-all"
                 >
                   Skip setup
                 </button>
               </div>
             </motion.div>
-          ) : (
+          ) : step === 2 ? (
             <motion.div
               key="step2"
               initial={{ opacity: 0, x: 24 }}
@@ -269,7 +294,7 @@ export default function Onboarding() {
                   </button>
                   <button
                     type="button"
-                    onClick={handleCompleteOnboarding}
+                    onClick={handleSaveTargetRole}
                     disabled={loading || !targetRole.trim()}
                     className="flex-1 h-11 rounded-xl bg-black hover:bg-zinc-800 text-white text-sm font-bold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                   >
@@ -277,8 +302,7 @@ export default function Onboarding() {
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
-                        <Sparkles className="h-4 w-4" />
-                        Finish &amp; See Dashboard
+                        Continue
                         <ArrowRight className="h-4 w-4" />
                       </>
                     )}
@@ -286,19 +310,101 @@ export default function Onboarding() {
                 </div>
               </div>
             </motion.div>
+          ) : (
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.22 }}
+              className="bg-white border border-zinc-200 rounded-2xl shadow-xl shadow-black/[0.06] overflow-hidden"
+            >
+              {/* Card header */}
+              <div className="px-8 pt-8 pb-6 border-b border-zinc-100">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black mb-5">
+                  <CreditCard className="h-5 w-5 text-white" />
+                </div>
+                <h1 className="text-2xl font-extrabold text-black tracking-tight mb-2">
+                  Choose your plan
+                </h1>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  Pick the plan that fits your search. You can change this anytime in Settings.
+                </p>
+              </div>
+
+              <div className="px-8 py-7">
+                {loadingPlans ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {plans.map((plan) => {
+                      const isPaid = Boolean(plan.stripe_price_id);
+                      const isSelecting = selectingPlanSlug === plan.slug;
+                      const topFeatures = plan.features
+                        .filter((f) => f.is_enabled)
+                        .slice(0, 3);
+                      return (
+                        <div
+                          key={plan.slug}
+                          className="rounded-xl border border-zinc-200 p-4 flex items-center justify-between gap-4 hover:border-zinc-400 transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-baseline gap-2">
+                              <p className="text-sm font-bold text-black">{plan.name}</p>
+                              <span className="text-xs font-semibold text-zinc-500">{plan.price_display}</span>
+                            </div>
+                            {topFeatures.length > 0 && (
+                              <ul className="mt-1.5 space-y-0.5">
+                                {topFeatures.map((f) => (
+                                  <li key={f.feature_key} className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+                                    <Check className="h-3 w-3 text-zinc-400 shrink-0" />
+                                    {f.feature_label || f.feature_key.replace(/_access$/, "").replace(/_/g, " ")}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleChoosePlan(plan.slug, isPaid)}
+                            disabled={selectingPlanSlug !== null}
+                            className="shrink-0 h-9 px-4 rounded-lg bg-black hover:bg-zinc-800 text-white text-xs font-bold transition-all disabled:opacity-40 flex items-center gap-1.5"
+                          >
+                            {isSelecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (isPaid ? "Choose" : "Start Free")}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={finishOnboarding}
+                  disabled={selectingPlanSlug !== null}
+                  className="w-full mt-5 h-11 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-sm font-semibold transition-all disabled:opacity-40"
+                >
+                  Skip — continue with Free plan
+                </button>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
 
-        <button
-          type="button"
-          onClick={() => { markOnboardingDone(); navigate("/dashboard"); }}
-          className="w-full mt-3 text-xs text-zinc-400 hover:text-zinc-600 transition-colors font-medium"
-        >
-          Skip setup entirely → go to dashboard
-        </button>
+        {step !== 3 && (
+          <button
+            type="button"
+            onClick={finishOnboarding}
+            className="w-full mt-3 text-xs text-zinc-400 hover:text-zinc-600 transition-colors font-medium"
+          >
+            Skip setup entirely → go to dashboard
+          </button>
+        )}
 
         <p className="text-center mt-3 text-xs text-zinc-400 font-medium">
-          Step {step} of 2 · You can edit all this info later in your profile.
+          Step {step} of 3 · You can edit all this info later in your profile.
         </p>
       </div>
     </div>

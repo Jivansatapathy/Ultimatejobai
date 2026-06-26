@@ -922,7 +922,7 @@ export function AutoApplyModal({
                     Remaining Resources
                   </p>
                   <p className="text-2xl font-black text-white uppercase">
-                    {result.applies_remaining} / 10
+                    {result.applies_remaining} / {result.max_applications ?? 10}
                   </p>
                 </div>
 

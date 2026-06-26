@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import {
   Mail, Key, User, Save, Loader2, ShieldCheck, Info,
-  Eye, EyeOff, Send, Chrome, Lock, Monitor,
+  Eye, EyeOff, Send, Chrome, Lock, Monitor, CreditCard, ArrowUpRight, Check,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { careerService, CareerProfile } from "@/services/careerService";
 import { autoApplyService } from "@/services/autoApplyService";
+import { useSubscription } from "@/context/SubscriptionContext";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
@@ -53,6 +55,8 @@ const SECTION_TITLE = "text-[11px] font-black uppercase tracking-wider text-teal
 
 export default function Settings() {
   const { userEmail } = useAuth();
+  const navigate = useNavigate();
+  const { summary, loadingSummary } = useSubscription();
   const [profile, setProfile] = useState<CareerProfile>(DEFAULT_PROFILE);
   const [botProfile, setBotProfile] = useState<BotProfile>(EMPTY_BOT);
   const [email, setEmail] = useState(userEmail || "");
@@ -63,7 +67,7 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingBot, setIsSavingBot] = useState(false);
-  const [activeTab, setActiveTab] = useState<"personal" | "email" | "security">("personal");
+  const [activeTab, setActiveTab] = useState<"personal" | "plan" | "email" | "security">("personal");
 
   useEffect(() => {
     const loadData = async () => {
@@ -246,6 +250,7 @@ export default function Settings() {
 
   const NAV_TABS = [
     { id: "personal" as const, label: "Personal Profile", icon: User },
+    { id: "plan"     as const, label: "Plan & Billing",   icon: CreditCard },
     { id: "email"    as const, label: "Email Config",     icon: Mail },
     { id: "security" as const, label: "Security",         icon: ShieldCheck },
   ];
@@ -519,6 +524,72 @@ export default function Settings() {
                         Save Preferences
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* ════════════════ PLAN & BILLING TAB ════════════════ */}
+                {activeTab === "plan" && (
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
+                    <div className="flex items-center gap-3 mb-7">
+                      <div className="h-10 w-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center">
+                        <CreditCard className="h-5 w-5 text-teal-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 leading-none">Plan & Billing</h3>
+                        <p className="text-xs text-gray-500 mt-1">Your current plan and usage limits.</p>
+                      </div>
+                    </div>
+
+                    {loadingSummary ? (
+                      <div className="flex items-center justify-center py-10">
+                        <Loader2 className="h-6 w-6 animate-spin text-teal-500" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 flex items-center justify-between gap-4 flex-wrap">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-lg font-extrabold text-gray-900">
+                                {summary?.plan?.name ?? "Free Tier"}
+                              </p>
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 border border-teal-200">
+                                {summary?.status ?? "default"}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500 font-medium">
+                              {summary?.plan?.price_display ?? "Free"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => navigate("/plans")}
+                            className="inline-flex items-center gap-1.5 h-10 px-5 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-semibold text-sm transition-colors"
+                          >
+                            Change Plan
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        {(summary?.plan?.features?.filter(f => f.is_enabled).length ?? 0) > 0 && (
+                          <div className="mt-6">
+                            <p className={SECTION_TITLE}>What's included</p>
+                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                              {summary!.plan!.features.filter(f => f.is_enabled).map(f => (
+                                <li key={f.feature_key} className="flex items-start gap-2 text-sm text-gray-700">
+                                  <Check className="h-4 w-4 text-teal-500 shrink-0 mt-0.5" />
+                                  <span>
+                                    {f.feature_label || f.feature_key.replace(/_access$/, "").replace(/_/g, " ")}
+                                    {f.limit_display && f.limit_display !== "Unlimited" && (
+                                      <span className="text-gray-400"> — {f.limit_display}</span>
+                                    )}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
 

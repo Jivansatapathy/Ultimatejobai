@@ -14,9 +14,10 @@ interface ConversationPanelProps {
     role: "employer" | "candidate";
   };
   emptyLabel?: string;
+  readOnly?: boolean;
 }
 
-export function ConversationPanel({ conversation, currentUser, emptyLabel = "No messages yet." }: ConversationPanelProps) {
+export function ConversationPanel({ conversation, currentUser, emptyLabel = "No messages yet.", readOnly = false }: ConversationPanelProps) {
   const [messages, setMessages] = useState<FirestoreConversationMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -79,18 +80,26 @@ export function ConversationPanel({ conversation, currentUser, emptyLabel = "No 
         )}
       </div>
 
-      <Textarea
-        className="min-h-24 rounded-2xl"
-        placeholder="Write a message..."
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-      />
-      <div className="flex justify-end">
-        <Button className="rounded-2xl" onClick={handleSend} disabled={sending || !draft.trim()}>
-          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          Send
-        </Button>
-      </div>
+      {readOnly ? (
+        <p className="text-center text-xs text-muted-foreground py-2">
+          This is a read-only channel. Only the employer can send messages here.
+        </p>
+      ) : (
+        <>
+          <Textarea
+            className="min-h-24 rounded-2xl"
+            placeholder="Write a message..."
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          <div className="flex justify-end">
+            <Button className="rounded-2xl" onClick={handleSend} disabled={sending || !draft.trim()}>
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Send
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -63,6 +63,7 @@ const BookACall = lazy(() => import("./pages/BookACall"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Plans = lazy(() => import("./pages/Plans"));
 const ContentPanel = lazy(() => import("./pages/ContentPanel"));
+const CandidateInbox = lazy(() => import("./pages/CandidateInbox"));
 
 // Venus AI Executive Career OS
 const VenusShell = lazy(() => import("./components/venus/VenusShell"));
@@ -334,6 +335,7 @@ const App = () => (
                   <Route path="/fractional-jobs" element={<CandidateRoute><FractionalJobs /></CandidateRoute>} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
+                  <Route path="/inbox" element={<CandidateRoute><CandidateInbox /></CandidateRoute>} />
                   <Route path="/applications" element={
                     <CandidateRoute>
                       <ProtectedRoute>

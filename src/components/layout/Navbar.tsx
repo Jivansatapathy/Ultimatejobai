@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   FileText,
+  Inbox,
   Search,
   LogIn,
   Users,
@@ -25,6 +26,7 @@ const authNavLinks = [
   { name: "Resume",     href: "/resume",     icon: FileText },
   { name: "Interview",  href: "/interview",  icon: Users },
   { name: "AI Mentor",  href: "/ai-mentor",  icon: BrainCircuit },
+  { name: "Inbox",      href: "/inbox",      icon: Inbox },
 ];
 
 const authSideLinks = [

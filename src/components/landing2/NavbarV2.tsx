@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Bot, ChevronDown, Menu, X, LogIn, Loader2, LogOut, Crown,
   LayoutDashboard, FileText, Search, Users, BrainCircuit,
-  Sparkles, Settings as SettingsIcon,
+  Sparkles, Settings as SettingsIcon, Inbox,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -21,6 +21,7 @@ const AUTH_NAV = [
   { name: "Resume",     href: "/resume",     icon: FileText },
   { name: "Interview",  href: "/interview",  icon: Users },
   { name: "AI Mentor",  href: "/ai-mentor",  icon: BrainCircuit },
+  { name: "Inbox",      href: "/inbox",      icon: Inbox },
 ];
 
 const AUTH_SIDE = [

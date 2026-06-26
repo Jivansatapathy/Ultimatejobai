@@ -440,6 +440,25 @@ const App = () => (
                     <Route path="salary-negotiation" element={<VenusSalaryNegotiation />} />
                   </Route>
 
+                  {/* Venus embedded inline under AI Mentor — same pages, mounted at a
+                      different base path so VenusShell's nav stays within /ai-mentor/* */}
+                  <Route path="/ai-mentor/venus" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
+                    <Route index element={<VenusDashboard />} />
+                    <Route path="profile" element={<ExecutiveProfileBuilder />} />
+                    <Route path="opportunities" element={<ExecutiveOpportunityEngine />} />
+                    <Route path="company-intel" element={<CompanyIntelligence />} />
+                    <Route path="compensation" element={<CompensationIntelligence />} />
+                    <Route path="equity" element={<EquityCalculator />} />
+                    <Route path="network" element={<NetworkingEngine />} />
+                    <Route path="branding" element={<ExecutiveBranding />} />
+                    <Route path="interview-prep" element={<ExecInterviewPrep />} />
+                    <Route path="readiness-score" element={<ExecutiveReadinessScore />} />
+                    <Route path="career-twin" element={<AICareerTwin />} />
+                    <Route path="ai-insights" element={<VenusAIInsights />} />
+                    <Route path="job-fairs" element={<VenusJobFairs />} />
+                    <Route path="salary-negotiation" element={<VenusSalaryNegotiation />} />
+                  </Route>
+
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/return-policy" element={<ReturnPolicy />} />

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, ChevronRight, ChevronLeft, Check, Building2, TrendingUp, Star, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, ExecutiveProfile } from "@/services/venusService";
+import { getVenusBasePath } from "@/lib/venusBasePath";
 
 const EXEC_ROLES = ["CEO","COO","CTO","CFO","CPO","CMO","CRO","CHRO","CISO","CIO","VP Engineering","VP Sales","VP Marketing","VP Product","VP Finance","VP Operations","Board Advisor","Fractional Executive"];
 const INDUSTRIES = ["Technology","FinTech","HealthTech","SaaS","E-commerce","Manufacturing","Healthcare","Financial Services","Media","Education","Clean Energy","Real Estate","Consulting","Retail","Defense","Biotech"];
@@ -21,6 +22,7 @@ const STEPS = [
 
 export default function ExecutiveProfileBuilder() {
   const navigate = useNavigate();
+  const basePath = getVenusBasePath(useLocation().pathname);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<Partial<ExecutiveProfile>>({
@@ -43,10 +45,10 @@ export default function ExecutiveProfileBuilder() {
     try {
       await venusService.updateProfile(profile);
       toast.success("Executive profile saved!");
-      navigate("/venus");
+      navigate(basePath);
     } catch {
       toast.error("Failed to save profile — API not yet connected.");
-      navigate("/venus");
+      navigate(basePath);
     } finally {
       setSaving(false);
     }
@@ -264,7 +266,7 @@ export default function ExecutiveProfileBuilder() {
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-            <Button variant="outline" onClick={() => step > 0 ? setStep(s => s - 1) : navigate("/venus")}
+            <Button variant="outline" onClick={() => step > 0 ? setStep(s => s - 1) : navigate(basePath)}
               className="border-gray-300 text-gray-600 hover:bg-gray-100">
               <ChevronLeft className="h-4 w-4 mr-1" />
               {step === 0 ? "Cancel" : "Back"}

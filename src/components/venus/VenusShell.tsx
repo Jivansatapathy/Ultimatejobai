@@ -8,6 +8,7 @@ import {
   Sparkles, Calendar, Handshake,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { getVenusBasePath } from "@/lib/venusBasePath";
 
 function ContentLoader() {
   return (
@@ -17,23 +18,25 @@ function ContentLoader() {
   );
 }
 
-const NAV = [
-  { label: "Dashboard",        href: "/venus",                    icon: LayoutDashboard, exact: true },
-  { label: "Opportunities",    href: "/venus/opportunities",      icon: Star },
-  { label: "Company Intel",    href: "/venus/company-intel",      icon: Building2 },
-  { label: "Compensation",     href: "/venus/compensation",       icon: DollarSign },
-  { label: "Equity Calc",      href: "/venus/equity",             icon: TrendingUp },
-  { label: "Network",          href: "/venus/network",            icon: Network },
-  { label: "Branding",         href: "/venus/branding",           icon: Megaphone },
-  { label: "Interview Prep",   href: "/venus/interview-prep",     icon: Mic },
-  { label: "Readiness Score",  href: "/venus/readiness-score",    icon: Target },
-  { label: "Career Twin",      href: "/venus/career-twin",        icon: Bot },
-  { label: "AI Insights",      href: "/venus/ai-insights",        icon: Sparkles },
-  { label: "Job Fairs",        href: "/venus/job-fairs",          icon: Calendar },
-  { label: "Salary Negotiation", href: "/venus/salary-negotiation", icon: Handshake },
-];
+function getNav(base: string) {
+  return [
+    { label: "Dashboard",        href: base,                          icon: LayoutDashboard, exact: true },
+    { label: "Opportunities",    href: `${base}/opportunities`,       icon: Star },
+    { label: "Company Intel",    href: `${base}/company-intel`,       icon: Building2 },
+    { label: "Compensation",     href: `${base}/compensation`,        icon: DollarSign },
+    { label: "Equity Calc",      href: `${base}/equity`,              icon: TrendingUp },
+    { label: "Network",          href: `${base}/network`,             icon: Network },
+    { label: "Branding",         href: `${base}/branding`,            icon: Megaphone },
+    { label: "Interview Prep",   href: `${base}/interview-prep`,      icon: Mic },
+    { label: "Readiness Score",  href: `${base}/readiness-score`,     icon: Target },
+    { label: "Career Twin",      href: `${base}/career-twin`,         icon: Bot },
+    { label: "AI Insights",      href: `${base}/ai-insights`,         icon: Sparkles },
+    { label: "Job Fairs",        href: `${base}/job-fairs`,           icon: Calendar },
+    { label: "Salary Negotiation", href: `${base}/salary-negotiation`, icon: Handshake },
+  ];
+}
 
-function NavItem({ item, onClick }: { item: typeof NAV[0]; onClick?: () => void }) {
+function NavItem({ item, onClick }: { item: ReturnType<typeof getNav>[0]; onClick?: () => void }) {
   return (
     <NavLink
       to={item.href}
@@ -60,7 +63,7 @@ function NavItem({ item, onClick }: { item: typeof NAV[0]; onClick?: () => void 
   );
 }
 
-function Sidebar({ onNav }: { onNav?: () => void }) {
+function Sidebar({ nav, onNav }: { nav: ReturnType<typeof getNav>; onNav?: () => void }) {
   const { logout, userEmail } = useAuth();
   const navigate = useNavigate();
 
@@ -81,7 +84,7 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {NAV.map(item => (
+        {nav.map(item => (
           <NavItem key={item.href} item={item} onClick={onNav} />
         ))}
       </nav>
@@ -113,12 +116,14 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
 export default function VenusShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const basePath = getVenusBasePath(location.pathname);
+  const nav = getNav(basePath);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:w-60 lg:shrink-0">
-        <Sidebar />
+        <Sidebar nav={nav} />
       </div>
 
       {/* Mobile sidebar overlay */}
@@ -135,7 +140,7 @@ export default function VenusShell() {
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="fixed inset-y-0 left-0 z-50 w-64 lg:hidden"
             >
-              <Sidebar onNav={() => setMobileOpen(false)} />
+              <Sidebar nav={nav} onNav={() => setMobileOpen(false)} />
             </motion.div>
           </>
         )}

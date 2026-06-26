@@ -4,10 +4,12 @@ import {
   Calendar, Loader2, RefreshCw, MapPin, ArrowRight,
   Users, Building2, ExternalLink,
 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { careerService, JobFair } from "@/services/careerService";
 import { Button } from "@/components/ui/button";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getVenusBasePath } from "@/lib/venusBasePath";
 
 interface Filters {
   country: string;
@@ -31,6 +33,8 @@ export default function VenusJobFairs() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<Filters>({ country: "", state: "", city: "" });
   const { refreshSummary } = useSubscription();
+  const navigate = useNavigate();
+  const basePath = getVenusBasePath(useLocation().pathname);
 
   useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
@@ -240,7 +244,7 @@ export default function VenusJobFairs() {
           </div>
           <button
             type="button"
-            onClick={() => window.open("/venus/profile", "_self")}
+            onClick={() => navigate(`${basePath}/profile`)}
             className="shrink-0 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold whitespace-nowrap"
           >
             Update Profile <ArrowRight className="h-3 w-3" />

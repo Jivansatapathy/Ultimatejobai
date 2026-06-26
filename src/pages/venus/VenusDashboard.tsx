@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Star, Building2, TrendingUp, ArrowRight, Loader2, RefreshCw, Briefcase, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { venusService, DailyBriefing, ExecutiveOpportunity } from "@/services/venusService";
 import { useAuth } from "@/context/AuthContext";
+import { getVenusBasePath } from "@/lib/venusBasePath";
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) {
   return (
@@ -53,6 +54,7 @@ function OpportunityCard({ opp, onClick }: { opp: ExecutiveOpportunity; onClick:
 export default function VenusDashboard() {
   const { userEmail } = useAuth();
   const navigate = useNavigate();
+  const basePath = getVenusBasePath(useLocation().pathname);
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [topOpps, setTopOpps] = useState<ExecutiveOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +126,7 @@ export default function VenusDashboard() {
         <p className="text-sm text-gray-500 max-w-sm mb-6">
           Complete your profile so Venus AI can calculate EOS scores, generate your briefing, and match you to the right opportunities.
         </p>
-        <Button onClick={() => navigate("/venus/profile")}
+        <Button onClick={() => navigate(`${basePath}/profile`)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-8">
           <Crown className="h-4 w-4 mr-2" /> Build My Profile
         </Button>
@@ -194,7 +196,7 @@ export default function VenusDashboard() {
           className="rounded-2xl border border-gray-200 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">Top Matches</h3>
-            <button type="button" onClick={() => navigate("/venus/opportunities")}
+            <button type="button" onClick={() => navigate(`${basePath}/opportunities`)}
               className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold">
               View all <ArrowRight className="h-3 w-3" />
             </button>
@@ -208,7 +210,7 @@ export default function VenusDashboard() {
             <div className="space-y-2">
               {topOpps.map(opp => (
                 <OpportunityCard key={opp.id} opp={opp}
-                  onClick={() => navigate(`/venus/opportunities?id=${opp.id}`)} />
+                  onClick={() => navigate(`${basePath}/opportunities?id=${opp.id}`)} />
               ))}
             </div>
           ) : (
@@ -216,7 +218,7 @@ export default function VenusDashboard() {
               <Star className="h-8 w-8 text-gray-300 mx-auto mb-2" />
               <p className="text-sm text-gray-400">Opportunities load once the API is connected.</p>
               <Button size="sm" className="mt-3 bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={() => navigate("/venus/opportunities")}>
+                onClick={() => navigate(`${basePath}/opportunities`)}>
                 Explore Roles
               </Button>
             </div>
@@ -229,10 +231,10 @@ export default function VenusDashboard() {
           <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide mb-4">Quick Actions</h3>
           <div className="space-y-2">
             {[
-              { label: "Benchmark your compensation", icon: TrendingUp, href: "/venus/compensation", badge: "Ph2" },
-              { label: "Model your equity scenarios", icon: Star, href: "/venus/equity", badge: "Ph2" },
-              { label: "Generate executive content", icon: Sparkles, href: "/venus/branding", badge: "Ph3" },
-              { label: "Build your network map", icon: Building2, href: "/venus/network", badge: "Ph3" },
+              { label: "Benchmark your compensation", icon: TrendingUp, href: `${basePath}/compensation`, badge: "Ph2" },
+              { label: "Model your equity scenarios", icon: Star, href: `${basePath}/equity`, badge: "Ph2" },
+              { label: "Generate executive content", icon: Sparkles, href: `${basePath}/branding`, badge: "Ph3" },
+              { label: "Build your network map", icon: Building2, href: `${basePath}/network`, badge: "Ph3" },
             ].map(({ label, icon: Icon, href, badge }) => (
               <button key={href} type="button" onClick={() => navigate(href)}
                 className="w-full flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-gray-100 px-4 py-3 transition-all group">

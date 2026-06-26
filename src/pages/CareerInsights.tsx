@@ -1,14 +1,11 @@
 import { motion } from "framer-motion";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import {
-  TrendingUp,
   Target,
-  Lightbulb,
   CheckCircle2,
   AlertCircle,
   ArrowRight,
   Zap,
-  BookOpen,
   Users,
   Award,
   Sparkles,
@@ -16,7 +13,6 @@ import {
   Edit3,
   RefreshCw,
   Loader2,
-  Send,
   FileText,
   ChevronRight,
   History,
@@ -30,7 +26,6 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useResume } from "@/hooks/useResume";
 import { searchJobs, Job } from "@/services/jobService";
-import { getCareerAdvice } from "@/services/aiService";
 import { activityService } from "@/services/activityService";
 import { careerService, CareerProfile, JobMatch, UserScore, CareerRoadmap, JobFair } from "@/services/careerService";
 
@@ -49,17 +44,18 @@ export default function CareerInsights() {
   const [profile, setProfile] = useState<CareerProfile | null>(null);
   const [userScore, setUserScore] = useState<UserScore | null>(null);
   const [backendRoadmap, setBackendRoadmap] = useState<CareerRoadmap | null>(null);
-  const [offerText, setOfferText] = useState("");
-  const [advice, setAdvice] = useState("");
-  const [isAdvising, setIsAdvising] = useState(false);
   const [gapAnalysis, setGapAnalysis] = useState<any>(null);
   const navigate = useNavigate();
 
 
   useEffect(() => {
     const nextTab = searchParams.get("tab") || "skills";
+    if (nextTab === "ai-insights") {
+      navigate("/venus");
+      return;
+    }
     setActiveTab(nextTab);
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   // Auto-fetch/select first resume if none active
   useEffect(() => {
@@ -84,22 +80,17 @@ export default function CareerInsights() {
 
       // Fetch Authenticated Data
       try {
-        const [profileData, matchesData, scoreData, roadmapData, advicesData] = await Promise.all([
+        const [profileData, matchesData, scoreData, roadmapData] = await Promise.all([
           careerService.getProfile(),
           careerService.getJobMatches(),
           careerService.getUserScore(),
           careerService.getRoadmap(),
-          careerService.getAdvices()
         ]);
 
         setProfile(profileData);
         setBackendMatches(matchesData);
         setUserScore(scoreData);
         setBackendRoadmap(roadmapData);
-
-        if (advicesData.length > 0) {
-          setAdvice(advicesData[0].advice);
-        }
 
         const mapped: Job[] = matchesData.map(m => ({
           id: m.id,
@@ -190,29 +181,6 @@ export default function CareerInsights() {
       description: `Scheduled ${type} interview practice`,
       metadata: { mode: type }
     });
-  };
-
-  const handleGetAdvice = async () => {
-    if (!offerText.trim()) return;
-    setIsAdvising(true);
-    try {
-      const resumeContent = JSON.stringify(activeResume);
-      const resp = await getCareerAdvice(offerText, resumeContent);
-      setAdvice(resp);
-
-      // Save advice to backend
-      await careerService.createAdvice(offerText, resp);
-
-      activityService.logActivity({
-        activity_type: 'CAREER_ADVICE',
-        description: `Requested career advice for an offer/dilemma`,
-        metadata: { hasAdvice: !!resp }
-      });
-    } catch (error) {
-      console.error("Advice failed:", error);
-    } finally {
-      setIsAdvising(false);
-    }
   };
 
   // Helper to ensure we don't render objects
@@ -322,6 +290,10 @@ export default function CareerInsights() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.08 }}
                       onClick={() => {
+                        if (tab === "ai-insights") {
+                          navigate("/venus");
+                          return;
+                        }
                         setActiveTab(tab);
                         setShowLanding(false);
                         setSearchParams((p) => { const n = new URLSearchParams(p); n.set("tab", tab); return n; });
@@ -466,6 +438,10 @@ export default function CareerInsights() {
                   defaultValue="ai-insights"
                   value={activeTab}
                   onValueChange={(value) => {
+                    if (value === "ai-insights") {
+                      navigate("/venus");
+                      return;
+                    }
                     setActiveTab(value);
                     setSearchParams((current) => {
                       const next = new URLSearchParams(current);
@@ -516,91 +492,6 @@ export default function CareerInsights() {
                     </TabsList>
                   </div>
 
-                  <TabsContent value="ai-insights" className="space-y-5" data-tour="mentor-ai-insights">
-
-                    {/* Career Strategic Planner — hero card */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="relative overflow-hidden rounded-2xl border border-teal-200 bg-teal-50 p-6"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-teal-200 bg-white">
-                          <TrendingUp className="h-7 w-7 text-teal-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600 mb-1">AI-Powered</p>
-                          <h3 className="text-xl font-black text-gray-900 tracking-tight">Career Strategic Planner</h3>
-                          <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                            Chat with your AI career advisor to build a concrete 12–24 month roadmap tailored to your goals.
-                          </p>
-                        </div>
-                        <Button
-                          onClick={() => navigate("/career-planner")}
-                          className="shrink-0 gap-2 bg-teal-500 hover:bg-teal-600 text-white font-bold px-6 h-11 rounded-xl"
-                        >
-                          <BookOpen className="h-4 w-4" />
-                          Start Session
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </motion.div>
-
-                    {/* Strategic Career Advisor — offer analysis */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.07 }}
-                      className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm"
-                    >
-                      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-teal-200 bg-teal-50">
-                          <Sparkles className="h-4 w-4 text-teal-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-base font-bold leading-tight text-gray-900">Career Move Analyzer</h3>
-                          <p className="text-xs text-gray-500">Paste an offer or dilemma — AI weighs the pros, cons, and fit</p>
-                        </div>
-                      </div>
-
-                      <div className="p-5 space-y-4">
-                        <textarea
-                          placeholder="Paste your offer letter, company details, or describe your career dilemma here…"
-                          className="w-full min-h-[120px] p-4 rounded-xl bg-white border border-gray-200 text-gray-900 focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none text-sm leading-relaxed placeholder:text-gray-400"
-                          value={offerText}
-                          onChange={(e) => setOfferText(e.target.value)}
-                        />
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs text-gray-500">Your resume profile is used as context automatically.</p>
-                          <Button
-                            onClick={handleGetAdvice}
-                            disabled={isAdvising || !offerText.trim()}
-                            className="gap-2 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl h-9 px-5 text-sm"
-                          >
-                            {isAdvising ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                            Analyze
-                          </Button>
-                        </div>
-                      </div>
-
-                      {advice && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mx-5 mb-5 rounded-xl border border-teal-200 bg-teal-50 overflow-hidden"
-                        >
-                          <div className="flex items-center gap-2 px-4 py-3 border-b border-teal-100 bg-teal-50/50">
-                            <Lightbulb className="h-4 w-4 text-teal-600 shrink-0" />
-                            <p className="text-xs font-bold text-teal-600 uppercase tracking-wider">AI Analysis</p>
-                          </div>
-                          <div className="px-4 py-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                            {advice}
-                          </div>
-                        </motion.div>
-                      )}
-                    </motion.div>
-
-                  </TabsContent>
                   <TabsContent value="fairs" className="space-y-6" data-tour="mentor-fairs">
                     <div className="grid gap-6">
                       <div className="flex items-center justify-between">

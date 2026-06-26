@@ -17,6 +17,7 @@ import { Resume, GapAnalysis } from "@/types/resume";
 import { performGapAnalysis } from "@/services/aiService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
 import {
     Select,
@@ -55,7 +56,10 @@ export function GapAnalysisPanel({ resumes }: GapAnalysisPanelProps) {
             toast.success("Analysis complete!", { id: toastId });
             refreshSummary();
         } catch (error: any) {
-            toast.error("Analysis failed: " + error.message, { id: toastId });
+            toast.error(
+                getApiErrorMessage(error) || "Analysis failed: " + error.message,
+                { id: toastId },
+            );
         } finally {
             setIsAnalyzing(false);
         }

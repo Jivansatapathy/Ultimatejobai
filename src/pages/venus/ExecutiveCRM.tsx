@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { venusService, CRMContact } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const CONTACT_TYPES: CRMContact["contact_type"][] = ["recruiter","vc","pe_firm","founder","board_member","exec_search","advisor","family_office"];
 const TYPE_LABELS: Record<CRMContact["contact_type"], string> = {
@@ -188,7 +189,11 @@ export default function ExecutiveCRM() {
         refreshSummary();
       }
       toast.success("Contact saved.");
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.error("Saved locally — API not connected.");
       const local = { ...form, id: form.id || `local-${Date.now()}` };
       if (form.id) setContacts(c => c.map(x => x.id === form.id ? local : x));

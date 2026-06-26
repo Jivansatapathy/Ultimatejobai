@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { venusService, ReadinessScoreResult } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const DIMENSIONS = [
   { key: "strategic_vision", label: "Strategic Vision", desc: "Ability to define and communicate 3–5 year direction", weight: 0.20 },
@@ -126,7 +127,11 @@ export default function ExecutiveReadinessScore() {
       const res = await venusService.calculateReadinessScore({ target_role: targetRole, dimensions: scores });
       setResult(res);
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.info("Showing local assessment — connect Venus API for AI-enhanced analysis.");
       setResult(buildDemoResult(targetRole, scores));
     } finally {

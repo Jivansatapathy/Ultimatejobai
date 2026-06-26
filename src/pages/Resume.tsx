@@ -24,6 +24,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { GapAnalysisPanel } from "@/components/resume/GapAnalysisPanel";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage } from "@/lib/utils";
 import { activityTracker } from "@/services/activityTracker";
 import { careerService } from "@/services/careerService";
 import {
@@ -549,7 +550,10 @@ export default function Resume() {
                               }
                               refreshSummary();
                             } catch (error: any) {
-                              toast.error("Analysis failed: " + error.message, { id: toastId });
+                              toast.error(
+                                getApiErrorMessage(error) || "Analysis failed: " + error.message,
+                                { id: toastId },
+                              );
                             } finally {
                               setIsAnalyzing(false);
                             }

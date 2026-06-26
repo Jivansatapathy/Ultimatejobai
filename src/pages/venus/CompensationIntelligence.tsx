@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { venusService, CompBenchmark } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -256,7 +257,11 @@ export default function CompensationIntelligence() {
       setResult(data);
       setHistory(h => [data, ...h.slice(0, 4)]);
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.error("API not connected — showing demo data.");
       const demo: CompBenchmark = {
         role, stage, location, years_experience,

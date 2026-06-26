@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { venusService, BrandingContent } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const CONTENT_TYPES = [
   { key: "linkedin_post", label: "LinkedIn Post", icon: MessageSquare, desc: "Thought leadership, 150–300 words" },
@@ -81,7 +82,11 @@ export default function ExecutiveBranding() {
       setLibrary(l => [content, ...l]);
       toast.success("Content generated.");
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.error("API not connected — showing demo content.");
       const demo: BrandingContent = {
         id: `local-${Date.now()}`,

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { venusService, ResumeVersion } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const MODES = [
   { key: "startup", label: "Startup / VC-backed", icon: "🚀", desc: "Growth metrics, scrappiness, equity mindset" },
@@ -103,7 +104,11 @@ export default function ExecutiveResumeStudio() {
       toast.success("Resume generated.");
       setPreviewing(version);
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.error("API not connected — showing demo resume.");
       const demo: ResumeVersion = {
         id: `local-${Date.now()}`,

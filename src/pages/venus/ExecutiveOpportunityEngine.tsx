@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { venusService, ExecutiveOpportunity, EOSResult } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const OPP_TYPES = ["full_time","fractional","advisory","board","consulting","interim"];
 const SENIORITY = ["C-Suite","VP","Director"];
@@ -115,6 +116,7 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
   const [loading, setLoading] = useState(true);
   const [eos, setEos] = useState<EOSResult | null>(null);
   const [decision, setDecision] = useState<{ verdict: string; reasoning: string; risks: string[]; upsides: string[]; action: string } | null>(null);
+  const [planLimitMessage, setPlanLimitMessage] = useState<string | null>(null);
   const { refreshSummary } = useSubscription();
 
   useEffect(() => {
@@ -125,6 +127,12 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
       if (eosRes.status === "fulfilled") setEos(eosRes.value);
       if (decRes.status === "fulfilled") setDecision(decRes.value);
       if (eosRes.status === "fulfilled" || decRes.status === "fulfilled") refreshSummary();
+      const limitError = [eosRes, decRes].find(
+        r => r.status === "rejected" && isPlanLimitError(r.reason)
+      ) as PromiseRejectedResult | undefined;
+      if (limitError) {
+        setPlanLimitMessage(getApiErrorMessage(limitError.reason) || "Plan limit reached. Upgrade to continue.");
+      }
     }).finally(() => setLoading(false));
   }, [opp.id, refreshSummary]);
 
@@ -196,6 +204,8 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
                   <p className="text-sm font-semibold text-blue-700">{decision.action}</p>
                 </div>
               </div>
+            ) : planLimitMessage ? (
+              <p className="text-sm text-red-600 text-center py-4 font-semibold">{planLimitMessage}</p>
             ) : (
               <p className="text-sm text-gray-400 text-center py-4">Decision engine will respond once the API is connected.</p>
             )}
@@ -230,7 +240,12 @@ export default function ExecutiveOpportunityEngine() {
       setOpps(prev => append ? [...prev, ...res.results] : res.results);
       setTotal(res.count);
       setHasNext(res.has_next);
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        setOpps([]);
+        return;
+      }
       toast.error("Could not load opportunities — API not yet connected.");
       setOpps([]);
     } finally {

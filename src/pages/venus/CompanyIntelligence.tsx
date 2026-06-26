@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { venusService, CompanyIntel } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 function AvoidScoreBadge({ score }: { score: number }) {
   const color = score >= 70 ? "border-red-200 bg-red-50 text-red-700"
@@ -126,7 +127,11 @@ export default function CompanyIntelligence() {
       setIntel(data);
       setCompanyId(input.trim());
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.error("Could not fetch company intel — API not yet connected.");
       setIntel({
         id: "demo",
@@ -153,7 +158,11 @@ export default function CompanyIntelligence() {
       toast.success("Company intel refresh triggered.");
       refreshSummary();
       search();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.error("Refresh failed — API not yet connected.");
     }
   };

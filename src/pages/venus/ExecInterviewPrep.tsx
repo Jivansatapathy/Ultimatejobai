@@ -8,6 +8,7 @@ import { venusService, InterviewPrepPack, InterviewQuestion } from "@/services/v
 import { subscriptionService, SubscriptionSummary } from "@/services/subscriptionService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 // Lazy-load heavy interview components (they pull in TensorFlow, MediaPipe, etc.)
 const TextInterview = lazy(() =>
@@ -336,7 +337,11 @@ export default function ExecInterviewPrep() {
       const result = await venusService.generateInterviewPrep({ interview_type: interviewType, company, role });
       setPack(result);
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.info("Using demo prep pack — connect Venus API for AI-personalized content.");
       setPack(DEMO_PACKS[interviewType](company, role));
     } finally {

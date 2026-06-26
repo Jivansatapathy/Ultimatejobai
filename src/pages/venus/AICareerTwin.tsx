@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { venusService, CareerTwinMessage, ExecutiveProfile } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const STORAGE_KEY = "venus_career_twin_history";
 const MAX_HISTORY = 50;
@@ -221,7 +222,11 @@ export default function AICareerTwin() {
       const { reply } = await venusService.sendCareerTwinMessage({ message: text, history });
       setMessages(m => [...m, { role: "assistant", content: reply, timestamp: new Date().toISOString() }]);
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       const reply = getDemoReply(text);
       setMessages(m => [...m, { role: "assistant", content: reply, timestamp: new Date().toISOString() }]);
     } finally {

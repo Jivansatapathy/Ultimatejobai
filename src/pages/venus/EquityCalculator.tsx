@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { venusService, EquityScenario } from "@/services/venusService";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const STAGES = ["Seed","Series A","Series B","Series C","Late Stage","Pre-IPO"];
 
@@ -83,7 +84,11 @@ export default function EquityCalculator() {
       const data = await venusService.calculateEquity(form);
       setResult(data);
       refreshSummary();
-    } catch {
+    } catch (error: any) {
+      if (isPlanLimitError(error)) {
+        toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
+        return;
+      }
       toast.error("API not connected — showing demo calculation.");
       setResult({
         ...form,

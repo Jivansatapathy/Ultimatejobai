@@ -277,6 +277,8 @@ export default function ExecInterviewPrep() {
   const [pack, setPack]                   = useState<InterviewPrepPack | null>(null);
   const { refreshSummary } = useSubscription();
 
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
+
   // Tab + practice mode state
   const [tab, setTab]               = useState<TabKey>("prep");
   const [practiceMode, setPracticeMode] = useState<PracticeMode>(null);

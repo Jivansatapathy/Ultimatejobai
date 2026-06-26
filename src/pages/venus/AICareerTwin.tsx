@@ -198,6 +198,8 @@ export default function AICareerTwin() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { refreshSummary } = useSubscription();
 
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
+
   useEffect(() => {
     venusService.getProfile().then(setProfile).catch(() => null);
   }, []);

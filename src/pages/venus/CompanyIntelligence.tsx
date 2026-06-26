@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Building2, Loader2, ExternalLink, TrendingUp, AlertTriangle, RefreshCw, Newspaper } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -117,6 +117,8 @@ export default function CompanyIntelligence() {
   const [intel, setIntel] = useState<CompanyIntel | null>(null);
   const [loading, setLoading] = useState(false);
   const { refreshSummary } = useSubscription();
+
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   const search = async () => {
     if (!input.trim()) return;

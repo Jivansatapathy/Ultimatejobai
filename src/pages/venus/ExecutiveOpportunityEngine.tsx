@@ -227,6 +227,9 @@ export default function ExecutiveOpportunityEngine() {
   const [seniorityFilter, setSeniorityFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
   const [selectedOpp, setSelectedOpp] = useState<ExecutiveOpportunity | null>(null);
+  const { refreshSummary } = useSubscription();
+
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   const load = useCallback(async (q: string, type: string, seniority: string, country: string, pg: number, append: boolean) => {
     if (!append) setLoading(true);

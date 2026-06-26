@@ -89,6 +89,8 @@ export default function ExecutiveResumeStudio() {
   const [previewing, setPreviewing] = useState<ResumeVersion | null>(null);
   const { refreshSummary } = useSubscription();
 
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
+
   useEffect(() => {
     venusService.getResumeVersions?.()
       .then(setVersions)

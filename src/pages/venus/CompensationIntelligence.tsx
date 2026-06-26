@@ -248,6 +248,8 @@ export default function CompensationIntelligence() {
   const [history, setHistory] = useState<CompBenchmark[]>([]);
   const { refreshSummary } = useSubscription();
 
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
+
   const handleBenchmark = async () => {
     if (!role || !stage || !location) { toast.error("Select role, stage, and location."); return; }
     const years_experience = experience ? Number(experience) : undefined;

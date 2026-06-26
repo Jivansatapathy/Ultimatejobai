@@ -7,6 +7,7 @@ import {
 import { careerService, JobFair } from "@/services/careerService";
 import { Button } from "@/components/ui/button";
 import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 interface Filters {
   country: string;
@@ -29,6 +30,9 @@ export default function VenusJobFairs() {
   const [fairs, setFairs] = useState<JobFair[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<Filters>({ country: "", state: "", city: "" });
+  const { refreshSummary } = useSubscription();
+
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   const load = async () => {
     setLoading(true);

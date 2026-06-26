@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, Loader2, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,8 @@ export default function EquityCalculator() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<EquityScenario | null>(null);
   const { refreshSummary } = useSubscription();
+
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   const set = (k: keyof typeof form, v: string | number) => setForm(p => ({ ...p, [k]: v }));
 

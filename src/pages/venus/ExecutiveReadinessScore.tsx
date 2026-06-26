@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, Loader2, TrendingUp, AlertCircle, Calendar, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,8 @@ export default function ExecutiveReadinessScore() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ReadinessScoreResult | null>(null);
   const { refreshSummary } = useSubscription();
+
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   const calculate = async () => {
     setLoading(true);

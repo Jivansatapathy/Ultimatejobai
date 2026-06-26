@@ -171,6 +171,8 @@ export default function ExecutiveCRM() {
   const [editing, setEditing] = useState<(Omit<CRMContact, "id"> & { id?: string }) | null>(null);
   const { refreshSummary } = useSubscription();
 
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
+
   useEffect(() => {
     venusService.getContacts()
       .then(setContacts)

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2, Copy, Linkedin, BookOpen, MessageSquare, Video, PenLine, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,8 @@ export default function ExecutiveBranding() {
   const [generating, setGenerating] = useState(false);
   const [library, setLibrary] = useState<BrandingContent[]>([]);
   const { refreshSummary } = useSubscription();
+
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   const generate = async () => {
     setGenerating(true);

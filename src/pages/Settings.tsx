@@ -56,7 +56,7 @@ const SECTION_TITLE = "text-[11px] font-black uppercase tracking-wider text-teal
 export default function Settings() {
   const { userEmail } = useAuth();
   const navigate = useNavigate();
-  const { summary, loadingSummary } = useSubscription();
+  const { summary, loadingSummary, refreshSummary } = useSubscription();
   const [profile, setProfile] = useState<CareerProfile>(DEFAULT_PROFILE);
   const [botProfile, setBotProfile] = useState<BotProfile>(EMPTY_BOT);
   const [email, setEmail] = useState(userEmail || "");
@@ -125,6 +125,8 @@ export default function Settings() {
     };
     loadData();
   }, []);
+
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);

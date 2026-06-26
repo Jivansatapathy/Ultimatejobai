@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { InterviewType } from "@/lib/interview-api";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { cn, stripMarkdown } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Sparkles, ArrowLeft, Mic, MicOff, AlertTriangle, ShieldCheck } from "lucide-react";
@@ -263,7 +264,13 @@ export const VideoInterview = ({ onBack, initialJobDescription = "" }: { onBack:
                         <div className="p-2 rounded-xl bg-teal-500"><Sparkles className="h-5 w-5 text-white" /></div>
                         <h1 className="text-xl font-semibold text-gray-900">Audio Interview Setup</h1>
                     </div>
-                    <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
+                    <div className="flex items-center gap-3">
+                        <UsageMonitor
+                            featureKey={selectedType === "salary_negotiation" ? "live_salary_negotiation_call" : "video_interview_access"}
+                            compact
+                        />
+                        <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
+                    </div>
                 </header>
                 <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
                     <div className="text-center space-y-3 max-w-lg">

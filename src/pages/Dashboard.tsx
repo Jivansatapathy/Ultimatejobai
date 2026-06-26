@@ -123,7 +123,7 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [loading, setLoading] = useState(!_dashCache?.stats);
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>(_dashCache?.recommendedJobs ?? []);
-  const { summary: subscriptionSummary, hasFeature, loadingSummary } = useSubscription();
+  const { summary: subscriptionSummary, hasFeature, loadingSummary, refreshSummary } = useSubscription();
   const [manualDailyTaskIds, setManualDailyTaskIds] = useState<number[]>([]);
   const [dashboardStats, setDashboardStats] = useState(_dashCache?.stats ?? _DEFAULT_STATS);
   const [chartData, setChartData] = useState<number[]>(_dashCache?.chartData ?? []);
@@ -232,6 +232,7 @@ export default function Dashboard() {
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { loadApplications(); }, [loadApplications]);
   useEffect(() => { loadDailyPref(); }, [loadDailyPref]);
+  useEffect(() => { refreshSummary(); }, [refreshSummary]);
 
   useEffect(() => {
     const role = activeResume?.targetJobRole || notificationService.getPrefs().targetRole;

@@ -22,6 +22,8 @@ import { CareerResume } from "@/services/careerService";
 import { useResume } from "@/hooks/useResume";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GapAnalysisPanel } from "@/components/resume/GapAnalysisPanel";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 import { activityTracker } from "@/services/activityTracker";
 import { careerService } from "@/services/careerService";
 import {
@@ -56,6 +58,7 @@ export default function Resume() {
     optimizeWithAI,
     analyzeFileATS
   } = useResume();
+  const { refreshSummary } = useSubscription();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastUploadedFileRef = useRef<File | null>(null);
@@ -461,9 +464,12 @@ export default function Resume() {
                 className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6"
                 data-tour="resume-ats"
               >
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
                   <h2 className="text-lg font-semibold text-gray-900">ATS Profile Optimization</h2>
-                  <Target className="h-5 w-5 text-teal-500" />
+                  <div className="flex items-center gap-2">
+                    <UsageMonitor featureKey="ats_optimizer_access" compact />
+                    <Target className="h-5 w-5 text-teal-500" />
+                  </div>
                 </div>
 
                 <div className="space-y-4 mb-4">
@@ -541,6 +547,7 @@ export default function Resume() {
                                 setIsAnalysisVisible(true);
                                 toast.success("AI Analysis updated!", { id: toastId });
                               }
+                              refreshSummary();
                             } catch (error: any) {
                               toast.error("Analysis failed: " + error.message, { id: toastId });
                             } finally {

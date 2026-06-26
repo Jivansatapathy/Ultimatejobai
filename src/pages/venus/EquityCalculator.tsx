@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, EquityScenario } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const STAGES = ["Seed","Series A","Series B","Series C","Late Stage","Pre-IPO"];
 
@@ -70,6 +72,7 @@ export default function EquityCalculator() {
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<EquityScenario | null>(null);
+  const { refreshSummary } = useSubscription();
 
   const set = (k: keyof typeof form, v: string | number) => setForm(p => ({ ...p, [k]: v }));
 
@@ -79,6 +82,7 @@ export default function EquityCalculator() {
     try {
       const data = await venusService.calculateEquity(form);
       setResult(data);
+      refreshSummary();
     } catch {
       toast.error("API not connected — showing demo calculation.");
       setResult({
@@ -93,7 +97,10 @@ export default function EquityCalculator() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 2 · Intelligence</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 2 · Intelligence</p>
+          <UsageMonitor featureKey="equity_calculator_access" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Equity Calculator</h1>
         <p className="text-sm text-gray-400 mt-1">Model your equity payout across exit scenarios.</p>
       </div>

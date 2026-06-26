@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, ReadinessScoreResult } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const DIMENSIONS = [
   { key: "strategic_vision", label: "Strategic Vision", desc: "Ability to define and communicate 3–5 year direction", weight: 0.20 },
@@ -116,12 +118,14 @@ export default function ExecutiveReadinessScore() {
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ReadinessScoreResult | null>(null);
+  const { refreshSummary } = useSubscription();
 
   const calculate = async () => {
     setLoading(true);
     try {
       const res = await venusService.calculateReadinessScore({ target_role: targetRole, dimensions: scores });
       setResult(res);
+      refreshSummary();
     } catch {
       toast.info("Showing local assessment — connect Venus API for AI-enhanced analysis.");
       setResult(buildDemoResult(targetRole, scores));
@@ -133,7 +137,10 @@ export default function ExecutiveReadinessScore() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · Assessment</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · Assessment</p>
+          <UsageMonitor featureKey="readiness_score_access" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Readiness Score</h1>
         <p className="text-sm text-gray-400 mt-1">Rate yourself on 6 executive dimensions. Get a score, gap analysis, and 90-day action plan.</p>
       </div>

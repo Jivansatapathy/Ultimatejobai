@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, ResumeVersion } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const MODES = [
   { key: "startup", label: "Startup / VC-backed", icon: "🚀", desc: "Growth metrics, scrappiness, equity mindset" },
@@ -84,6 +86,7 @@ export default function ExecutiveResumeStudio() {
   const [versions, setVersions] = useState<ResumeVersion[]>([]);
   const [loadingVersions, setLoadingVersions] = useState(true);
   const [previewing, setPreviewing] = useState<ResumeVersion | null>(null);
+  const { refreshSummary } = useSubscription();
 
   useEffect(() => {
     venusService.getResumeVersions?.()
@@ -99,6 +102,7 @@ export default function ExecutiveResumeStudio() {
       setVersions(v => [version, ...v]);
       toast.success("Resume generated.");
       setPreviewing(version);
+      refreshSummary();
     } catch {
       toast.error("API not connected — showing demo resume.");
       const demo: ResumeVersion = {
@@ -126,7 +130,10 @@ export default function ExecutiveResumeStudio() {
       {previewing && <ResumePreview version={previewing} onClose={() => setPreviewing(null)} />}
 
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 3 · Resume & Brand</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 3 · Resume & Brand</p>
+          <UsageMonitor featureKey="resume_builder_access" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Resume Studio</h1>
         <p className="text-sm text-gray-400 mt-1">AI-tailored resumes for every type of executive opportunity.</p>
       </div>

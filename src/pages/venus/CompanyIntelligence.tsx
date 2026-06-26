@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, CompanyIntel } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 function AvoidScoreBadge({ score }: { score: number }) {
   const color = score >= 70 ? "border-red-200 bg-red-50 text-red-700"
@@ -113,6 +115,7 @@ export default function CompanyIntelligence() {
   const [input, setInput] = useState("");
   const [intel, setIntel] = useState<CompanyIntel | null>(null);
   const [loading, setLoading] = useState(false);
+  const { refreshSummary } = useSubscription();
 
   const search = async () => {
     if (!input.trim()) return;
@@ -122,6 +125,7 @@ export default function CompanyIntelligence() {
       const data = await venusService.getCompanyIntel(input.trim());
       setIntel(data);
       setCompanyId(input.trim());
+      refreshSummary();
     } catch {
       toast.error("Could not fetch company intel — API not yet connected.");
       setIntel({
@@ -147,6 +151,7 @@ export default function CompanyIntelligence() {
     try {
       await venusService.refreshCompanyIntel(companyId);
       toast.success("Company intel refresh triggered.");
+      refreshSummary();
       search();
     } catch {
       toast.error("Refresh failed — API not yet connected.");
@@ -156,7 +161,10 @@ export default function CompanyIntelligence() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 2 · Intelligence</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 2 · Intelligence</p>
+          <UsageMonitor featureKey="company_intel_access" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Company Intelligence</h1>
         <p className="text-sm text-gray-400 mt-1">Research any company before pursuing an opportunity.</p>
       </div>

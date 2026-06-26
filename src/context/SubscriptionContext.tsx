@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -29,7 +29,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(Boolean(isAuthenticated));
 
-  const refreshPlans = async () => {
+  const refreshPlans = useCallback(async () => {
     setLoadingPlans(true);
     try {
       const nextPlans = await subscriptionService.getPlans();
@@ -40,9 +40,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } finally {
       setLoadingPlans(false);
     }
-  };
+  }, []);
 
-  const refreshSummary = async () => {
+  const refreshSummary = useCallback(async () => {
     if (!isAuthenticated) {
       setSummary(null);
       setLoadingSummary(false);
@@ -59,9 +59,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } finally {
       setLoadingSummary(false);
     }
-  };
+  }, [isAuthenticated]);
 
-  const selectPlan = async (planSlug: string) => {
+  const selectPlan = useCallback(async (planSlug: string) => {
     if (!isAuthenticated) {
       return null;
     }
@@ -69,9 +69,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const nextSummary = await subscriptionService.selectPlan(planSlug);
     setSummary(nextSummary);
     return nextSummary;
-  };
+  }, [isAuthenticated]);
 
-  const initiateCheckout = async (planSlug: string) => {
+  const initiateCheckout = useCallback(async (planSlug: string) => {
     if (!isAuthenticated) {
       return;
     }
@@ -85,7 +85,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.error("Failed to initiate checkout:", error);
       throw error;
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isEmployerRoute) {
@@ -93,7 +93,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
     refreshPlans();
-  }, [isEmployerRoute]);
+  }, [isEmployerRoute, refreshPlans]);
 
   useEffect(() => {
     if (isEmployerRoute) {
@@ -102,7 +102,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
     refreshSummary();
-  }, [isAuthenticated, isEmployerRoute]);
+  }, [isAuthenticated, isEmployerRoute, refreshSummary]);
 
   const value = useMemo(
     () => ({

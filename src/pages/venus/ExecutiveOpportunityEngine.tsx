@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Search, Loader2, Star, MapPin, Building2, Briefcase, ExternalLink, ChevronDown, X } from "lucide-react";
 import { toast } from "sonner";
 import { venusService, ExecutiveOpportunity, EOSResult } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const OPP_TYPES = ["full_time","fractional","advisory","board","consulting","interim"];
 const SENIORITY = ["C-Suite","VP","Director"];
@@ -113,6 +115,7 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
   const [loading, setLoading] = useState(true);
   const [eos, setEos] = useState<EOSResult | null>(null);
   const [decision, setDecision] = useState<{ verdict: string; reasoning: string; risks: string[]; upsides: string[]; action: string } | null>(null);
+  const { refreshSummary } = useSubscription();
 
   useEffect(() => {
     Promise.allSettled([
@@ -121,8 +124,9 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
     ]).then(([eosRes, decRes]) => {
       if (eosRes.status === "fulfilled") setEos(eosRes.value);
       if (decRes.status === "fulfilled") setDecision(decRes.value);
+      if (eosRes.status === "fulfilled" || decRes.status === "fulfilled") refreshSummary();
     }).finally(() => setLoading(false));
-  }, [opp.id]);
+  }, [opp.id, refreshSummary]);
 
   const eosColor = (eos?.score ?? 0) >= 75 ? "text-emerald-600" : (eos?.score ?? 0) >= 50 ? "text-amber-600" : "text-red-600";
 
@@ -242,7 +246,10 @@ export default function ExecutiveOpportunityEngine() {
 
       {/* Header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 1 · Opportunity Engine</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 1 · Opportunity Engine</p>
+          <UsageMonitor featureKey="eos_score_access" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Opportunities</h1>
         <p className="text-sm text-gray-400 mt-1">
           {loading ? "Loading..." : `${total.toLocaleString()} roles across full-time, fractional, board & advisory`}

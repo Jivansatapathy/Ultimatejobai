@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { api, InterviewState, InterviewType, Message, ApiError } from "@/lib/interview-api";
 import { toast } from "@/hooks/use-toast";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const initialState: InterviewState = {
   sessionId: null,
@@ -26,6 +27,7 @@ export function useInterview() {
   const [isRenderingVideo, setIsRenderingVideo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { refreshSummary } = useSubscription();
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -99,13 +101,14 @@ export function useInterview() {
           minQuestions: response.min_questions || 0,
           maxQuestions: response.max_questions || 10,
         });
+        refreshSummary();
         return true;
       } catch (error) {
         handleError(error);
         return false;
       }
     },
-    [handleError]
+    [handleError, refreshSummary]
   );
 
   const startLocalInterview = useCallback(
@@ -130,13 +133,14 @@ export function useInterview() {
           maxQuestions: response.max_questions,
         });
         setAudioUrl(response.interviewer_audio_url);
+        refreshSummary();
         return true;
       } catch (error) {
         handleError(error);
         return false;
       }
     },
-    [handleError]
+    [handleError, refreshSummary]
   );
 
   const validateMessage = useCallback(

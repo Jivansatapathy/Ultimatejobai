@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InterviewType } from "@/lib/interview-api";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
@@ -89,6 +90,10 @@ export const TextInterview = ({ onBack, initialJobDescription = "" }: { onBack: 
                         <h1 className="text-xl font-semibold text-gray-900">Text Interview Setup</h1>
                     </div>
                     <div className="flex items-center gap-3">
+                        <UsageMonitor
+                            featureKey={selectedType === "salary_negotiation" ? "salary_negotiation_access" : "text_interview_access"}
+                            compact
+                        />
                         <AIStatusBadge isHealthy={isHealthy} isChecking={isChecking} />
                     </div>
                 </header>

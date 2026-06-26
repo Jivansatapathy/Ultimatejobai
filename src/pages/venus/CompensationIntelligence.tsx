@@ -4,6 +4,8 @@ import { DollarSign, Loader2, TrendingUp, History, Search, X, MapPin } from "luc
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { venusService, CompBenchmark } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -243,6 +245,7 @@ export default function CompensationIntelligence() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CompBenchmark | null>(null);
   const [history, setHistory] = useState<CompBenchmark[]>([]);
+  const { refreshSummary } = useSubscription();
 
   const handleBenchmark = async () => {
     if (!role || !stage || !location) { toast.error("Select role, stage, and location."); return; }
@@ -252,6 +255,7 @@ export default function CompensationIntelligence() {
       const data = await venusService.benchmarkCompensation({ role, stage, location, years_experience });
       setResult(data);
       setHistory(h => [data, ...h.slice(0, 4)]);
+      refreshSummary();
     } catch {
       toast.error("API not connected — showing demo data.");
       const demo: CompBenchmark = {
@@ -273,7 +277,10 @@ export default function CompensationIntelligence() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 2 · Intelligence</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 2 · Intelligence</p>
+          <UsageMonitor featureKey="salary_range_research" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Compensation Intelligence</h1>
         <p className="text-sm text-gray-400 mt-1">Benchmark base, bonus, RSUs & equity for any executive role across 300+ US & Canadian cities.</p>
       </div>

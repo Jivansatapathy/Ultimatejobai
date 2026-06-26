@@ -4,6 +4,8 @@ import { Send, Loader2, Crown, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { venusService, CareerTwinMessage, ExecutiveProfile } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const STORAGE_KEY = "venus_career_twin_history";
 const MAX_HISTORY = 50;
@@ -193,6 +195,7 @@ export default function AICareerTwin() {
   const [profile, setProfile] = useState<ExecutiveProfile | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { refreshSummary } = useSubscription();
 
   useEffect(() => {
     venusService.getProfile().then(setProfile).catch(() => null);
@@ -217,6 +220,7 @@ export default function AICareerTwin() {
       const history = [...messages, userMsg];
       const { reply } = await venusService.sendCareerTwinMessage({ message: text, history });
       setMessages(m => [...m, { role: "assistant", content: reply, timestamp: new Date().toISOString() }]);
+      refreshSummary();
     } catch {
       const reply = getDemoReply(text);
       setMessages(m => [...m, { role: "assistant", content: reply, timestamp: new Date().toISOString() }]);
@@ -243,7 +247,7 @@ export default function AICareerTwin() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+      <div className="flex items-center justify-between gap-3 flex-wrap px-6 py-4 border-b border-gray-200 shrink-0">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · AI</p>
           <h1 className="text-lg font-black text-gray-900">AI Career Twin</h1>
@@ -251,13 +255,16 @@ export default function AICareerTwin() {
             <p className="text-xs text-gray-400">Personalized for {profile.role}{profile.growth_stage ? ` · ${profile.growth_stage}` : ""}</p>
           )}
         </div>
-        {messages.length > 0 && (
-          <Button size="sm" variant="outline" onClick={clearHistory}
-            className="border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-red-600 h-7 text-xs">
-            <Trash2 className="h-3 w-3 mr-1" />
-            Clear
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <UsageMonitor featureKey="career_twin_access" compact />
+          {messages.length > 0 && (
+            <Button size="sm" variant="outline" onClick={clearHistory}
+              className="border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-red-600 h-7 text-xs">
+              <Trash2 className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}

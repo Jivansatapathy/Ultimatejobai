@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, CRMContact } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const CONTACT_TYPES: CRMContact["contact_type"][] = ["recruiter","vc","pe_firm","founder","board_member","exec_search","advisor","family_office"];
 const TYPE_LABELS: Record<CRMContact["contact_type"], string> = {
@@ -166,6 +168,7 @@ export default function ExecutiveCRM() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<CRMContact["contact_type"] | "">("");
   const [editing, setEditing] = useState<(Omit<CRMContact, "id"> & { id?: string }) | null>(null);
+  const { refreshSummary } = useSubscription();
 
   useEffect(() => {
     venusService.getContacts()
@@ -182,6 +185,7 @@ export default function ExecutiveCRM() {
       } else {
         const created = await venusService.addContact(form as Omit<CRMContact, "id">);
         setContacts(c => [created, ...c]);
+        refreshSummary();
       }
       toast.success("Contact saved.");
     } catch {
@@ -221,16 +225,19 @@ export default function ExecutiveCRM() {
     <div className="p-6 max-w-4xl mx-auto space-y-5">
       {editing && <ContactForm initial={editing} onSave={save} onClose={() => setEditing(null)} />}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 3 · Network</p>
           <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive CRM</h1>
           <p className="text-sm text-gray-400 mt-1">{contacts.length} contacts tracked</p>
         </div>
-        <Button onClick={() => setEditing(EMPTY_CONTACT)}
-          className="bg-blue-600 hover:bg-blue-700 text-white">
-          <Plus className="h-4 w-4 mr-1.5" /> Add Contact
-        </Button>
+        <div className="flex items-center gap-3">
+          <UsageMonitor featureKey="crm_contacts_access" compact />
+          <Button onClick={() => setEditing(EMPTY_CONTACT)}
+            className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Plus className="h-4 w-4 mr-1.5" /> Add Contact
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

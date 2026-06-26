@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Resume, GapAnalysis } from "@/types/resume";
 import { performGapAnalysis } from "@/services/aiService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 import { toast } from "sonner";
 import {
     Select,
@@ -36,6 +38,7 @@ export function GapAnalysisPanel({ resumes }: GapAnalysisPanelProps) {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysis, setAnalysis] = useState<GapAnalysis | null>(null);
     const [expandedStep, setExpandedStep] = useState<number | null>(null);
+    const { refreshSummary } = useSubscription();
 
     const handleAnalyze = async () => {
         const resume = resumes.find(r => r.id === selectedResumeId);
@@ -50,6 +53,7 @@ export function GapAnalysisPanel({ resumes }: GapAnalysisPanelProps) {
             const result = await performGapAnalysis(resume, jobRole, jobDescription, experience);
             setAnalysis(result);
             toast.success("Analysis complete!", { id: toastId });
+            refreshSummary();
         } catch (error: any) {
             toast.error("Analysis failed: " + error.message, { id: toastId });
         } finally {
@@ -68,9 +72,12 @@ export function GapAnalysisPanel({ resumes }: GapAnalysisPanelProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className={cardCls}
             >
-                <div className="flex items-center gap-2 mb-6">
-                    <Target className="h-6 w-6 text-teal-500" />
-                    <h2 className="text-xl font-bold text-gray-900">Deep Gap Analysis</h2>
+                <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                    <div className="flex items-center gap-2">
+                        <Target className="h-6 w-6 text-teal-500" />
+                        <h2 className="text-xl font-bold text-gray-900">Deep Gap Analysis</h2>
+                    </div>
+                    <UsageMonitor featureKey="gap_analysis_access" compact />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-6">

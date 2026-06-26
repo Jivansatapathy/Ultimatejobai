@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/lib/interview-api";
 import type { Message } from "@/lib/interview-api";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 // ─── Scenario setup ────────────────────────────────────────────────────────────
 interface Scenario {
@@ -117,6 +119,7 @@ type Stage = "pick" | "brief" | "chat" | "result";
 
 export default function SalaryNegotiator() {
     const navigate = useNavigate();
+    const { refreshSummary } = useSubscription();
     const [stage, setStage] = useState<Stage>("pick");
     const [scenario, setScenario] = useState<Scenario | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -142,12 +145,13 @@ export default function SalaryNegotiator() {
             setSessionId(res.session_id);
             setMessages([{ role: "interviewer", content: res.interviewer_message, timestamp: new Date() }]);
             setStage("chat");
-        } catch {
-            toast.error("Failed to start session. Check your connection.");
+            refreshSummary();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to start session. Check your connection.");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [refreshSummary]);
 
     const handleSend = useCallback(async () => {
         if (!input.trim() || !sessionId || loading || finished) return;
@@ -213,8 +217,11 @@ export default function SalaryNegotiator() {
                 </button>
 
                 <div className="mb-14" data-tour="salary-header">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.3em] text-orange-600 mb-6 shadow-sm">
-                        <DollarSign className="h-3 w-3" /> Negotiation Protocol
+                    <div className="flex items-center justify-between gap-3 flex-wrap mb-6">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.3em] text-orange-600 shadow-sm">
+                            <DollarSign className="h-3 w-3" /> Negotiation Protocol
+                        </div>
+                        <UsageMonitor featureKey="salary_negotiation_access" compact />
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase mb-4">Capital Leverage</h1>
                     <p className="text-lg font-medium text-gray-500 max-w-2xl leading-relaxed">Multimodal simulation suite for high-stakes compensation engineering. Master the art of the counter-offer.</p>

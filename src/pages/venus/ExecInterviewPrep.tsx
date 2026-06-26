@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, InterviewPrepPack, InterviewQuestion } from "@/services/venusService";
 import { subscriptionService, SubscriptionSummary } from "@/services/subscriptionService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 // Lazy-load heavy interview components (they pull in TensorFlow, MediaPipe, etc.)
 const TextInterview = lazy(() =>
@@ -272,6 +274,7 @@ export default function ExecInterviewPrep() {
   const [role, setRole]                   = useState("");
   const [loading, setLoading]             = useState(false);
   const [pack, setPack]                   = useState<InterviewPrepPack | null>(null);
+  const { refreshSummary } = useSubscription();
 
   // Tab + practice mode state
   const [tab, setTab]               = useState<TabKey>("prep");
@@ -332,6 +335,7 @@ export default function ExecInterviewPrep() {
     try {
       const result = await venusService.generateInterviewPrep({ interview_type: interviewType, company, role });
       setPack(result);
+      refreshSummary();
     } catch {
       toast.info("Using demo prep pack — connect Venus API for AI-personalized content.");
       setPack(DEMO_PACKS[interviewType](company, role));
@@ -344,7 +348,10 @@ export default function ExecInterviewPrep() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · Intelligence</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · Intelligence</p>
+          <UsageMonitor featureKey="interview_prep_access" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Interview Prep AI</h1>
         <p className="text-sm text-gray-400 mt-1">Executive-specific prep for board, investor, founder, PE, and comp negotiation interviews.</p>
       </div>

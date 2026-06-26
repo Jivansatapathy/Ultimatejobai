@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { venusService, BrandingContent } from "@/services/venusService";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 const CONTENT_TYPES = [
   { key: "linkedin_post", label: "LinkedIn Post", icon: MessageSquare, desc: "Thought leadership, 150–300 words" },
@@ -70,6 +72,7 @@ export default function ExecutiveBranding() {
   const [topic, setTopic] = useState("");
   const [generating, setGenerating] = useState(false);
   const [library, setLibrary] = useState<BrandingContent[]>([]);
+  const { refreshSummary } = useSubscription();
 
   const generate = async () => {
     setGenerating(true);
@@ -77,6 +80,7 @@ export default function ExecutiveBranding() {
       const content = await venusService.generateBrandingContent({ content_type: contentType, topic });
       setLibrary(l => [content, ...l]);
       toast.success("Content generated.");
+      refreshSummary();
     } catch {
       toast.error("API not connected — showing demo content.");
       const demo: BrandingContent = {
@@ -105,7 +109,10 @@ export default function ExecutiveBranding() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 3 · Resume & Brand</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 3 · Resume & Brand</p>
+          <UsageMonitor featureKey="career_strategy_access" compact />
+        </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Branding</h1>
         <p className="text-sm text-gray-400 mt-1">AI-generated thought leadership content powered by Groq.</p>
       </div>

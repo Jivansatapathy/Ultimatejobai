@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { careerService, JobFair } from "@/services/careerService";
 import { Button } from "@/components/ui/button";
+import { UsageMonitor } from "@/components/subscription/UsageMonitor";
 
 interface Filters {
   country: string;
@@ -60,9 +61,12 @@ export default function VenusJobFairs() {
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Venus AI · Events</p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Venus AI · Events</p>
+            <UsageMonitor featureKey="job_fairs_access" compact />
+          </div>
           <h1 className="text-2xl font-black text-gray-900 mt-0.5">Job Fairs</h1>
           <p className="text-sm text-gray-400 mt-1">
             Upcoming executive career fairs and recruiting events.

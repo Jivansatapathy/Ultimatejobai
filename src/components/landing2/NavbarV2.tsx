@@ -63,7 +63,7 @@ export const NavbarV2 = () => {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1 flex-1">
+          <nav className="hidden lg:flex items-center gap-1 flex-1">
             {isAuthenticated ? (
               /* Authenticated: show full app nav */
               AUTH_NAV.map((link) => (
@@ -147,7 +147,7 @@ export const NavbarV2 = () => {
           </nav>
 
           {/* Desktop right */}
-          <div className="hidden md:flex items-center gap-2 shrink-0">
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
             {!isAuthenticated ? (
               <>
                 <Link
@@ -203,11 +203,11 @@ export const NavbarV2 = () => {
             )}
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile/tablet hamburger */}
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            className="lg:hidden flex items-center justify-center h-9 w-9 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
             aria-label="Toggle menu"
           >
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -215,9 +215,9 @@ export const NavbarV2 = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile/tablet menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
+        <div className="lg:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
           {isAuthenticated ? (
             <>
               <p className="px-3 pt-1 pb-2 text-[9px] font-black uppercase tracking-[0.3em] text-gray-300">

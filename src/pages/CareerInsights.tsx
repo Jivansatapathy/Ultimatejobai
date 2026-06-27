@@ -298,7 +298,7 @@ export default function CareerInsights() {
                         setShowLanding(false);
                         setSearchParams((p) => { const n = new URLSearchParams(p); n.set("tab", tab); return n; });
                       }}
-                      className={`group flex flex-col items-start text-left rounded-[28px] border bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-md shadow-sm ${accent}`}
+                      className={`group flex flex-col items-start text-left rounded-[28px] border bg-white p-4 sm:p-6 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-md shadow-sm ${accent}`}
                     >
                       <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-[20px] border ${iconCls} transition-transform group-hover:scale-110 duration-500`}>
                         <Icon className="h-6 w-6" />
@@ -339,7 +339,7 @@ export default function CareerInsights() {
               </motion.div>
             </div>
 
-            <div className="grid lg:grid-cols-5 gap-8">
+            <div className="grid lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
               {/* Sidebar Stats */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="border border-gray-200 bg-white rounded-[28px] p-4 overflow-hidden hover:border-teal-400 transition-all shadow-sm">
@@ -415,7 +415,7 @@ export default function CareerInsights() {
                   </div>
                 </div>
 
-                <div className="p-8 rounded-[28px] bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-500/20 relative overflow-hidden group">
+                <div className="p-4 sm:p-8 rounded-[28px] bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-500/20 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
                     <Zap className="h-24 w-24" />
                   </div>

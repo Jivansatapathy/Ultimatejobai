@@ -109,9 +109,9 @@ export default function CareerPlanner() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50">
+        <div className="h-[100dvh] flex flex-col bg-gray-50">
             {/* Header */}
-            <header className="shrink-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between bg-white">
+            <header className="shrink-0 border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
                     <button onClick={() => navigate("/ai-mentor")} className="text-gray-500 hover:text-gray-900 transition-colors">
                         <ArrowLeft className="h-5 w-5" />
@@ -149,7 +149,7 @@ export default function CareerPlanner() {
             <div className="flex-1 overflow-y-auto">
                 {!started ? (
                     /* Landing / prompt picker */
-                    <div className="max-w-2xl mx-auto px-6 py-12">
+                    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
                         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
                             <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-teal-600 mb-6">
                                 <Sparkles className="h-3 w-3" /> AI Career Advisor
@@ -185,7 +185,7 @@ export default function CareerPlanner() {
                     </div>
                 ) : (
                     /* Messages */
-                    <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
+                    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-6">
                         <AnimatePresence initial={false}>
                             {messages.map((msg, i) => (
                                 <motion.div
@@ -251,7 +251,7 @@ export default function CareerPlanner() {
             </div>
 
             {/* Input bar */}
-            <div className="shrink-0 border-t border-gray-200 bg-white px-6 py-4" data-tour="planner-input">
+            <div className="shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 py-4" data-tour="planner-input">
                 <div className="max-w-2xl mx-auto">
                     <div className="flex gap-3 items-end">
                         <Textarea

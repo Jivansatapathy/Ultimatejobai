@@ -272,17 +272,17 @@ export default function Settings() {
             </p>
           </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
 
             {/* ── Sidebar ─────────────────────────────────────────────────── */}
-            <aside className="lg:col-span-1">
-              <nav className="bg-white rounded-2xl border border-gray-200 shadow-sm p-2 flex flex-col gap-1">
+            <aside className="md:col-span-1">
+              <nav className="bg-white rounded-2xl border border-gray-200 shadow-sm p-2 flex flex-row md:flex-col gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {NAV_TABS.map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
                     type="button"
                     onClick={() => setActiveTab(id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-all ${
+                    className={`flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-xs md:text-sm font-semibold text-left transition-all whitespace-nowrap shrink-0 md:shrink md:w-full ${
                       activeTab === id
                         ? "bg-teal-50 border border-teal-200 text-teal-700"
                         : "text-gray-500 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
@@ -296,7 +296,7 @@ export default function Settings() {
             </aside>
 
             {/* ── Main panel ──────────────────────────────────────────────── */}
-            <main className="lg:col-span-3">
+            <main className="md:col-span-3">
               <motion.div
                 key={activeTab}
                 initial={{ opacity: 0, y: 12 }}

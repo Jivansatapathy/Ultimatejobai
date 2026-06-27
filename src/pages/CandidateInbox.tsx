@@ -60,10 +60,10 @@ export default function CandidateInbox() {
             </div>
           </div>
         ) : (
-          <div className="flex gap-4 h-[calc(100vh-220px)]">
+          <div className="flex flex-col md:flex-row gap-4 h-[calc(100dvh-220px)]">
 
-            {/* Conversation list */}
-            <div className="w-72 shrink-0 flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            {/* Conversation list — full width on mobile, fixed sidebar on md+ */}
+            <div className={`md:w-72 md:shrink-0 flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden ${selectedId ? "hidden md:flex" : "flex"}`}>
               <div className="p-3 border-b border-gray-100">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -115,8 +115,8 @@ export default function CandidateInbox() {
               </div>
             </div>
 
-            {/* Chat area */}
-            <div className="flex-1 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col">
+            {/* Chat area — full width on mobile when selected */}
+            <div className={`flex-1 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col ${!selectedId ? "hidden md:flex" : "flex"}`}>
               <AnimatePresence mode="wait">
                 {selected ? (
                   <motion.div
@@ -127,7 +127,16 @@ export default function CandidateInbox() {
                     className="flex flex-col h-full"
                   >
                     <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
+                      {/* Back button on mobile */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedId(null)}
+                        className="md:hidden flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+                        aria-label="Back to list"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                      </button>
+                      <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                         <Building2 className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>

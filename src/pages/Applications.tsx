@@ -124,12 +124,12 @@ export default function Applications() {
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-6 rounded-[28px] border border-gray-200 bg-white p-8 shadow-sm transition-all"
+            className="flex flex-col gap-6 rounded-[28px] border border-gray-200 bg-white p-4 sm:p-6 md:p-8 shadow-sm transition-all"
           >
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-2">Job Applications</p>
-                <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase">My Applications</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase">My Applications</h1>
                 <p className="mt-4 max-w-2xl text-base font-medium text-gray-500 leading-relaxed">
                   Track all your job applications and follow up with employers in one place.
                 </p>
@@ -151,18 +151,18 @@ export default function Applications() {
             </div>
 
 
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-6 hover:border-teal-400 transition-all group">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
+              <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-4 sm:p-6 hover:border-teal-400 transition-all group">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3 group-hover:text-teal-600 transition-colors">Total Applied</p>
                 <p className="text-4xl font-black text-gray-900 tracking-tighter">{applications.length}</p>
                 <p className="mt-3 text-xs font-medium text-gray-400 leading-relaxed">Total applications submitted via email or employer portal.</p>
               </div>
-              <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-6 hover:border-teal-400 transition-all group">
+              <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-4 sm:p-6 hover:border-teal-400 transition-all group">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3 group-hover:text-teal-600 transition-colors">Employer Portal</p>
                 <p className="text-4xl font-black text-gray-900 tracking-tighter">{employerManagedCount}</p>
                 <p className="mt-3 text-xs font-medium text-gray-400 leading-relaxed">Applications sent through employer portals or ATS systems.</p>
               </div>
-              <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-6 hover:border-teal-400 transition-all group">
+              <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-4 sm:p-6 hover:border-teal-400 transition-all group">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3 group-hover:text-teal-600 transition-colors">Active Pipeline</p>
                 <p className="text-4xl font-black text-gray-900 tracking-tighter">{activePipelineCount}</p>
                 <p className="mt-3 text-xs font-medium text-gray-400 leading-relaxed">Applications currently in screening, interview, or offer stage.</p>
@@ -175,7 +175,7 @@ export default function Applications() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className="rounded-[28px] border border-gray-200 bg-white p-8 shadow-sm"
+            className="rounded-[28px] border border-gray-200 bg-white p-4 sm:p-6 md:p-8 shadow-sm"
           >
             <div className="flex flex-col gap-4 lg:flex-row">
               <div className="relative flex-1 group">

@@ -109,7 +109,7 @@ export default function AIMentor() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.06 }}
-                className="rounded-[28px] border border-gray-200 bg-white p-8 shadow-sm hover:border-teal-400 transition-all hover:-translate-y-1 group"
+                className="rounded-[28px] border border-gray-200 bg-white p-4 sm:p-6 md:p-8 shadow-sm hover:border-teal-400 transition-all hover:-translate-y-1 group"
               >
                 <div className="flex items-start gap-5">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] bg-gray-100 border border-gray-200 group-hover:bg-teal-50 group-hover:border-teal-200 transition-all">

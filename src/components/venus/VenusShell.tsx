@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Star, Building2, DollarSign,
   TrendingUp, Network, Megaphone,
   LogOut, Menu, X, ChevronRight, Crown, Mic, Target, Bot, Loader2,
-  Sparkles, Calendar, Handshake,
+  Sparkles, Handshake, ArrowLeft,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getVenusBasePath } from "@/lib/venusBasePath";
@@ -69,9 +69,21 @@ function Sidebar({ nav, onNav }: { nav: ReturnType<typeof getNav>; onNav?: () =>
   const initials = (userEmail || "VE").slice(0, 2).toUpperCase();
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-white border-r border-gray-200">
+    <div className="flex h-full flex-col overflow-y-auto bg-white border-r border-gray-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Back to Dashboard */}
+      <div className="px-3 pt-3 pb-1">
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard")}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Dashboard
+        </button>
+      </div>
+
       {/* Brand */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 shadow-lg shadow-blue-500/20">
           <Crown className="h-5 w-5 text-white" />
         </div>

@@ -19,7 +19,7 @@ import {
 } from "@/services/seniorJobService";
 import { venusService } from "@/services/venusService";
 
-// ─── Venus AI profile → search filter mapping ──────────────────────────────────
+// ─── Hizorex AI profile → search filter mapping ──────────────────────────────────
 
 const ROLE_TO_SEARCH: Record<string, string> = {
   "CEO": "Chief Executive Officer",
@@ -525,7 +525,7 @@ function JobCard({ job, onSelect }: { job: SeniorJob; onSelect: (j: SeniorJob) =
               {job.is_venus_powered && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide border border-violet-700 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm shadow-violet-300">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Venus Powered
+                  Hizorex Powered
                 </span>
               )}
               {job.workplace_type && (
@@ -621,7 +621,7 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
                     {job.is_venus_powered && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide border border-violet-700 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm shadow-violet-300">
                         <Sparkles className="h-3.5 w-3.5" />
-                        Venus Powered
+                        Hizorex Powered
                       </span>
                     )}
                     {job.industry && (
@@ -885,7 +885,7 @@ export default function FindJobs() {
     ...(filters.role      ? [{ label: filters.role, clear: () => setFilters((f) => ({ ...f, role: "", seniority: "" })) }] : []),
     ...(filters.workplace ? [{ label: filters.workplace, clear: () => set("workplace", "") }] : []),
     ...(filters.hasSalary === "true" ? [{ label: "Salary listed", clear: () => set("hasSalary", "") }] : []),
-    ...(filters.venusPowered === "true" ? [{ label: "Venus Powered", clear: () => set("venusPowered", "") }] : []),
+    ...(filters.venusPowered === "true" ? [{ label: "Hizorex Powered", clear: () => set("venusPowered", "") }] : []),
     ...(filters.text      ? [{ label: `"${filters.text}"`, clear: () => { set("text", ""); setTextInput(""); } }] : []),
   ];
 
@@ -993,8 +993,8 @@ export default function FindJobs() {
           </button>
         </FilterSection>
 
-        {/* Venus Powered */}
-        <FilterSection title="Venus Powered" icon={Sparkles}>
+        {/* Hizorex Powered */}
+        <FilterSection title="Hizorex Powered" icon={Sparkles}>
           <button
             type="button"
             onClick={() => toggle("venusPowered", "true")}
@@ -1006,7 +1006,7 @@ export default function FindJobs() {
           >
             <span className="flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5" />
-              Venus Powered only
+              Hizorex Powered only
             </span>
             {filters.venusPowered === "true" && <X className="h-3.5 w-3.5 opacity-70" />}
           </button>
@@ -1283,12 +1283,12 @@ export default function FindJobs() {
         </div>
       </div>
 
-      {/* ── Venus AI pre-fill banner ── */}
+      {/* ── Hizorex AI pre-fill banner ── */}
       {venusPreFill && !venusbannerDismissed && (
         <div className="bg-violet-600 text-white px-4 py-2.5 flex items-center justify-center gap-3 text-sm">
           <Crown className="h-4 w-4 text-violet-200 shrink-0" />
           <span>
-            <span className="font-bold">Venus AI</span> pre-filled your search with{" "}
+            <span className="font-bold">Hizorex AI</span> pre-filled your search with{" "}
             <span className="font-semibold">{venusPreFill.role}</span>
             {venusPreFill.industry && <> in <span className="font-semibold">{venusPreFill.industry}</span></>}
             {" "}— update filters anytime.

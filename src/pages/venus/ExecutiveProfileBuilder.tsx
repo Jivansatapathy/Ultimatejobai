@@ -70,7 +70,7 @@ export default function ExecutiveProfileBuilder() {
             <Crown className="h-5 w-5 text-white" />
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Venus AI</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Hizorex AI</p>
             <p className="text-lg font-black text-gray-900">Executive Profile Builder</p>
           </div>
         </div>

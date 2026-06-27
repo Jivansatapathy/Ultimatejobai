@@ -18,7 +18,7 @@ const FALLBACK: LandingContent = {
       { num: 3, suffix: "×", label: "Faster applications with Apex™", sub: "AI handles the paperwork" },
       { num: 92, suffix: "%", label: "Profile match accuracy", sub: "Powered by AI scoring" },
     ],
-    venus_banner_title: "Venus AI — Your Executive Career Operating System",
+    venus_banner_title: "Hizorex AI — Your Executive Career Operating System",
     venus_banner_subtitle:
       "Company intelligence, compensation benchmarks, equity modeling, EOS™ scoring and live interview practice — built exclusively for C-suite leaders.",
   },

@@ -20,7 +20,7 @@ const AUTH_NAV = [
   { name: "Find Jobs",  href: "/find-jobs",  icon: Search },
   { name: "Resume",     href: "/resume",     icon: FileText },
   { name: "Interview",  href: "/interview",  icon: Users },
-  { name: "AI Mentor",  href: "/ai-mentor",  icon: BrainCircuit },
+  { name: "AI Mentor",  href: "/hizorex-os", icon: BrainCircuit },
   { name: "Inbox",      href: "/inbox",      icon: Inbox },
 ];
 
@@ -81,7 +81,7 @@ export const NavbarV2 = () => {
                 </Link>
               ))
             ) : (
-              /* Public: Home, Categories, For Employers, Pricing, Venus AI */
+              /* Public: Home, Categories, For Employers, Pricing, Hizorex AI */
               <>
                 <Link
                   to="/"
@@ -136,11 +136,11 @@ export const NavbarV2 = () => {
                   Pricing
                 </a>
                 <Link
-                  to="/venus"
+                  to="/hizorex-os"
                   className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-violet-700 hover:text-violet-900 transition-colors rounded-lg hover:bg-violet-50"
                 >
                   <Crown className="h-3.5 w-3.5" />
-                  Venus AI
+                  Hizorex AI
                 </Link>
               </>
             )}
@@ -293,9 +293,9 @@ export const NavbarV2 = () => {
                 <Link key={c.href} to={c.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 pl-6">{c.label}</Link>
               ))}
               <a href="/v2#pricing" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Pricing</a>
-              <Link to="/venus" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors">
+              <Link to="/hizorex-os" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors">
                 <Crown className="h-3.5 w-3.5" />
-                Venus AI — Executive OS
+                Hizorex AI — Executive OS
               </Link>
               <div className="pt-3 flex flex-col gap-2 border-t border-gray-100 mt-2">
                 <Link to="/auth" onClick={() => setMenuOpen(false)}>

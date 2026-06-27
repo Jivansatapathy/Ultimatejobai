@@ -371,7 +371,7 @@ export async function getSalaryBenchmark(payload: {
 
 // ─── Job Templates ──────────────────────────────────────────────
 export async function getJobTemplates() {
-  const response = await api.get<JobTemplate[]>("/api/employer/jobs/templates/");
+  const response = await api.get<JobTemplate[]>("/api/employer/job-templates/");
   return response.data;
 }
 
@@ -386,7 +386,7 @@ export async function saveJobTemplate(payload: {
   workplace_type?: string;
   skills: string[];
 }) {
-  const response = await api.post<JobTemplate>("/api/employer/jobs/templates/", payload);
+  const response = await api.post<JobTemplate>("/api/employer/job-templates/", payload);
   return response.data;
 }
 

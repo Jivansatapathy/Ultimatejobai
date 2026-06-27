@@ -72,7 +72,7 @@ export default function VenusJobFairs() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Venus AI · Events</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Hizorex AI · Events</p>
             <UsageMonitor featureKey="job_fairs_access" compact />
           </div>
           <h1 className="text-2xl font-black text-gray-900 mt-0.5">Job Fairs</h1>
@@ -239,7 +239,7 @@ export default function VenusJobFairs() {
           <div>
             <p className="text-sm font-bold text-gray-900">Executive Networking Tip</p>
             <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-              Before attending any event, update your Venus profile so your EOS™ score and branding materials are current. First impressions at these events can open board and C-suite pipelines.
+              Before attending any event, update your Hizorex profile so your EOS™ score and branding materials are current. First impressions at these events can open board and C-suite pipelines.
             </p>
           </div>
           <button

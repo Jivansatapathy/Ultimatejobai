@@ -223,8 +223,8 @@ function HeroTab({ token }: { token: string }) {
         onChange={(v) => setData((d) => d && { ...d, stats: v as Hero["stats"] })}
         rows={8}
       />
-      <Field label="Venus banner title" value={data.venus_banner_title} onChange={set("venus_banner_title")} />
-      <Field label="Venus banner subtitle" value={data.venus_banner_subtitle} onChange={set("venus_banner_subtitle")} multiline />
+      <Field label="Hizorex banner title" value={data.venus_banner_title} onChange={set("venus_banner_title")} />
+      <Field label="Hizorex banner subtitle" value={data.venus_banner_subtitle} onChange={set("venus_banner_subtitle")} multiline />
       <SaveBtn loading={saving} onClick={save} />
       <Toast {...toast} />
     </div>

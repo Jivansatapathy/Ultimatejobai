@@ -282,7 +282,7 @@ export default function AICareerTwin() {
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
                 <Crown className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-lg font-black text-gray-900">Venus Career Twin</h2>
+              <h2 className="text-lg font-black text-gray-900">Hizorex Career Twin</h2>
               <p className="text-sm text-gray-500 mt-1 max-w-sm">
                 Your AI advisor trained on executive career strategy. Ask about comp negotiation, board positioning, role decisions, or PE diligence.
               </p>
@@ -318,7 +318,7 @@ export default function AICareerTwin() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask Venus anything about your executive career..."
+            placeholder="Ask Hizorex anything about your executive career..."
             rows={1}
             className="flex-1 resize-none rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all max-h-32 overflow-y-auto"
             style={{ fieldSizing: "content" } as React.CSSProperties}

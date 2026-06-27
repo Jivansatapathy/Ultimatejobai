@@ -150,14 +150,14 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
         </motion.div>
       </div>
 
-      {/* Venus AI Executive OS banner */}
+      {/* Hizorex AI Executive OS banner */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.35 }}
         className="relative mx-auto max-w-5xl px-4 sm:px-6 pb-10 sm:pb-14"
       >
-        <Link to="/venus" className="group block">
+        <Link to="/hizorex-os" className="group block">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-950 via-violet-900 to-indigo-900 border border-violet-700/40 shadow-[0_8px_40px_rgba(109,40,217,0.25)] hover:shadow-[0_12px_48px_rgba(109,40,217,0.4)] transition-all duration-300">
             {/* Glow blobs */}
             <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-violet-500/20 blur-2xl" />
@@ -199,7 +199,7 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
 
               {/* CTA arrow */}
               <div className="shrink-0 flex items-center gap-2 rounded-xl bg-violet-600 group-hover:bg-violet-500 transition-colors px-5 py-3 text-white font-bold text-sm shadow-md shadow-violet-900/30 self-start sm:self-auto">
-                Explore Venus
+                Explore Hizorex
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>

@@ -337,7 +337,7 @@ export default function ExecutiveOpportunityEngine() {
         <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center">
           <Briefcase className="h-10 w-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-semibold">No opportunities found</p>
-          <p className="text-sm text-gray-400 mt-1">Try adjusting filters or connecting the Venus API.</p>
+          <p className="text-sm text-gray-400 mt-1">Try adjusting filters or connecting the Hizorex API.</p>
         </div>
       ) : (
         <div className="space-y-3">

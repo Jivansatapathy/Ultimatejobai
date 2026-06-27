@@ -46,7 +46,7 @@ function NavItem({ item, onClick }: { item: ReturnType<typeof getNav>[0]; onClic
         `group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
           isActive
             ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-            : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+            : "text-gray-800 hover:bg-gray-100 hover:text-gray-900"
         }`
       }
     >
@@ -77,7 +77,7 @@ function Sidebar({ nav, onNav }: { nav: ReturnType<typeof getNav>; onNav?: () =>
           <Crown className="h-5 w-5 text-white" />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Venus AI</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Hizorex AI</p>
           <p className="text-sm font-bold text-gray-900">Executive OS</p>
         </div>
       </div>
@@ -97,13 +97,13 @@ function Sidebar({ nav, onNav }: { nav: ReturnType<typeof getNav>; onNav?: () =>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-gray-900 truncate">{userEmail || "Executive"}</p>
-            <p className="text-xs text-gray-400">Venus Pro</p>
+            <p className="text-xs text-gray-400">Hizorex Pro</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => { logout(); navigate("/auth"); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all"
         >
           <LogOut className="h-4 w-4" />
           Sign out
@@ -154,7 +154,7 @@ export default function VenusShell() {
             <Menu className="h-5 w-5" />
           </button>
           <Crown className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-bold text-gray-900">Venus AI</span>
+          <span className="text-sm font-bold text-gray-900">Hizorex AI</span>
         </div>
 
         {/* Page content */}

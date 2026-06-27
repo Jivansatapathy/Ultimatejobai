@@ -32,6 +32,7 @@ const NO_CACHE_PREFIXES = [
   '/ws/',
   '/api/search/senior/',
   '/api/search/senior/filters/',
+  '/api/employer/chat/',
 ];
 
 /** Synchronously check if a GET URL is already in cache (no fetch needed). */

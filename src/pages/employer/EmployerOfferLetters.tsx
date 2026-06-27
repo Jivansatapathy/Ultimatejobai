@@ -54,7 +54,7 @@ export default function EmployerOfferLetters() {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [salary, setSalary] = useState("");
   const [startDate, setStartDate] = useState("");
-  const [customContent, setCustomContent] = useState("");
+  const [customContent, setCustomContent] = useState(defaultTemplate);
 
   const inputCls = "h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors";
 
@@ -77,6 +77,22 @@ export default function EmployerOfferLetters() {
     load();
   }, [isEmployer, user]);
 
+  const applyPlaceholders = (content: string) => {
+    const candidate = candidates.find((c) => c.id === selectedCandidate);
+    const replacements: Record<string, string> = {
+      "{{candidate_name}}": candidate?.name || "",
+      "{{job_title}}": candidate?.job_title || "",
+      "{{salary}}": salary.trim(),
+      "{{start_date}}": startDate,
+      "{{company_name}}": profile?.company_name || "",
+      "{{employer_name}}": profile?.full_name || "",
+    };
+    return Object.entries(replacements).reduce(
+      (text, [token, value]) => text.split(token).join(value),
+      content,
+    );
+  };
+
   const handleGenerate = async () => {
     if (!selectedCandidate) { toast.error("Select a candidate first."); return; }
     if (!salary.trim()) { toast.error("Enter a salary."); return; }
@@ -88,7 +104,7 @@ export default function EmployerOfferLetters() {
         template_id: selectedTemplate || undefined,
         salary: salary.trim(),
         start_date: startDate,
-        custom_content: customContent.trim() || undefined,
+        custom_content: applyPlaceholders(customContent).trim() || undefined,
       });
       setOffers((current) => [offer, ...current]);
       setDialogOpen(false);
@@ -116,17 +132,14 @@ export default function EmployerOfferLetters() {
     printWindow.print();
   };
 
-  const resetForm = () => { setSelectedCandidate(""); setSelectedTemplate(""); setSalary(""); setStartDate(""); setCustomContent(""); };
+  const resetForm = () => { setSelectedCandidate(""); setSelectedTemplate(""); setSalary(""); setStartDate(""); setCustomContent(defaultTemplate); };
 
   const handleLoadTemplate = (templateId: string) => {
     setSelectedTemplate(templateId);
     if (!templateId) return;
     const template = templates.find((t) => t.id === templateId);
     if (template) {
-      let content = template.content;
-      content = content.replace("{{company_name}}", profile?.company_name || "");
-      content = content.replace("{{employer_name}}", profile?.full_name || "");
-      setCustomContent(content);
+      setCustomContent(applyPlaceholders(template.content));
     }
   };
 
@@ -287,7 +300,7 @@ export default function EmployerOfferLetters() {
               <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Letter content</label>
               <textarea
                 rows={12}
-                value={customContent || defaultTemplate}
+                value={customContent}
                 onChange={(e) => setCustomContent(e.target.value)}
                 placeholder="Write or edit the offer letter content..."
                 className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-mono text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-y"

@@ -16,6 +16,13 @@ export interface ExecutiveProfile {
   confidential_mode: boolean;
   comp_floor?: number;
   risk_tolerance?: 'low' | 'medium' | 'high';
+  // Richer profile fields
+  past_companies: { company: string; title: string; duration_years: number }[];
+  achievements: string[];
+  skills: string[];
+  pl_size?: number;
+  team_size?: number;
+  education?: string;
   eos_score?: number;
 }
 

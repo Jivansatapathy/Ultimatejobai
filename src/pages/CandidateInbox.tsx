@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, MessageSquare, Search } from "lucide-react";
+import { Building2, Check, FileText, Loader2, MessageSquare, Search, X } from "lucide-react";
+import { toast } from "sonner";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { ConversationPanel } from "@/components/chat/ConversationPanel";
 import { useAuth } from "@/context/AuthContext";
 import { subscribeCandidateConversations } from "@/services/chatService";
+import { getOfferLetterForApplication, respondToOfferLetter } from "@/services/employerService";
 import type { FirestoreConversation } from "@/types/chat";
+import type { OfferLetter } from "@/types/employer";
+
+const offerStatusStyle: Record<string, string> = {
+  sent: "bg-blue-50 text-blue-700 border-blue-200",
+  accepted: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  declined: "bg-red-50 text-red-700 border-red-200",
+  expired: "bg-gray-50 text-gray-500 border-gray-200",
+};
 
 function formatTime(value: string | null) {
   if (!value) return "";
@@ -22,6 +32,8 @@ export default function CandidateInbox() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [offer, setOffer] = useState<OfferLetter | null>(null);
+  const [respondingAction, setRespondingAction] = useState<"accept" | "decline" | null>(null);
 
   useEffect(() => {
     const email = (userEmail || "").toLowerCase();
@@ -32,6 +44,29 @@ export default function CandidateInbox() {
     });
     return unsubscribe;
   }, [userEmail]);
+
+  useEffect(() => {
+    if (!selectedId) { setOffer(null); return; }
+    let active = true;
+    getOfferLetterForApplication(selectedId)
+      .then((result) => { if (active) setOffer(result); })
+      .catch(() => { if (active) setOffer(null); });
+    return () => { active = false; };
+  }, [selectedId]);
+
+  const handleRespond = async (action: "accept" | "decline") => {
+    if (!offer) return;
+    setRespondingAction(action);
+    try {
+      const updated = await respondToOfferLetter(offer.id, action);
+      setOffer(updated);
+      toast.success(action === "accept" ? "Offer accepted." : "Offer declined.");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || "Unable to submit your response.");
+    } finally {
+      setRespondingAction(null);
+    }
+  };
 
   const filtered = conversations.filter((c) =>
     c.employerCompany.toLowerCase().includes(search.toLowerCase()) ||
@@ -49,7 +84,7 @@ export default function CandidateInbox() {
         <div className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-400 mb-1">Inbox</p>
           <h1 className="text-2xl font-extrabold text-gray-900">Messages from Employers</h1>
-          <p className="text-sm text-gray-500 mt-1">Interview invites and updates sent to you by hiring teams.</p>
+          <p className="text-sm text-gray-500 mt-1">Interview invites, offer letters, and updates sent to you by hiring teams.</p>
         </div>
 
         {loading ? (
@@ -144,6 +179,54 @@ export default function CandidateInbox() {
                         <p className="text-xs text-gray-500">{selected.jobTitle}</p>
                       </div>
                     </div>
+
+                    {offer && (
+                      <div className="border-b border-gray-100 bg-amber-50/60 p-4 shrink-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileText className="h-4 w-4 text-amber-600 shrink-0" />
+                          <p className="text-sm font-bold text-gray-900">Offer Letter</p>
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold capitalize ${offerStatusStyle[offer.status] || ""}`}>
+                            {offer.status}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mb-3">
+                          <span>Salary: <span className="font-semibold text-gray-900">{offer.salary}</span></span>
+                          <span>Start date: <span className="font-semibold text-gray-900">{offer.start_date}</span></span>
+                        </div>
+                        {offer.content && (
+                          <div className="max-h-28 overflow-y-auto rounded-lg bg-white border border-gray-200 p-3 text-xs text-gray-600 whitespace-pre-wrap mb-3">
+                            {offer.content}
+                          </div>
+                        )}
+                        {offer.status === "sent" ? (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleRespond("accept")}
+                              disabled={respondingAction !== null}
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 disabled:opacity-50 transition-colors shadow-sm"
+                            >
+                              {respondingAction === "accept" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                              Accept Offer
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRespond("decline")}
+                              disabled={respondingAction !== null}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold px-3 py-2 disabled:opacity-50 transition-colors"
+                            >
+                              {respondingAction === "decline" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+                              Decline
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500">
+                            You {offer.status} this offer{offer.responded_at ? ` on ${new Date(offer.responded_at).toLocaleDateString()}` : ""}.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex-1 overflow-hidden p-4">
                       <ConversationPanel
                         conversation={selected}

@@ -483,6 +483,17 @@ export async function sendOfferLetter(offerId: string) {
   return response.data;
 }
 
+// ─── Candidate-side offer letter access ──────────────────────────
+export async function getOfferLetterForApplication(applicationId: string) {
+  const response = await api.get<OfferLetter | null>(`/api/employer/offers/letters/by-application/${applicationId}/`);
+  return response.data || null;
+}
+
+export async function respondToOfferLetter(offerId: string, action: "accept" | "decline") {
+  const response = await api.post<OfferLetter>(`/api/employer/offers/letters/${offerId}/respond/`, { action });
+  return response.data;
+}
+
 // ─── Notifications ──────────────────────────────────────────────
 export async function getEmployerNotifications() {
   const response = await api.get<EmployerNotification[]>("/api/employer/notifications/");

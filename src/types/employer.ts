@@ -384,7 +384,7 @@ export interface OfferTemplate {
 
 export interface OfferLetter {
   id: string;
-  application_id: string;
+  application: string;
   candidate_name: string;
   candidate_email: string;
   job_title: string;
@@ -392,8 +392,9 @@ export interface OfferLetter {
   content: string;
   salary: string;
   start_date: string;
-  status: "draft" | "sent" | "accepted" | "rejected";
+  status: "draft" | "sent" | "accepted" | "declined" | "expired";
   sent_at?: string | null;
+  responded_at?: string | null;
   created_at?: string | null;
 }
 

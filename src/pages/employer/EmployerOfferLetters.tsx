@@ -21,7 +21,8 @@ const statusStyle: Record<string, string> = {
   draft:    "bg-amber-50 text-amber-700 border-amber-200",
   sent:     "bg-blue-50 text-blue-700 border-blue-200",
   accepted: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  rejected: "bg-red-50 text-red-700 border-red-200",
+  declined: "bg-red-50 text-red-700 border-red-200",
+  expired:  "bg-gray-50 text-gray-500 border-gray-200",
 };
 
 const defaultTemplate = `Dear {{candidate_name}},
@@ -164,11 +165,12 @@ export default function EmployerOfferLetters() {
       />
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         {[
           { label: "Total Offers", value: offers.length,                                             color: "text-gray-900" },
           { label: "Sent",         value: offers.filter((o) => o.status === "sent").length,     color: "text-blue-600" },
           { label: "Accepted",     value: offers.filter((o) => o.status === "accepted").length, color: "text-emerald-600" },
+          { label: "Declined",     value: offers.filter((o) => o.status === "declined").length, color: "text-red-600" },
         ].map((stat) => (
           <div key={stat.label} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">{stat.label}</p>
@@ -237,6 +239,7 @@ export default function EmployerOfferLetters() {
                 <p className="mt-3 text-xs text-gray-400">
                   Created {offer.created_at ? new Date(offer.created_at).toLocaleDateString() : "recently"}
                   {offer.sent_at ? ` · Sent ${new Date(offer.sent_at).toLocaleDateString()}` : ""}
+                  {offer.responded_at ? ` · ${offer.status === "accepted" ? "Accepted" : "Declined"} ${new Date(offer.responded_at).toLocaleDateString()}` : ""}
                 </p>
               </div>
             </motion.div>

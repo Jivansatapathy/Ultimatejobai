@@ -12,7 +12,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: s
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl border border-gray-200 bg-white p-5">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">{label}</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-700">{label}</span>
         <div className={`h-8 w-8 flex items-center justify-center rounded-xl ${color}`}>
           <Icon className="h-4 w-4 text-white" />
         </div>
@@ -30,9 +30,9 @@ function OpportunityCard({ opp, onClick }: { opp: ExecutiveOpportunity; onClick:
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-gray-900 truncate">{opp.title}</p>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">{opp.company_name} · {opp.location || opp.country}</p>
+          <p className="text-xs text-gray-800 mt-0.5 truncate">{opp.company_name} · {opp.location || opp.country}</p>
           <div className="flex items-center gap-2 mt-2">
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600 capitalize">
+            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-800 capitalize">
               {(opp.type || "full_time").replace(/_/g, " ")}
             </span>
             {opp.is_remote && (
@@ -43,7 +43,7 @@ function OpportunityCard({ opp, onClick }: { opp: ExecutiveOpportunity; onClick:
         {opp.eos_score != null && (
           <div className="shrink-0 text-right">
             <p className={`text-2xl font-black tabular-nums ${eosColor}`}>{opp.eos_score}</p>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">EOS™</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-gray-700">EOS™</p>
           </div>
         )}
       </div>
@@ -123,7 +123,7 @@ export default function VenusDashboard() {
           <Crown className="h-8 w-8 text-blue-600" />
         </div>
         <h2 className="text-xl font-black text-gray-900 mb-2">Set up your Executive Profile</h2>
-        <p className="text-sm text-gray-500 max-w-sm mb-6">
+        <p className="text-sm text-gray-800 max-w-sm mb-6">
           Complete your profile so Hizorex AI can calculate EOS scores, generate your briefing, and match you to the right opportunities.
         </p>
         <Button onClick={() => navigate(`${basePath}/profile`)}
@@ -143,10 +143,10 @@ export default function VenusDashboard() {
           <h1 className="text-2xl font-black text-gray-900 mt-0.5">
             {greeting}, <span className="capitalize">{firstName}</span>.
           </h1>
-          <p className="text-sm text-gray-400 mt-0.5">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+          <p className="text-sm text-gray-700 mt-0.5">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => loadData(true)} disabled={refreshing}
-          className="border-gray-300 text-gray-500 hover:bg-gray-50">
+          className="border-gray-300 text-gray-800 hover:bg-gray-50">
           <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${refreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
@@ -169,7 +169,7 @@ export default function VenusDashboard() {
           <p className="text-xs font-bold uppercase tracking-widest text-blue-600">AI Daily Briefing</p>
         </div>
         {briefingLoading ? (
-          <div className="flex items-center gap-2 text-gray-400">
+          <div className="flex items-center gap-2 text-gray-700">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm">Generating your briefing...</span>
           </div>
@@ -177,7 +177,7 @@ export default function VenusDashboard() {
           <div className="space-y-3">
             <p className="text-gray-900 font-medium leading-relaxed">{briefing.recommended_action}</p>
             {briefing.network_moves > 0 && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-800">
                 <span className="text-blue-600 font-semibold">{briefing.network_moves} former colleague(s)</span> made executive moves this week.
               </p>
             )}
@@ -185,7 +185,7 @@ export default function VenusDashboard() {
         ) : (
           <div className="space-y-2">
             <p className="text-gray-900 font-medium">Your AI briefing will appear here once the Hizorex API is connected.</p>
-            <p className="text-sm text-gray-500">Today's focus: Review matched opportunities and update your EOS™ scores.</p>
+            <p className="text-sm text-gray-800">Today's focus: Review matched opportunities and update your EOS™ scores.</p>
           </div>
         )}
       </motion.div>
@@ -202,7 +202,7 @@ export default function VenusDashboard() {
             </button>
           </div>
           {oppsLoading ? (
-            <div className="flex items-center gap-2 text-gray-400 py-4">
+            <div className="flex items-center gap-2 text-gray-700 py-4">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-sm">Loading opportunities...</span>
             </div>
@@ -215,8 +215,8 @@ export default function VenusDashboard() {
             </div>
           ) : (
             <div className="py-6 text-center">
-              <Star className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">Opportunities load once the API is connected.</p>
+              <Star className="h-8 w-8 text-gray-700 mx-auto mb-2" />
+              <p className="text-sm text-gray-700">Opportunities load once the API is connected.</p>
               <Button size="sm" className="mt-3 bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={() => navigate(`${basePath}/opportunities`)}>
                 Explore Roles
@@ -238,13 +238,13 @@ export default function VenusDashboard() {
             ].map(({ label, icon: Icon, href, badge }) => (
               <button key={href} type="button" onClick={() => navigate(href)}
                 className="w-full flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-gray-100 px-4 py-3 transition-all group">
-                <span className="flex items-center gap-3 text-sm font-medium text-gray-600 group-hover:text-gray-900">
+                <span className="flex items-center gap-3 text-sm font-medium text-gray-800 group-hover:text-gray-900">
                   <Icon className="h-4 w-4 text-blue-600" />
                   {label}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">{badge}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-blue-600 transition-colors" />
+                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">{badge}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-gray-700 group-hover:text-blue-600 transition-colors" />
                 </div>
               </button>
             ))}

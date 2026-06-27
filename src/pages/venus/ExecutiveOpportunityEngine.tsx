@@ -47,7 +47,7 @@ function OpportunityCard({ opp, onDecision }: { opp: ExecutiveOpportunity; onDec
           <div className="flex items-start justify-between gap-2">
             <div>
               <h3 className="text-base font-bold text-gray-900">{opp.title}</h3>
-              <p className="text-sm text-gray-500 mt-0.5">{opp.company_name}</p>
+              <p className="text-sm text-gray-800 mt-0.5">{opp.company_name}</p>
             </div>
             <EOSBadge score={opp.eos_score} />
           </div>
@@ -60,20 +60,20 @@ function OpportunityCard({ opp, onDecision }: { opp: ExecutiveOpportunity; onDec
               <span className="inline-flex items-center rounded-full bg-teal-50 text-teal-600 px-2.5 py-0.5 text-[11px] font-bold">Remote</span>
             )}
             {opp.stage && (
-              <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-500 px-2.5 py-0.5 text-[11px] font-bold">{opp.stage}</span>
+              <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-2.5 py-0.5 text-[11px] font-bold">{opp.stage}</span>
             )}
             {opp.industry && (
-              <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-500 px-2.5 py-0.5 text-[11px] font-bold">{opp.industry}</span>
+              <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-2.5 py-0.5 text-[11px] font-bold">{opp.industry}</span>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-700">
             {(opp.city || opp.country) && (
               <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[opp.city, opp.country].filter(Boolean).join(", ")}</span>
             )}
             {opp.compensation_cash_min && (
               <span className="flex items-center gap-1">
-                <span className="font-semibold text-gray-600">
+                <span className="font-semibold text-gray-800">
                   ${(opp.compensation_cash_min / 1000).toFixed(0)}K–${((opp.compensation_cash_max || opp.compensation_cash_min) / 1000).toFixed(0)}K
                 </span>
                 base
@@ -100,13 +100,13 @@ function OpportunityCard({ opp, onDecision }: { opp: ExecutiveOpportunity; onDec
             href={opp.apply_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white border border-gray-200 text-gray-800 text-xs font-semibold hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 transition-colors"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Apply
           </a>
         )}
-        <span className="ml-auto text-[10px] text-gray-400 capitalize">{opp.platform || opp.source}</span>
+        <span className="ml-auto text-[10px] text-gray-700 capitalize">{opp.platform || opp.source}</span>
       </div>
     </motion.div>
   );
@@ -147,15 +147,15 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">Executive Decision Engine</p>
             <h3 className="text-lg font-black text-gray-900">{opp.title}</h3>
-            <p className="text-sm text-gray-500">{opp.company_name}</p>
+            <p className="text-sm text-gray-800">{opp.company_name}</p>
           </div>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-900">
+          <button type="button" onClick={onClose} className="text-gray-700 hover:text-gray-900">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-10 gap-2 text-gray-500">
+          <div className="flex items-center justify-center py-10 gap-2 text-gray-800">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm">AI is evaluating this opportunity...</span>
           </div>
@@ -164,14 +164,14 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
             {eos && (
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold uppercase tracking-widest text-gray-500">EOS™ Score</span>
-                  <span className={`text-3xl font-black tabular-nums ${eosColor}`}>{eos.score}<span className="text-sm text-gray-400">/100</span></span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-gray-800">EOS™ Score</span>
+                  <span className={`text-3xl font-black tabular-nums ${eosColor}`}>{eos.score}<span className="text-sm text-gray-700">/100</span></span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {Object.entries(eos.breakdown).map(([k, v]) => (
                     <div key={k} className="rounded-lg bg-white p-2">
                       <p className="text-lg font-black text-gray-900">{v}</p>
-                      <p className="text-[9px] uppercase tracking-widest text-gray-400 capitalize">{k}</p>
+                      <p className="text-[9px] uppercase tracking-widest text-gray-700 capitalize">{k}</p>
                     </div>
                   ))}
                 </div>
@@ -182,13 +182,13 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
               <div className="space-y-3">
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                   <p className="text-sm font-bold text-gray-900 mb-1">AI Verdict</p>
-                  <p className="text-sm text-gray-600 leading-relaxed">{decision.verdict}</p>
+                  <p className="text-sm text-gray-800 leading-relaxed">{decision.verdict}</p>
                 </div>
                 {decision.upsides?.length > 0 && (
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Upsides</p>
                     {decision.upsides.map((u, i) => (
-                      <p key={i} className="text-xs text-gray-500 flex gap-2 mb-1"><span className="text-emerald-500">+</span>{u}</p>
+                      <p key={i} className="text-xs text-gray-800 flex gap-2 mb-1"><span className="text-emerald-500">+</span>{u}</p>
                     ))}
                   </div>
                 )}
@@ -196,7 +196,7 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-red-600 mb-2">Risks</p>
                     {decision.risks.map((r, i) => (
-                      <p key={i} className="text-xs text-gray-500 flex gap-2 mb-1"><span className="text-red-500">!</span>{r}</p>
+                      <p key={i} className="text-xs text-gray-800 flex gap-2 mb-1"><span className="text-red-500">!</span>{r}</p>
                     ))}
                   </div>
                 )}
@@ -207,7 +207,7 @@ function DecisionModal({ opp, onClose }: { opp: ExecutiveOpportunity; onClose: (
             ) : planLimitMessage ? (
               <p className="text-sm text-red-600 text-center py-4 font-semibold">{planLimitMessage}</p>
             ) : (
-              <p className="text-sm text-gray-400 text-center py-4">Decision engine will respond once the API is connected.</p>
+              <p className="text-sm text-gray-700 text-center py-4">Decision engine will respond once the API is connected.</p>
             )}
           </div>
         )}
@@ -269,7 +269,7 @@ export default function ExecutiveOpportunityEngine() {
           <UsageMonitor featureKey="eos_score_access" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Opportunities</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-gray-700 mt-1">
           {loading ? "Loading..." : `${total.toLocaleString()} roles across full-time, fractional, board & advisory`}
         </p>
       </div>
@@ -278,21 +278,21 @@ export default function ExecutiveOpportunityEngine() {
       <div className="space-y-3">
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-700" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search roles, companies..."
-              className="w-full h-10 pl-9 pr-4 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15 transition-all"
+              className="w-full h-10 pl-9 pr-4 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15 transition-all"
             />
           </div>
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
-            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 outline-none focus:border-blue-500">
+            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-500">
             <option value="">All Types</option>
             {OPP_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
           </select>
           <select value={seniorityFilter} onChange={e => setSeniorityFilter(e.target.value)}
-            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 outline-none focus:border-blue-500">
+            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-500">
             <option value="">All Levels</option>
             {SENIORITY.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -300,7 +300,7 @@ export default function ExecutiveOpportunityEngine() {
             <button
               type="button"
               onClick={() => { setTypeFilter(""); setSeniorityFilter(""); setCountryFilter(""); }}
-              className="inline-flex items-center gap-1 h-10 px-3 rounded-xl border border-gray-200 bg-white text-gray-500 text-sm font-medium hover:bg-gray-50 hover:text-gray-700 transition-colors"
+              className="inline-flex items-center gap-1 h-10 px-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-sm font-medium hover:bg-gray-50 hover:text-gray-700 transition-colors"
             >
               <X className="h-3.5 w-3.5" /> Clear
             </button>
@@ -308,8 +308,8 @@ export default function ExecutiveOpportunityEngine() {
         </div>
         {/* Country filter */}
         <div className="flex items-center gap-2">
-          <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-          <span className="text-xs text-gray-400 font-semibold uppercase tracking-widest mr-1">Country:</span>
+          <MapPin className="h-3.5 w-3.5 text-gray-700 shrink-0" />
+          <span className="text-xs text-gray-700 font-semibold uppercase tracking-widest mr-1">Country:</span>
           {COUNTRIES.map(c => (
             <button
               key={c.value}
@@ -318,7 +318,7 @@ export default function ExecutiveOpportunityEngine() {
               className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
                 countryFilter === c.value
                   ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+                  : "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-gray-900"
               }`}
             >
               {c.label}
@@ -329,15 +329,15 @@ export default function ExecutiveOpportunityEngine() {
 
       {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 gap-2 text-gray-400">
+        <div className="flex items-center justify-center py-20 gap-2 text-gray-700">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading opportunities...</span>
         </div>
       ) : opps.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center">
-          <Briefcase className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 font-semibold">No opportunities found</p>
-          <p className="text-sm text-gray-400 mt-1">Try adjusting filters or connecting the Hizorex API.</p>
+          <Briefcase className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-800 font-semibold">No opportunities found</p>
+          <p className="text-sm text-gray-700 mt-1">Try adjusting filters or connecting the Hizorex API.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -348,7 +348,7 @@ export default function ExecutiveOpportunityEngine() {
             <button
               type="button"
               onClick={() => { const next = page + 1; setPage(next); load(search, typeFilter, seniorityFilter, countryFilter, next, true); }}
-              className="w-full h-10 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
+              className="w-full h-10 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-800 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
             >
               Load more
               <ChevronDown className="h-4 w-4" />

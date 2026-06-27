@@ -19,7 +19,7 @@ const TYPE_COLORS: Record<CRMContact["contact_type"], string> = {
   recruiter: "bg-blue-100 text-blue-700", vc: "bg-blue-100 text-blue-700",
   pe_firm: "bg-amber-100 text-amber-700", founder: "bg-teal-100 text-teal-700",
   board_member: "bg-pink-100 text-pink-700", exec_search: "bg-orange-100 text-orange-700",
-  advisor: "bg-gray-100 text-gray-600", family_office: "bg-emerald-100 text-emerald-700",
+  advisor: "bg-gray-100 text-gray-800", family_office: "bg-emerald-100 text-emerald-700",
 };
 
 const EMPTY_CONTACT: Omit<CRMContact, "id"> = {
@@ -34,7 +34,7 @@ function WarmthBar({ score }: { score: number }) {
       <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${score}%` }} />
       </div>
-      <span className="text-[10px] font-bold text-gray-400 w-6">{score}</span>
+      <span className="text-[10px] font-bold text-gray-700 w-6">{score}</span>
     </div>
   );
 }
@@ -50,14 +50,14 @@ function ContactCard({ contact, onEdit, onDelete, onEnrich }: {
     <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       className="rounded-xl border border-gray-200 bg-white p-4 hover:border-gray-300 transition-all">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-600">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-800">
           {initials || "?"}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-sm font-bold text-gray-900">{contact.name || "Unnamed"}</p>
-              <p className="text-xs text-gray-500">{contact.title}{contact.firm ? ` · ${contact.firm}` : ""}</p>
+              <p className="text-xs text-gray-800">{contact.title}{contact.firm ? ` · ${contact.firm}` : ""}</p>
             </div>
             <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${TYPE_COLORS[contact.contact_type]}`}>
               {TYPE_LABELS[contact.contact_type]}
@@ -65,7 +65,7 @@ function ContactCard({ contact, onEdit, onDelete, onEnrich }: {
           </div>
 
           <div className="mt-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Warmth</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700 mb-1">Warmth</p>
             <WarmthBar score={contact.warmth_score} />
           </div>
 
@@ -75,12 +75,12 @@ function ContactCard({ contact, onEdit, onDelete, onEnrich }: {
 
           <div className="flex items-center gap-2 mt-3">
             <Button size="sm" variant="outline" onClick={() => onEdit(contact)}
-              className="h-7 text-xs border-gray-300 text-gray-500 hover:bg-gray-100">
+              className="h-7 text-xs border-gray-300 text-gray-800 hover:bg-gray-100">
               <Edit2 className="h-3 w-3 mr-1" /> Edit
             </Button>
             {contact.id && (
               <Button size="sm" variant="outline" onClick={() => onEnrich(contact.id!)}
-                className="h-7 text-xs border-gray-300 text-gray-500 hover:bg-gray-100">
+                className="h-7 text-xs border-gray-300 text-gray-800 hover:bg-gray-100">
                 <Sparkles className="h-3 w-3 mr-1" /> Enrich
               </Button>
             )}
@@ -111,7 +111,7 @@ function ContactForm({ initial, onSave, onClose }: {
         className="relative w-full max-w-lg rounded-2xl border border-gray-300 bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-black text-gray-900">{form.id ? "Edit Contact" : "Add Contact"}</h3>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-900"><X className="h-5 w-5" /></button>
+          <button type="button" onClick={onClose} className="text-gray-700 hover:text-gray-900"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
           {[
@@ -122,40 +122,40 @@ function ContactForm({ initial, onSave, onClose }: {
             { label: "LinkedIn URL", key: "linkedin_url" as const, placeholder: "linkedin.com/in/..." },
           ].map(({ label, key, placeholder }) => (
             <div key={key}>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 block">{label}</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1 block">{label}</label>
               <Input value={(form[key] as string) || ""} onChange={e => set(key, e.target.value)}
                 placeholder={placeholder}
-                className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+                className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
             </div>
           ))}
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 block">Contact Type</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1 block">Contact Type</label>
             <select value={form.contact_type} onChange={e => set("contact_type", e.target.value as CRMContact["contact_type"])}
-              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-blue-500">
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-blue-500">
               {CONTACT_TYPES.map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 block">Warmth Score (0-100)</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1 block">Warmth Score (0-100)</label>
             <Input type="number" min={0} max={100} value={form.warmth_score}
               onChange={e => set("warmth_score", parseInt(e.target.value) || 0)}
               className="bg-gray-100 border-gray-300 text-gray-900 rounded-xl" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 block">Next Action</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1 block">Next Action</label>
             <Input value={form.next_action || ""} onChange={e => set("next_action", e.target.value)}
               placeholder="Follow up after SaaStr Annual"
-              className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+              className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 block">Notes</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1 block">Notes</label>
             <textarea value={form.notes || ""} onChange={e => set("notes", e.target.value)} rows={2}
               placeholder="Met at AWS re:Invent. Interested in AI infrastructure roles."
-              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 placeholder:text-gray-400 outline-none focus:border-blue-500 resize-none" />
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-700 outline-none focus:border-blue-500 resize-none" />
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <Button variant="outline" onClick={onClose} className="flex-1 border-gray-300 text-gray-600">Cancel</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1 border-gray-300 text-gray-800">Cancel</Button>
           <Button onClick={() => onSave(form)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">Save Contact</Button>
         </div>
       </motion.div>
@@ -236,7 +236,7 @@ export default function ExecutiveCRM() {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Phase 3 · Network</p>
           <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive CRM</h1>
-          <p className="text-sm text-gray-400 mt-1">{contacts.length} contacts tracked</p>
+          <p className="text-sm text-gray-700 mt-1">{contacts.length} contacts tracked</p>
         </div>
         <div className="flex items-center gap-3">
           <UsageMonitor featureKey="crm_contacts_access" compact />
@@ -250,13 +250,13 @@ export default function ExecutiveCRM() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-700" />
           <Input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search contacts..."
-            className="pl-9 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl h-10" />
+            className="pl-9 bg-white border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl h-10" />
         </div>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as CRMContact["contact_type"] | "")}
-          className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 outline-none focus:border-blue-500">
+          className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-500">
           <option value="">All Types</option>
           {CONTACT_TYPES.map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
         </select>
@@ -264,14 +264,14 @@ export default function ExecutiveCRM() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
+        <div className="flex items-center justify-center py-16 gap-2 text-gray-700">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading contacts...</span>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-          <Users className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 font-semibold">{contacts.length === 0 ? "No contacts yet — add your first" : "No contacts match filters"}</p>
+          <Users className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-700 font-semibold">{contacts.length === 0 ? "No contacts yet — add your first" : "No contacts match filters"}</p>
           {contacts.length === 0 && (
             <Button size="sm" className="mt-3 bg-blue-600 hover:bg-blue-700 text-white"
               onClick={() => setEditing(EMPTY_CONTACT)}>

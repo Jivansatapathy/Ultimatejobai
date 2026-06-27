@@ -42,7 +42,7 @@ function ScoreGauge({ score }: { score: number }) {
         </svg>
         <div className="text-center z-10">
           <p className={`text-4xl font-black tabular-nums ${color}`}>{score}</p>
-          <p className="text-xs text-gray-400 font-bold">/100</p>
+          <p className="text-xs text-gray-700 font-bold">/100</p>
         </div>
       </div>
       <div className={`mt-3 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${bgColor}/20 ${color}`}>
@@ -60,9 +60,9 @@ function DimensionBar({ dim, score }: { dim: typeof DIMENSIONS[number]; score: n
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-gray-900">{dim.label}</p>
-          <p className="text-xs text-gray-400">{dim.desc}</p>
+          <p className="text-xs text-gray-700">{dim.desc}</p>
         </div>
-        <span className="text-sm font-black text-gray-600 tabular-nums">{score}/10</span>
+        <span className="text-sm font-black text-gray-800 tabular-nums">{score}/10</span>
       </div>
       <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
         <motion.div initial={{ width: 0 }} animate={{ width: barWidth }} transition={{ duration: 0.6, delay: 0.1 }}
@@ -149,19 +149,19 @@ export default function ExecutiveReadinessScore() {
           <UsageMonitor featureKey="readiness_score_access" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Readiness Score</h1>
-        <p className="text-sm text-gray-400 mt-1">Rate yourself on 6 executive dimensions. Get a score, gap analysis, and 90-day action plan.</p>
+        <p className="text-sm text-gray-700 mt-1">Rate yourself on 6 executive dimensions. Get a score, gap analysis, and 90-day action plan.</p>
       </div>
 
       {/* Assessment panel */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
         {/* Target role */}
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Target Role</label>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-2 block">Target Role</label>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {ROLE_OPTIONS.map(r => (
               <button key={r} type="button" onClick={() => setTargetRole(r)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
-                  targetRole === r ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+                  targetRole === r ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-gray-900"
                 }`}>
                 {r}
               </button>
@@ -169,19 +169,19 @@ export default function ExecutiveReadinessScore() {
           </div>
           <Input value={targetRole} onChange={e => setTargetRole(e.target.value)}
             placeholder="Or type a custom role..."
-            className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+            className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
         </div>
 
         {/* Sliders */}
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3">Self-Assessment (1 = beginner, 10 = world-class)</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-3">Self-Assessment (1 = beginner, 10 = world-class)</p>
           <div className="space-y-5">
             {DIMENSIONS.map(dim => (
               <div key={dim.key} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{dim.label}</p>
-                    <p className="text-xs text-gray-400">{dim.desc}</p>
+                    <p className="text-xs text-gray-700">{dim.desc}</p>
                   </div>
                   <span className="text-lg font-black text-blue-600 w-8 text-right tabular-nums">
                     {scores[dim.key]}
@@ -191,9 +191,9 @@ export default function ExecutiveReadinessScore() {
                   value={scores[dim.key]}
                   onChange={e => setScores(s => ({ ...s, [dim.key]: Number(e.target.value) }))}
                   className="w-full accent-blue-500 cursor-pointer" />
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-gray-700">
                   <span>1 — Beginner</span>
-                  <span className="text-gray-400">weight {Math.round(dim.weight * 100)}%</span>
+                  <span className="text-gray-700">weight {Math.round(dim.weight * 100)}%</span>
                   <span>10 — World-class</span>
                 </div>
               </div>
@@ -252,7 +252,7 @@ export default function ExecutiveReadinessScore() {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-gray-900">{dim.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{dim.insight}</p>
+                      <p className="text-xs text-gray-800 mt-0.5">{dim.insight}</p>
                     </div>
                   </div>
                 ))}
@@ -267,7 +267,7 @@ export default function ExecutiveReadinessScore() {
               </div>
               <ul className="space-y-2">
                 {result.key_gaps.map((gap, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-gray-600">
+                  <li key={i} className="flex gap-2 text-sm text-gray-800">
                     <span className="text-amber-500 shrink-0 mt-0.5">⚠</span>
                     {gap}
                   </li>
@@ -286,14 +286,14 @@ export default function ExecutiveReadinessScore() {
                   <div key={i} className="flex gap-3 items-start rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
                     <div className="shrink-0">
                       <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
-                        item.priority === "high" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
+                        item.priority === "high" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-800"
                       }`}>
                         Wk {item.week}
                       </span>
                     </div>
                     <div className="flex-1 flex items-start gap-2">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
-                      <p className="text-sm text-gray-600">{item.action}</p>
+                      <CheckCircle2 className="h-3.5 w-3.5 text-gray-700 shrink-0 mt-0.5" />
+                      <p className="text-sm text-gray-800">{item.action}</p>
                     </div>
                   </div>
                 ))}
@@ -305,9 +305,9 @@ export default function ExecutiveReadinessScore() {
 
       {!result && !loading && (
         <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-          <Target className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 font-semibold">Rate yourself across 6 dimensions above</p>
-          <p className="text-xs text-gray-400 mt-1">Get your readiness score, gap analysis, and a 12-week action plan</p>
+          <Target className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-700 font-semibold">Rate yourself across 6 dimensions above</p>
+          <p className="text-xs text-gray-700 mt-1">Get your readiness score, gap analysis, and a 12-week action plan</p>
         </div>
       )}
     </div>

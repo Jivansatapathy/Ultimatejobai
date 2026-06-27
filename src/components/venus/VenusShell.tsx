@@ -97,7 +97,7 @@ function Sidebar({ nav, onNav }: { nav: ReturnType<typeof getNav>; onNav?: () =>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-gray-900 truncate">{userEmail || "Executive"}</p>
-            <p className="text-xs text-gray-400">Hizorex Pro</p>
+            <p className="text-xs text-gray-700">Hizorex Pro</p>
           </div>
         </div>
         <button
@@ -150,7 +150,7 @@ export default function VenusShell() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile topbar */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 lg:hidden">
-          <button type="button" onClick={() => setMobileOpen(true)} aria-label="Open navigation" className="text-gray-500 hover:text-gray-900">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-label="Open navigation" className="text-gray-800 hover:text-gray-900">
             <Menu className="h-5 w-5" />
           </button>
           <Crown className="h-4 w-4 text-blue-600" />

@@ -206,7 +206,7 @@ export default function VenusSalaryNegotiation() {
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Hizorex AI · Salary Lab</p>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Salary Negotiation</h1>
-        <p className="text-sm text-gray-400 mt-1">Choose a scenario and practice live negotiation against an AI employer.</p>
+        <p className="text-sm text-gray-700 mt-1">Choose a scenario and practice live negotiation against an AI employer.</p>
       </div>
 
       <div className="space-y-3">
@@ -226,22 +226,22 @@ export default function VenusSalaryNegotiation() {
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${diffBadge(sc.difficulty)}`}>
                     {sc.difficulty}
                   </span>
-                  <span className="text-xs text-gray-400">{sc.company} · {sc.role}</span>
+                  <span className="text-xs text-gray-700">{sc.company} · {sc.role}</span>
                 </div>
                 <h3 className="text-base font-bold text-gray-900 mb-1">{sc.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{sc.context.slice(0, 100)}…</p>
+                <p className="text-sm text-gray-800 leading-relaxed">{sc.context.slice(0, 100)}…</p>
                 <div className="flex gap-6 mt-3">
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">Offered</p>
+                    <p className="text-[10px] text-gray-700 uppercase tracking-wider">Offered</p>
                     <p className="text-sm font-bold text-gray-700">{sc.offered}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">Your Target</p>
+                    <p className="text-[10px] text-gray-700 uppercase tracking-wider">Your Target</p>
                     <p className="text-sm font-bold text-blue-600">{sc.target}</p>
                   </div>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-blue-500 transition-colors mt-1 shrink-0" />
+              <ChevronRight className="h-5 w-5 text-gray-700 group-hover:text-blue-500 transition-colors mt-1 shrink-0" />
             </div>
           </motion.button>
         ))}
@@ -256,7 +256,7 @@ export default function VenusSalaryNegotiation() {
             "Get real-time coaching on each response",
             "Receive a performance score + AI feedback at the end",
           ].map(item => (
-            <li key={item} className="flex items-center gap-2 text-sm text-gray-600">
+            <li key={item} className="flex items-center gap-2 text-sm text-gray-800">
               <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 shrink-0" />
               {item}
             </li>
@@ -270,7 +270,7 @@ export default function VenusSalaryNegotiation() {
   if (stage === "brief" && scenario) return (
     <div className="p-6 max-w-2xl mx-auto space-y-5">
       <button type="button" onClick={() => setStage("pick")}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+        className="flex items-center gap-2 text-sm text-gray-800 hover:text-gray-900 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Choose scenario
       </button>
 
@@ -280,20 +280,20 @@ export default function VenusSalaryNegotiation() {
             {scenario.difficulty}
           </span>
           <h1 className="text-2xl font-black text-gray-900 mt-3 mb-1">{scenario.title}</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">{scenario.context}</p>
+          <p className="text-sm text-gray-800 leading-relaxed">{scenario.context}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Company</p>
+            <p className="text-[10px] text-gray-700 uppercase tracking-wider mb-1">Company</p>
             <p className="font-bold text-gray-900 text-sm">{scenario.company}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Role</p>
+            <p className="text-[10px] text-gray-700 uppercase tracking-wider mb-1">Role</p>
             <p className="font-bold text-gray-900 text-sm">{scenario.role}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Their Offer</p>
+            <p className="text-[10px] text-gray-700 uppercase tracking-wider mb-1">Their Offer</p>
             <p className="font-bold text-gray-700 text-sm">{scenario.offered}</p>
           </div>
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
@@ -303,7 +303,7 @@ export default function VenusSalaryNegotiation() {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-800 mb-3 flex items-center gap-2">
             <Target className="h-3.5 w-3.5" /> Negotiation Tips
           </p>
           <ul className="space-y-2">
@@ -334,17 +334,17 @@ export default function VenusSalaryNegotiation() {
       {/* Header */}
       <div className="shrink-0 border-b border-gray-200 bg-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={reset} className="text-gray-400 hover:text-gray-900 transition-colors">
+          <button type="button" onClick={reset} className="text-gray-700 hover:text-gray-900 transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
             <p className="text-sm font-bold text-gray-900">{scenario.title}</p>
-            <p className="text-xs text-gray-400">{scenario.company} · {scenario.role}</p>
+            <p className="text-xs text-gray-700">{scenario.company} · {scenario.role}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Target</p>
+            <p className="text-[10px] text-gray-700 uppercase tracking-wider">Target</p>
             <p className="text-sm font-bold text-blue-600">{scenario.target}</p>
           </div>
           <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${diffBadge(scenario.difficulty)}`}>
@@ -371,7 +371,7 @@ export default function VenusSalaryNegotiation() {
                   : "bg-white border border-gray-200 text-gray-700 rounded-bl-sm"
               }`}>
                 {msg.role === "interviewer" && (
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-700 mb-1">
                     {scenario.company} HR
                   </p>
                 )}
@@ -412,7 +412,7 @@ export default function VenusSalaryNegotiation() {
             onChange={e => handleInputChange(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
             placeholder="Type your response… (Enter to send, Shift+Enter for new line)"
-            className="flex-1 resize-none bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl min-h-[56px] max-h-[120px] text-sm focus:border-blue-400 focus:ring-blue-500/20"
+            className="flex-1 resize-none bg-white border-gray-200 text-gray-900 placeholder:text-gray-700 rounded-xl min-h-[56px] max-h-[120px] text-sm focus:border-blue-400 focus:ring-blue-500/20"
             rows={2}
             disabled={finished || loading}
           />
@@ -425,7 +425,7 @@ export default function VenusSalaryNegotiation() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
-        <p className="text-[10px] text-gray-400 mt-2 text-center">
+        <p className="text-[10px] text-gray-700 mt-2 text-center">
           Respond as you would in a real negotiation. Be professional, confident, and specific.
         </p>
       </div>
@@ -441,14 +441,14 @@ export default function VenusSalaryNegotiation() {
             {score.overall >= 70 ? <Trophy className="h-8 w-8 text-blue-600" /> : <TrendingUp className="h-8 w-8 text-blue-600" />}
           </div>
           <h1 className="text-2xl font-black text-gray-900 mb-1">Negotiation Complete</h1>
-          <p className="text-sm text-gray-400">{scenario.title} · {scenario.company}</p>
+          <p className="text-sm text-gray-700">{scenario.title} · {scenario.company}</p>
         </div>
 
         {/* Overall score */}
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 text-center">
           <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">Overall Score</p>
           <p className="text-6xl font-black text-blue-600 tabular-nums">{score.overall}</p>
-          <p className="text-xs text-gray-400 mt-1">out of 100</p>
+          <p className="text-xs text-gray-700 mt-1">out of 100</p>
         </div>
 
         {/* Breakdown */}
@@ -461,8 +461,8 @@ export default function VenusSalaryNegotiation() {
           ] as const).map(({ label, val, icon: Icon }) => (
             <div key={label} className="rounded-xl border border-gray-200 bg-white p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Icon className="h-3.5 w-3.5 text-gray-400" />
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">{label}</p>
+                <Icon className="h-3.5 w-3.5 text-gray-700" />
+                <p className="text-[10px] text-gray-700 uppercase tracking-wider">{label}</p>
               </div>
               <div className="flex items-end gap-2">
                 <p className="text-2xl font-black text-gray-900 tabular-nums">{val}</p>
@@ -484,7 +484,7 @@ export default function VenusSalaryNegotiation() {
         {/* AI Feedback */}
         {feedback && (
           <div className="rounded-2xl border border-gray-200 bg-white p-5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-800 mb-3 flex items-center gap-2">
               <Star className="h-3.5 w-3.5 text-blue-500" /> AI Coach Feedback
             </p>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{feedback}</p>
@@ -493,14 +493,14 @@ export default function VenusSalaryNegotiation() {
 
         {/* Transcript */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 max-h-56 overflow-y-auto">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-3">Conversation Transcript</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-800 mb-3">Conversation Transcript</p>
           <div className="space-y-3">
             {messages.map((m, i) => (
               <div key={i}>
-                <p className="text-[10px] text-gray-400 mb-0.5">
+                <p className="text-[10px] text-gray-700 mb-0.5">
                   {m.role === "interviewer" ? scenario.company + " HR" : "You"}
                 </p>
-                <p className="text-sm text-gray-600 leading-relaxed">{m.content}</p>
+                <p className="text-sm text-gray-800 leading-relaxed">{m.content}</p>
               </div>
             ))}
           </div>

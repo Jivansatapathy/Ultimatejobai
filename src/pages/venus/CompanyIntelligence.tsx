@@ -31,16 +31,16 @@ function IntelCard({ intel, onRefresh }: { intel: CompanyIntel; onRefresh: () =>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <h2 className="text-xl font-black text-gray-900">{intel.company_name}</h2>
-          {intel.industry && <p className="text-sm text-gray-500 mt-0.5">{intel.industry}</p>}
+          {intel.industry && <p className="text-sm text-gray-800 mt-0.5">{intel.industry}</p>}
           {intel.website && (
             <a href={intel.website} target="_blank" rel="noopener noreferrer"
               className="text-xs text-blue-600 hover:text-blue-700 mt-0.5 inline-block">
               {intel.website.replace(/^https?:\/\//, "")}
             </a>
           )}
-          {intel.description && <p className="text-sm text-gray-400 mt-2 leading-relaxed">{intel.description}</p>}
+          {intel.description && <p className="text-sm text-gray-700 mt-2 leading-relaxed">{intel.description}</p>}
           {intel.last_updated && (
-            <p className="text-[10px] text-gray-400 mt-2">
+            <p className="text-[10px] text-gray-700 mt-2">
               Last enriched: {new Date(intel.last_updated).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
             </p>
           )}
@@ -48,7 +48,7 @@ function IntelCard({ intel, onRefresh }: { intel: CompanyIntel; onRefresh: () =>
         <div className="flex items-center gap-2 shrink-0">
           <AvoidScoreBadge score={intel.avoid_score} />
           <Button variant="outline" size="sm" onClick={onRefresh}
-            className="border-gray-300 text-gray-500 hover:bg-gray-100" title="Refresh intelligence">
+            className="border-gray-300 text-gray-800 hover:bg-gray-100" title="Refresh intelligence">
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -64,7 +64,7 @@ function IntelCard({ intel, onRefresh }: { intel: CompanyIntel; onRefresh: () =>
         ].map(({ label, value }) => (
           <div key={label} className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-center">
             <p className="text-lg font-black text-gray-900">{value}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-0.5">{label}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700 mt-0.5">{label}</p>
           </div>
         ))}
       </div>
@@ -82,7 +82,7 @@ function IntelCard({ intel, onRefresh }: { intel: CompanyIntel; onRefresh: () =>
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Newspaper className="h-4 w-4 text-blue-600" />
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Recent News</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-800">Recent News</p>
           </div>
           <div className="space-y-2">
             {intel.news.map((item, i) => (
@@ -90,9 +90,9 @@ function IntelCard({ intel, onRefresh }: { intel: CompanyIntel; onRefresh: () =>
                 className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 hover:border-gray-300 p-3 transition-all group">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{item.source} · {new Date(item.published_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-700 mt-1">{item.source} · {new Date(item.published_at).toLocaleDateString()}</p>
                 </div>
-                <ExternalLink className="h-3.5 w-3.5 text-gray-400 group-hover:text-blue-600 shrink-0 mt-0.5 transition-colors" />
+                <ExternalLink className="h-3.5 w-3.5 text-gray-700 group-hover:text-blue-600 shrink-0 mt-0.5 transition-colors" />
               </a>
             ))}
           </div>
@@ -177,17 +177,17 @@ export default function CompanyIntelligence() {
           <UsageMonitor featureKey="company_intel_access" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Company Intelligence</h1>
-        <p className="text-sm text-gray-400 mt-1">Research any company before pursuing an opportunity.</p>
+        <p className="text-sm text-gray-700 mt-1">Research any company before pursuing an opportunity.</p>
       </div>
 
       {/* Search */}
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-700" />
           <Input value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && search()}
             placeholder="Company name or ID..."
-            className="pl-9 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl h-11" />
+            className="pl-9 bg-white border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl h-11" />
         </div>
         <Button onClick={search} disabled={loading || !input.trim()}
           className="bg-blue-600 hover:bg-blue-700 text-white h-11 px-6">
@@ -204,12 +204,12 @@ export default function CompanyIntelligence() {
         ].map(({ label, color }) => (
           <span key={label} className={`font-semibold ${color}`}>{label}</span>
         ))}
-        <span className="text-gray-400 ml-auto">Hizorex Avoid Score™</span>
+        <span className="text-gray-700 ml-auto">Hizorex Avoid Score™</span>
       </div>
 
       {/* Result */}
       {loading && (
-        <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
+        <div className="flex items-center justify-center py-16 gap-2 text-gray-700">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Fetching intelligence via Groq AI + NewsAPI...</span>
         </div>
@@ -218,9 +218,9 @@ export default function CompanyIntelligence() {
 
       {!intel && !loading && (
         <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-          <TrendingUp className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 font-semibold">Search a company to see funding, headcount, news & risk scores</p>
-          <p className="text-xs text-gray-400 mt-1">Powered by Groq AI · results cached for speed, refresh to update</p>
+          <TrendingUp className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-700 font-semibold">Search a company to see funding, headcount, news & risk scores</p>
+          <p className="text-xs text-gray-700 mt-1">Powered by Groq AI · results cached for speed, refresh to update</p>
         </div>
       )}
     </div>

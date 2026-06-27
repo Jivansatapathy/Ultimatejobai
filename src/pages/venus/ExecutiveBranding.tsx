@@ -45,11 +45,11 @@ function ContentCard({ content, onCopy, onPublish }: {
           <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700 mr-2">
             {content.content_type.replace("_", " ")}
           </span>
-          {content.topic && <span className="text-xs text-gray-400">· {content.topic}</span>}
+          {content.topic && <span className="text-xs text-gray-700">· {content.topic}</span>}
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handleCopy}
-            className="h-7 text-xs border-gray-300 text-gray-500 hover:bg-gray-100">
+            className="h-7 text-xs border-gray-300 text-gray-800 hover:bg-gray-100">
             {copied ? <CheckCircle className="h-3 w-3 mr-1 text-emerald-600" /> : <Copy className="h-3 w-3 mr-1" />}
             {copied ? "Copied!" : "Copy"}
           </Button>
@@ -62,7 +62,7 @@ function ContentCard({ content, onCopy, onPublish }: {
         </div>
       </div>
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 max-h-72 overflow-y-auto">
-        <pre className="text-sm text-gray-600 whitespace-pre-wrap font-sans leading-relaxed">{content.content}</pre>
+        <pre className="text-sm text-gray-800 whitespace-pre-wrap font-sans leading-relaxed">{content.content}</pre>
       </div>
     </motion.div>
   );
@@ -121,33 +121,33 @@ export default function ExecutiveBranding() {
           <UsageMonitor featureKey="career_strategy_access" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Branding</h1>
-        <p className="text-sm text-gray-400 mt-1">AI-generated thought leadership content powered by Groq.</p>
+        <p className="text-sm text-gray-700 mt-1">AI-generated thought leadership content powered by Groq.</p>
       </div>
 
       {/* Generator */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-        <p className="text-xs font-black uppercase tracking-widest text-gray-500">Content Type</p>
+        <p className="text-xs font-black uppercase tracking-widest text-gray-800">Content Type</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {CONTENT_TYPES.map(ct => {
             const Icon = ct.icon;
             return (
               <button key={ct.key} type="button" onClick={() => setContentType(ct.key)}
                 className={`rounded-xl border p-3 text-left transition-all ${contentType === ct.key ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}>
-                <Icon className={`h-5 w-5 mb-1.5 ${contentType === ct.key ? "text-blue-600" : "text-gray-400"}`} />
+                <Icon className={`h-5 w-5 mb-1.5 ${contentType === ct.key ? "text-blue-600" : "text-gray-700"}`} />
                 <p className="text-xs font-bold text-gray-900">{ct.label}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">{ct.desc}</p>
+                <p className="text-[10px] text-gray-700 mt-0.5">{ct.desc}</p>
               </button>
             );
           })}
         </div>
 
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">
             Topic / Thesis (optional)
           </label>
           <Input value={topic} onChange={e => setTopic(e.target.value)}
             placeholder="e.g. AI is changing how executives make decisions"
-            className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+            className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
         </div>
 
         <Button onClick={generate} disabled={generating}
@@ -161,7 +161,7 @@ export default function ExecutiveBranding() {
       {/* Content library */}
       {library.length > 0 && (
         <div className="space-y-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Content Library ({library.length})</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700">Content Library ({library.length})</p>
           <AnimatePresence>
             {library.map((c, i) => (
               <ContentCard key={c.id || i} content={c}
@@ -174,9 +174,9 @@ export default function ExecutiveBranding() {
 
       {library.length === 0 && !generating && (
         <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-          <PenLine className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 font-semibold">Select content type and generate</p>
-          <p className="text-xs text-gray-400 mt-1">Groq AI creates executive-quality content in under 5 seconds</p>
+          <PenLine className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-700 font-semibold">Select content type and generate</p>
+          <p className="text-xs text-gray-700 mt-1">Groq AI creates executive-quality content in under 5 seconds</p>
         </div>
       )}
     </div>

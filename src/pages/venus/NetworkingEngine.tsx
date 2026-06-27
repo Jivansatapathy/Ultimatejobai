@@ -291,10 +291,10 @@ export default function NetworkingEngine() {
 
         {/* ── Stats strip ── */}
         <div className="flex flex-wrap gap-3">
-          <StatPill label="Recommendations" value={recs.length || "–"} icon={<Lightbulb className="h-4 w-4" />} />
-          <StatPill label="High Priority" value={highPriority.length || "–"} icon={<Flame className="h-4 w-4" />} />
-          <StatPill label="Exec Moves" value={moves.length || "–"} icon={<TrendingUp className="h-4 w-4" />} />
-          <StatPill label="Upcoming Events" value={datedEvents.length || "–"} icon={<CalendarDays className="h-4 w-4" />} />
+          <StatPill label="Recommendations" value={loading ? "–" : recs.length} icon={<Lightbulb className="h-4 w-4" />} />
+          <StatPill label="High Priority" value={loading ? "–" : highPriority.length} icon={<Flame className="h-4 w-4" />} />
+          <StatPill label="Exec Moves" value={movesLoading ? "–" : moves.length} icon={<TrendingUp className="h-4 w-4" />} />
+          <StatPill label="Upcoming Events" value={eventsLoading ? "–" : datedEvents.length} icon={<CalendarDays className="h-4 w-4" />} />
         </div>
 
         {/* ── Tabs ── */}

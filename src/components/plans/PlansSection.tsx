@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, Check, Clock, Crown, Phone, Sparkles, Briefcase, X,
+  ArrowRight, Check, Clock, Crown, Phone, Sparkles, Briefcase, X, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -203,7 +203,7 @@ const CARD_STYLES = {
 
 export function PlansSection({ compact = false }: PlansSectionProps) {
   const { isAuthenticated } = useAuth();
-  const { plans, summary, loadingPlans, selectPlan, initiateCheckout } = useSubscription();
+  const { plans, summary, loadingPlans, checkoutLoadingSlug, selectPlan, initiateCheckout } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isSelectionFlow = searchParams.get("select") === "1";
@@ -341,12 +341,21 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
                   <button
                     type="button"
                     onClick={() => handlePlanAction(plan.slug)}
-                    disabled={isCurrent}
-                    className={`w-full h-12 rounded-xl text-sm font-bold transition-all ${
+                    disabled={isCurrent || (checkoutLoadingSlug !== null && checkoutLoadingSlug !== plan.slug)}
+                    className={`w-full h-12 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
                       isCurrent ? s.btnDisabled + " cursor-default" : s.btn
                     }`}
                   >
-                    {isCurrent ? "✓ Current Plan" : plan.cta}
+                    {checkoutLoadingSlug === plan.slug ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Redirecting…
+                      </>
+                    ) : isCurrent ? (
+                      "✓ Current Plan"
+                    ) : (
+                      plan.cta
+                    )}
                   </button>
                 </motion.div>
               );

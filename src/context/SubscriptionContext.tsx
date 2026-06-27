@@ -12,6 +12,7 @@ interface SubscriptionContextType {
   summary: SubscriptionSummary | null;
   loadingPlans: boolean;
   loadingSummary: boolean;
+  checkoutLoadingSlug: string | null;
   selectPlan: (planSlug: string) => Promise<SubscriptionSummary | null>;
   initiateCheckout: (planSlug: string) => Promise<void>;
   refreshPlans: () => Promise<void>;
@@ -28,6 +29,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [summary, setSummary] = useState<SubscriptionSummary | null>(null);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(Boolean(isAuthenticated));
+  const [checkoutLoadingSlug, setCheckoutLoadingSlug] = useState<string | null>(null);
 
   const refreshPlans = useCallback(async () => {
     setLoadingPlans(true);
@@ -76,13 +78,19 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
+    setCheckoutLoadingSlug(planSlug);
     try {
       const { url } = await subscriptionService.createCheckoutSession(planSlug);
       if (url) {
+        // Leave the loader on — the browser is about to navigate to Stripe,
+        // clearing it here would flash the buttons back to normal first.
         window.location.href = url;
+        return;
       }
+      setCheckoutLoadingSlug(null);
     } catch (error) {
       console.error("Failed to initiate checkout:", error);
+      setCheckoutLoadingSlug(null);
       throw error;
     }
   }, [isAuthenticated]);
@@ -110,13 +118,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       summary,
       loadingPlans,
       loadingSummary,
+      checkoutLoadingSlug,
       selectPlan,
       initiateCheckout,
       refreshPlans,
       refreshSummary,
       hasFeature: (_featureKey: string) => true, // All features unlocked for all users
     }),
-    [plans, summary, loadingPlans, loadingSummary],
+    [plans, summary, loadingPlans, loadingSummary, checkoutLoadingSlug],
   );
 
   return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;

@@ -50,7 +50,9 @@ export default function Onboarding() {
     try {
       if (isPaid) {
         await initiateCheckout(slug);
-        return; // redirects to Stripe — onboarding continues on return via success_url
+        // Redirecting to Stripe — leave the loader on so the button doesn't
+        // flash back to normal before the browser navigates away.
+        return;
       }
       await selectPlan(slug);
       setStep(2);

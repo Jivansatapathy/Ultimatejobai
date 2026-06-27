@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Check, ArrowRight, Sparkles, Briefcase, Crown, Phone, Clock } from "lucide-react";
+import { Check, ArrowRight, Sparkles, Briefcase, Crown, Phone, Clock, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { planUiConfig, plans as staticPlans } from "@/data/plans";
@@ -56,9 +56,9 @@ const fallbackConfig = { icon: Phone };
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
 function PricingCard({
-  plan, index, annual, onSelect, isCurrent,
+  plan, index, annual, onSelect, isCurrent, isLoading, disabled,
 }: {
-  plan: any; index: number; annual: boolean; onSelect: () => void; isCurrent: boolean;
+  plan: any; index: number; annual: boolean; onSelect: () => void; isCurrent: boolean; isLoading: boolean; disabled: boolean;
 }) {
   const ui       = planUiConfig[plan.slug] || planUiConfig.free;
   const config   = PLAN_CONFIG[plan.slug] || fallbackConfig;
@@ -130,15 +130,26 @@ function PricingCard({
         <button
           type="button"
           onClick={onSelect}
-          disabled={isCurrent}
-          className={`group flex items-center justify-center gap-2 w-full h-12 rounded-2xl font-bold text-sm transition-all ${
+          disabled={isCurrent || disabled}
+          className={`group flex items-center justify-center gap-2 w-full h-12 rounded-2xl font-bold text-sm transition-all disabled:opacity-70 ${
             isCurrent
               ? "bg-white/20 text-white/60 cursor-default"
               : "bg-white text-blue-700 hover:bg-blue-50 shadow-lg"
           }`}
         >
-          {isCurrent ? "Current Plan" : (ui.cta || "Get Started")}
-          {!isCurrent && <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />}
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Redirecting…
+            </>
+          ) : isCurrent ? (
+            "Current Plan"
+          ) : (
+            <>
+              {ui.cta || "Get Started"}
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+            </>
+          )}
         </button>
       </motion.div>
     );
@@ -206,15 +217,26 @@ function PricingCard({
       <button
         type="button"
         onClick={onSelect}
-        disabled={isCurrent}
-        className={`group flex items-center justify-center gap-2 w-full h-12 rounded-2xl font-bold text-sm transition-all ${
+        disabled={isCurrent || disabled}
+        className={`group flex items-center justify-center gap-2 w-full h-12 rounded-2xl font-bold text-sm transition-all disabled:opacity-70 ${
           isCurrent
             ? "bg-gray-100 text-gray-400 cursor-default"
             : "border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-lg hover:shadow-blue-100"
         }`}
       >
-        {isCurrent ? "Current Plan" : (ui.cta || "Get Started")}
-        {!isCurrent && <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />}
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Redirecting…
+          </>
+        ) : isCurrent ? (
+          "Current Plan"
+        ) : (
+          <>
+            {ui.cta || "Get Started"}
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+          </>
+        )}
       </button>
     </motion.div>
   );
@@ -226,7 +248,7 @@ export const PricingV2 = () => {
   const [annual, setAnnual] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { plans, summary, loadingPlans, selectPlan, initiateCheckout } = useSubscription();
+  const { plans, summary, loadingPlans, checkoutLoadingSlug, selectPlan, initiateCheckout } = useSubscription();
 
   // Prefer the 4 canonical slugs in order; fall back to static definitions
   const CANONICAL = ["free", "beginner", "professional", "personal"];
@@ -335,6 +357,8 @@ export const PricingV2 = () => {
                 annual={annual}
                 onSelect={() => handleSelect(plan.slug)}
                 isCurrent={summary?.plan?.slug === plan.slug}
+                isLoading={checkoutLoadingSlug === plan.slug}
+                disabled={checkoutLoadingSlug !== null && checkoutLoadingSlug !== plan.slug}
               />
             ))}
           </div>

@@ -140,6 +140,7 @@ export default function Auth() {
     }
 
     setLoading(true);
+    let redirectingToCheckout = false;
 
     const sanitizedEmail = sanitizeEmail(formData.email);
     if (!sanitizedEmail) {
@@ -190,6 +191,10 @@ export default function Auth() {
           selectedPlanSlug
         );
         if (url) {
+          // Leave the loader on — the browser is about to navigate to
+          // Stripe, clearing it in `finally` below would flash the button
+          // back to normal first.
+          redirectingToCheckout = true;
           window.location.href = url;
           return;
         }
@@ -261,7 +266,7 @@ export default function Auth() {
 
       toast.error(errorMsg);
     } finally {
-      setLoading(false);
+      if (!redirectingToCheckout) setLoading(false);
     }
   };
 

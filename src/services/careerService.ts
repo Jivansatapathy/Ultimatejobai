@@ -59,6 +59,7 @@ export interface CareerResume {
     id: number;
     file: string;
     file_name?: string | null;
+    public_url?: string | null;
     firebase_download_url?: string | null;
     parsed_text?: string | null;
     structured_data?: Record<string, unknown>;

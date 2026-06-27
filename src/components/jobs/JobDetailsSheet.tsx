@@ -93,7 +93,7 @@ export function JobDetailsSheet({ job, open, onOpenChange, appliedJobIds, onBotA
   if (!job) return null;
 
   const getResumeLabel = (resume: CareerResume) => {
-    const fileName = resume.file?.split("/").pop() || `Resume ${resume.id}`;
+    const fileName = resume.file_name || resume.file?.split("/").pop() || `Resume ${resume.id}`;
     return `${fileName} - ${new Date(resume.updated_at || resume.created_at).toLocaleDateString()}`;
   };
 

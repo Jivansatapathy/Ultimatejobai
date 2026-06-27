@@ -366,7 +366,7 @@ export function AutoApplyModal({
   const appliesLeft = credStatus?.applies_remaining ?? 10;
   const appliesUsed = credStatus?.applies_used ?? 0;
   const getResumeLabel = (resume: any) => {
-    const fileName = resume.file?.split("/").pop() || `Resume ${resume.id}`;
+    const fileName = resume.file_name || resume.file?.split("/").pop() || `Resume ${resume.id}`;
     return `${fileName} - ${new Date(resume.updated_at || resume.created_at).toLocaleDateString()}`;
   };
 

@@ -259,7 +259,7 @@ export default function ExecutiveOpportunityEngine() {
   useEffect(() => { setPage(1); load(search, typeFilter, seniorityFilter, countryFilter, 1, false); }, [search, typeFilter, seniorityFilter, countryFilter, load]);
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5">
       {selectedOpp && <DecisionModal opp={selectedOpp} onClose={() => setSelectedOpp(null)} />}
 
       {/* Header */}

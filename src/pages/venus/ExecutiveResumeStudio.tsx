@@ -150,7 +150,7 @@ export default function ExecutiveResumeStudio() {
         <div className="lg:col-span-3 space-y-4">
           <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
             <p className="text-xs font-black uppercase tracking-widest text-gray-800">Select Mode</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {MODES.map(mode => (
                 <button key={mode.key} type="button" onClick={() => setSelectedMode(mode.key)}
                   className={`rounded-xl border p-3 text-left transition-all ${selectedMode === mode.key ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}>

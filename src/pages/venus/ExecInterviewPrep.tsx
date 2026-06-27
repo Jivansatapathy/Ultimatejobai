@@ -404,7 +404,7 @@ export default function ExecInterviewPrep() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Company (optional)</label>
                 <Input value={company} onChange={e => setCompany(e.target.value)}

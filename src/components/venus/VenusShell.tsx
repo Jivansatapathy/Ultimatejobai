@@ -31,7 +31,6 @@ function getNav(base: string) {
     { label: "Readiness Score",  href: `${base}/readiness-score`,     icon: Target },
     { label: "Career Twin",      href: `${base}/career-twin`,         icon: Bot },
     { label: "AI Insights",      href: `${base}/ai-insights`,         icon: Sparkles },
-    { label: "Job Fairs",        href: `${base}/job-fairs`,           icon: Calendar },
     { label: "Salary Negotiation", href: `${base}/salary-negotiation`, icon: Handshake },
   ];
 }

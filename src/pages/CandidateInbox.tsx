@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, Check, FileText, Loader2, MessageSquare, Search, X } from "lucide-react";
+import { Building2, Check, Download, FileText, Loader2, MessageSquare, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { ConversationPanel } from "@/components/chat/ConversationPanel";
@@ -53,6 +53,61 @@ export default function CandidateInbox() {
       .catch(() => { if (active) setOffer(null); });
     return () => { active = false; };
   }, [selectedId]);
+
+  const handleDownloadOffer = () => {
+    if (!offer) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const doc = printWindow.document;
+    doc.title = `Offer Letter - ${offer.candidate_name}`;
+
+    const style = doc.createElement("style");
+    // Values below come from a trusted stylesheet string, not user input.
+    style.textContent = `
+      body { font-family: 'Georgia', serif; max-width: 700px; margin: 60px auto; padding: 40px; line-height: 1.8; color: #1a1a1a; }
+      h1 { font-size: 20px; border-bottom: 2px solid #e5e5e5; padding-bottom: 12px; margin-bottom: 24px; }
+      .meta { font-size: 13px; color: #666; margin-bottom: 32px; }
+      .meta div { margin-bottom: 4px; }
+      .content { white-space: pre-wrap; font-size: 15px; }
+      .footer { margin-top: 48px; font-size: 12px; color: #999; border-top: 1px solid #e5e5e5; padding-top: 16px; }
+      @media print { body { margin: 20px; } }
+    `;
+    doc.head.appendChild(style);
+
+    const h1 = doc.createElement("h1");
+    h1.textContent = "Offer Letter";
+
+    const meta = doc.createElement("div");
+    meta.className = "meta";
+    // Built with textContent (not innerHTML) so the employer-authored offer
+    // text can never be parsed as markup in the candidate's browser.
+    [
+      ["Candidate", `${offer.candidate_name} (${offer.candidate_email})`],
+      ["Position", offer.job_title],
+      ["Salary", offer.salary],
+      ["Start Date", offer.start_date],
+      ["Status", offer.status],
+    ].forEach(([label, value]) => {
+      const row = doc.createElement("div");
+      const strong = doc.createElement("strong");
+      strong.textContent = `${label}: `;
+      row.appendChild(strong);
+      row.appendChild(doc.createTextNode(value));
+      meta.appendChild(row);
+    });
+
+    const content = doc.createElement("div");
+    content.className = "content";
+    content.textContent = offer.content;
+
+    const footer = doc.createElement("div");
+    footer.className = "footer";
+    footer.textContent = "Downloaded from Hizorex";
+
+    doc.body.append(h1, meta, content, footer);
+    printWindow.print();
+  };
 
   const handleRespond = async (action: "accept" | "decline") => {
     if (!offer) return;
@@ -182,12 +237,21 @@ export default function CandidateInbox() {
 
                     {offer && (
                       <div className="border-b border-gray-100 bg-amber-50/60 p-4 shrink-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <FileText className="h-4 w-4 text-amber-600 shrink-0" />
-                          <p className="text-sm font-bold text-gray-900">Offer Letter</p>
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold capitalize ${offerStatusStyle[offer.status] || ""}`}>
-                            {offer.status}
-                          </span>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="h-4 w-4 text-amber-600 shrink-0" />
+                            <p className="text-sm font-bold text-gray-900">Offer Letter</p>
+                            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold capitalize ${offerStatusStyle[offer.status] || ""}`}>
+                              {offer.status}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleDownloadOffer}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold px-2.5 py-1.5 transition-colors shrink-0"
+                          >
+                            <Download className="h-3.5 w-3.5" /> Download
+                          </button>
                         </div>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mb-3">
                           <span>Salary: <span className="font-semibold text-gray-900">{offer.salary}</span></span>

@@ -144,7 +144,7 @@ export default function CompanyIntelligence() {
         headcount_growth: "+12% YoY",
         funding_stage: "Series C",
         founded_year: 2018,
-        description: "Demo data shown — connect Venus API for live intelligence.",
+        description: "Demo data shown — connect Hizorex API for live intelligence.",
         exec_turnover_signal: "2 C-Suite changes in the last 12 months.",
         news: [],
       });
@@ -204,7 +204,7 @@ export default function CompanyIntelligence() {
         ].map(({ label, color }) => (
           <span key={label} className={`font-semibold ${color}`}>{label}</span>
         ))}
-        <span className="text-gray-400 ml-auto">Venus Avoid Score™</span>
+        <span className="text-gray-400 ml-auto">Hizorex Avoid Score™</span>
       </div>
 
       {/* Result */}

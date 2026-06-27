@@ -167,7 +167,7 @@ export default function EmployerLinkedIn() {
       getLinkedInGlobalAnalytics().catch(() => emptyGlobalAnalytics),
       getLinkedInPublishedPosts().catch(() => []),
     ]);
-    const approvedJobs = jobData.filter((job) => job.review_status === "approved");
+    const approvedJobs = jobData.filter((job) => job.employer_status === "published");
     setJobs(approvedJobs);
     setConnection(connectionData);
     setGlobalAnalytics(analyticsData);

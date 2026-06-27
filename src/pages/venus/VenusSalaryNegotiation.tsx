@@ -204,7 +204,7 @@ export default function VenusSalaryNegotiation() {
   if (stage === "pick") return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Venus AI · Salary Lab</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Hizorex AI · Salary Lab</p>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Salary Negotiation</h1>
         <p className="text-sm text-gray-400 mt-1">Choose a scenario and practice live negotiation against an AI employer.</p>
       </div>

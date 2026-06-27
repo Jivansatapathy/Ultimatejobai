@@ -150,7 +150,7 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
         </motion.div>
       </div>
 
-      {/* Venus AI Executive OS banner */}
+      {/* Hizorex AI Executive OS banner */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -199,7 +199,7 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
 
               {/* CTA arrow */}
               <div className="shrink-0 flex items-center gap-2 rounded-xl bg-violet-600 group-hover:bg-violet-500 transition-colors px-5 py-3 text-white font-bold text-sm shadow-md shadow-violet-900/30 self-start sm:self-auto">
-                Explore Venus
+                Explore Hizorex
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>

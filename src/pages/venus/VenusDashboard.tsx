@@ -124,7 +124,7 @@ export default function VenusDashboard() {
         </div>
         <h2 className="text-xl font-black text-gray-900 mb-2">Set up your Executive Profile</h2>
         <p className="text-sm text-gray-500 max-w-sm mb-6">
-          Complete your profile so Venus AI can calculate EOS scores, generate your briefing, and match you to the right opportunities.
+          Complete your profile so Hizorex AI can calculate EOS scores, generate your briefing, and match you to the right opportunities.
         </p>
         <Button onClick={() => navigate(`${basePath}/profile`)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-8">
@@ -139,7 +139,7 @@ export default function VenusDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Venus AI · Executive OS</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Hizorex AI · Executive OS</p>
           <h1 className="text-2xl font-black text-gray-900 mt-0.5">
             {greeting}, <span className="capitalize">{firstName}</span>.
           </h1>
@@ -184,7 +184,7 @@ export default function VenusDashboard() {
           </div>
         ) : (
           <div className="space-y-2">
-            <p className="text-gray-900 font-medium">Your AI briefing will appear here once the Venus API is connected.</p>
+            <p className="text-gray-900 font-medium">Your AI briefing will appear here once the Hizorex API is connected.</p>
             <p className="text-sm text-gray-500">Today's focus: Review matched opportunities and update your EOS™ scores.</p>
           </div>
         )}

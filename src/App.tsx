@@ -65,7 +65,7 @@ const Plans = lazy(() => import("./pages/Plans"));
 const ContentPanel = lazy(() => import("./pages/ContentPanel"));
 const CandidateInbox = lazy(() => import("./pages/CandidateInbox"));
 
-// Venus AI Executive Career OS
+// Hizorex AI Executive Career OS
 const VenusShell = lazy(() => import("./components/venus/VenusShell"));
 const VenusDashboard = lazy(() => import("./pages/venus/VenusDashboard"));
 const ExecutiveProfileBuilder = lazy(() => import("./pages/venus/ExecutiveProfileBuilder"));
@@ -422,7 +422,7 @@ const App = () => (
                       <Route path="settings" element={<EmployerSettings />} />
                     </Route>
                   </Route>
-                  {/* Venus AI Executive Career OS */}
+                  {/* Hizorex AI Executive Career OS */}
                   <Route path="/venus" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
                     <Route index element={<VenusDashboard />} />
                     <Route path="profile" element={<ExecutiveProfileBuilder />} />
@@ -440,7 +440,7 @@ const App = () => (
                     <Route path="salary-negotiation" element={<VenusSalaryNegotiation />} />
                   </Route>
 
-                  {/* Venus embedded inline under AI Mentor — same pages, mounted at a
+                  {/* Hizorex embedded inline under AI Mentor — same pages, mounted at a
                       different base path so VenusShell's nav stays within /ai-mentor/* */}
                   <Route path="/ai-mentor/venus" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
                     <Route index element={<VenusDashboard />} />

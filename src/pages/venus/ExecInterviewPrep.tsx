@@ -344,7 +344,7 @@ export default function ExecInterviewPrep() {
         toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
         return;
       }
-      toast.info("Using demo prep pack — connect Venus API for AI-personalized content.");
+      toast.info("Using demo prep pack — connect Hizorex API for AI-personalized content.");
       setPack(DEMO_PACKS[interviewType](company, role));
     } finally {
       setLoading(false);

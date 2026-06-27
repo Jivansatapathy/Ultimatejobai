@@ -134,7 +134,7 @@ export default function ExecutiveReadinessScore() {
         toast.error(getApiErrorMessage(error) || "Plan limit reached. Upgrade to continue.");
         return;
       }
-      toast.info("Showing local assessment — connect Venus API for AI-enhanced analysis.");
+      toast.info("Showing local assessment — connect Hizorex API for AI-enhanced analysis.");
       setResult(buildDemoResult(targetRole, scores));
     } finally {
       setLoading(false);

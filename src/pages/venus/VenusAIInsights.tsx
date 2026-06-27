@@ -68,9 +68,9 @@ export default function VenusAIInsights() {
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Venus AI · Strategic Intelligence</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Hizorex AI · Strategic Intelligence</p>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">AI Insights</h1>
-        <p className="text-sm text-gray-400 mt-1">Paste any offer, dilemma, or career decision — Venus AI gives executive-level strategic analysis.</p>
+        <p className="text-sm text-gray-400 mt-1">Paste any offer, dilemma, or career decision — Hizorex AI gives executive-level strategic analysis.</p>
       </div>
 
       {/* Career Strategic Planner CTA */}
@@ -153,7 +153,7 @@ export default function VenusAIInsights() {
             >
               <div className="flex items-center gap-2 px-4 py-3 border-b border-blue-100">
                 <Lightbulb className="h-4 w-4 text-blue-600 shrink-0" />
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Venus AI Analysis</p>
+                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Hizorex AI Analysis</p>
               </div>
               <div className="px-4 py-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {advice}

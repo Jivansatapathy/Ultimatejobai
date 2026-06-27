@@ -70,7 +70,7 @@ export default function VenusAIInsights() {
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Hizorex AI · Strategic Intelligence</p>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">AI Insights</h1>
-        <p className="text-sm text-gray-400 mt-1">Paste any offer, dilemma, or career decision — Hizorex AI gives executive-level strategic analysis.</p>
+        <p className="text-sm text-gray-700 mt-1">Paste any offer, dilemma, or career decision — Hizorex AI gives executive-level strategic analysis.</p>
       </div>
 
       {/* Career Strategic Planner CTA */}
@@ -82,7 +82,7 @@ export default function VenusAIInsights() {
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-0.5">AI-Powered</p>
           <h3 className="text-sm font-black text-gray-900">Career Strategic Planner</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Build a concrete 12–24 month roadmap with your AI career advisor.</p>
+          <p className="text-xs text-gray-800 mt-0.5">Build a concrete 12–24 month roadmap with your AI career advisor.</p>
         </div>
         <Button
           onClick={() => navigate("/career-planner")}
@@ -103,7 +103,7 @@ export default function VenusAIInsights() {
           </div>
           <div>
             <h3 className="text-sm font-black text-gray-900">Career Move Analyzer</h3>
-            <p className="text-xs text-gray-400">AI weighs the pros, cons, and executive fit of your decision</p>
+            <p className="text-xs text-gray-700">AI weighs the pros, cons, and executive fit of your decision</p>
           </div>
         </div>
 
@@ -115,7 +115,7 @@ export default function VenusAIInsights() {
                 key={p}
                 type="button"
                 onClick={() => setOfferText(p)}
-                className="text-[11px] font-medium px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                className="text-[11px] font-medium px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-800 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all"
               >
                 {p.length > 48 ? p.slice(0, 48) + "…" : p}
               </button>
@@ -124,13 +124,13 @@ export default function VenusAIInsights() {
 
           <textarea
             placeholder="Paste your offer letter, describe a career dilemma, or ask for strategic advice…"
-            className="w-full min-h-[120px] p-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all resize-none text-sm leading-relaxed placeholder:text-gray-400"
+            className="w-full min-h-[120px] p-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all resize-none text-sm leading-relaxed placeholder:text-gray-700"
             value={offerText}
             onChange={e => setOfferText(e.target.value)}
           />
 
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-gray-400">Your executive profile is used as context automatically.</p>
+            <p className="text-xs text-gray-700">Your executive profile is used as context automatically.</p>
             <Button
               onClick={handleGetAdvice}
               disabled={isAdvising || !offerText.trim()}
@@ -170,7 +170,7 @@ export default function VenusAIInsights() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">Recent Analyses</h3>
             <button type="button" onClick={loadHistory}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors">
+              className="flex items-center gap-1 text-xs text-gray-700 hover:text-gray-700 transition-colors">
               <RefreshCw className="h-3 w-3" /> Refresh
             </button>
           </div>
@@ -178,8 +178,8 @@ export default function VenusAIInsights() {
           <div className="space-y-3">
             {savedHistory.map((item, i) => (
               <div key={i} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                <p className="text-xs font-semibold text-gray-600 mb-2 line-clamp-2">{item.q}</p>
-                <p className="text-xs text-gray-400 line-clamp-3 leading-relaxed">{item.a}</p>
+                <p className="text-xs font-semibold text-gray-800 mb-2 line-clamp-2">{item.q}</p>
+                <p className="text-xs text-gray-700 line-clamp-3 leading-relaxed">{item.a}</p>
                 <button
                   type="button"
                   onClick={() => { setOfferText(item.q); setAdvice(item.a); }}
@@ -225,7 +225,7 @@ export default function VenusAIInsights() {
             <h4 className="text-sm font-black text-gray-900 mb-2">{title}</h4>
             <ul className="space-y-1">
               {tips.map(t => (
-                <li key={t} className="text-xs text-gray-500 flex items-start gap-1.5">
+                <li key={t} className="text-xs text-gray-800 flex items-start gap-1.5">
                   <span className="mt-1.5 h-1 w-1 rounded-full bg-gray-300 shrink-0" />
                   {t}
                 </li>

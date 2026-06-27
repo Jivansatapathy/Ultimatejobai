@@ -126,17 +126,17 @@ function CityPicker({ value, onChange }: { value: string; onChange: (v: string) 
   return (
     <div ref={ref} className="relative">
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-700 pointer-events-none" />
         <input
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange(""); }}
           onFocus={() => setOpen(true)}
           onKeyDown={e => e.key === "Escape" && setOpen(false)}
           placeholder="Search city or state…"
-          className="w-full rounded-xl border border-gray-300 bg-gray-100 pl-8 pr-8 py-2.5 text-sm text-gray-600 placeholder:text-gray-400 outline-none focus:border-blue-500 transition-colors"
+          className="w-full rounded-xl border border-gray-300 bg-gray-100 pl-8 pr-8 py-2.5 text-sm text-gray-800 placeholder:text-gray-700 outline-none focus:border-blue-500 transition-colors"
         />
         {query && (
-          <button type="button" onClick={clear} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+          <button type="button" onClick={clear} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 hover:text-gray-800">
             <X className="h-3.5 w-3.5" />
           </button>
         )}
@@ -156,12 +156,12 @@ function CityPicker({ value, onChange }: { value: string; onChange: (v: string) 
                     <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${
                       group.country === "USA" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
                     }`}>{group.country}</span>
-                    <span className="text-[10px] font-bold text-gray-400">{group.label}</span>
+                    <span className="text-[10px] font-bold text-gray-700">{group.label}</span>
                   </div>
                   {group.cities.map(city => (
                     <button key={city} type="button" onClick={() => select(city)}
                       className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                        value === city ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        value === city ? "bg-blue-600 text-white" : "text-gray-800 hover:bg-gray-100 hover:text-gray-900"
                       }`}>
                       {city}
                     </button>
@@ -174,8 +174,8 @@ function CityPicker({ value, onChange }: { value: string; onChange: (v: string) 
         {open && query.trim().length > 0 && filtered.length === 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="absolute z-50 mt-1 w-full rounded-xl border border-gray-300 bg-white p-4 text-center shadow-xl">
-            <Search className="h-5 w-5 text-gray-400 mx-auto mb-1" />
-            <p className="text-xs text-gray-400">No cities match "{query}"</p>
+            <Search className="h-5 w-5 text-gray-700 mx-auto mb-1" />
+            <p className="text-xs text-gray-700">No cities match "{query}"</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -206,14 +206,14 @@ function BenchmarkResult({ b }: { b: CompBenchmark }) {
         </div>
         <div className="text-right">
           <p className="text-3xl font-black text-gray-900">{FmtK(b.p50_total)}</p>
-          <p className="text-xs text-gray-400 font-semibold">Market P50</p>
+          <p className="text-xs text-gray-700 font-semibold">Market P50</p>
         </div>
       </div>
 
       <div className="space-y-2">
         {rows.map(({ label, min, max }) => (
           <div key={label} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-600">{label}</span>
+            <span className="text-sm font-semibold text-gray-800">{label}</span>
             <span className="text-base font-black text-gray-900">{FmtK(min)} – {FmtK(max)}</span>
           </div>
         ))}
@@ -289,46 +289,46 @@ export default function CompensationIntelligence() {
           <UsageMonitor featureKey="salary_range_research" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Compensation Intelligence</h1>
-        <p className="text-sm text-gray-400 mt-1">Benchmark base, bonus, RSUs & equity for any executive role across 300+ US & Canadian cities.</p>
+        <p className="text-sm text-gray-700 mt-1">Benchmark base, bonus, RSUs & equity for any executive role across 300+ US & Canadian cities.</p>
       </div>
 
       {/* Inputs */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Role</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Role</label>
             <select value={role} onChange={e => setRole(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-blue-500 transition-colors">
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-blue-500 transition-colors">
               <option value="">Select role</option>
               {ROLES.map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Company Stage</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Company Stage</label>
             <select value={stage} onChange={e => setStage(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-blue-500 transition-colors">
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-blue-500 transition-colors">
               <option value="">Select stage</option>
               {STAGES.map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Location</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Location</label>
             <CityPicker value={location} onChange={setLocation} />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Years of Experience</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Years of Experience</label>
             <input
               type="number" min={0} max={60} value={experience}
               onChange={e => setExperience(e.target.value)}
               placeholder="e.g. 12"
-              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 placeholder:text-gray-400 outline-none focus:border-blue-500 transition-colors"
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-700 outline-none focus:border-blue-500 transition-colors"
             />
           </div>
         </div>
 
         {/* Selected city display */}
         {location && (
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-gray-800">
             <MapPin className="h-3 w-3 text-blue-600" />
             <span>Benchmarking for <span className="text-gray-900 font-semibold">{location}</span></span>
           </div>
@@ -347,8 +347,8 @@ export default function CompensationIntelligence() {
       {history.length > 0 && (
         <div className="rounded-2xl border border-gray-200 bg-white p-5">
           <div className="flex items-center gap-2 mb-4">
-            <History className="h-4 w-4 text-gray-400" />
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Recent Benchmarks</p>
+            <History className="h-4 w-4 text-gray-700" />
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-700">Recent Benchmarks</p>
           </div>
           <div className="space-y-2">
             {history.map((h, i) => (
@@ -356,11 +356,11 @@ export default function CompensationIntelligence() {
                 className="w-full flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 hover:border-gray-300 px-4 py-3 transition-all text-left">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{h.role}</p>
-                  <p className="text-xs text-gray-400">{h.stage} · {h.location}</p>
+                  <p className="text-xs text-gray-700">{h.stage} · {h.location}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-black text-gray-900">{FmtK(h.p50_total)}</p>
-                  <p className="text-[10px] text-gray-400">P50</p>
+                  <p className="text-[10px] text-gray-700">P50</p>
                 </div>
               </button>
             ))}
@@ -370,9 +370,9 @@ export default function CompensationIntelligence() {
 
       {!result && !loading && (
         <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-          <TrendingUp className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 font-semibold">Select role, stage & location to benchmark</p>
-          <p className="text-xs text-gray-400 mt-1">300+ cities across the US and Canada · Groq AI-powered</p>
+          <TrendingUp className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-700 font-semibold">Select role, stage & location to benchmark</p>
+          <p className="text-xs text-gray-700 mt-1">300+ cities across the US and Canada · Groq AI-powered</p>
         </div>
       )}
     </div>

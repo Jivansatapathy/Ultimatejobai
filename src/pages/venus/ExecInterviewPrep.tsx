@@ -147,7 +147,7 @@ function QuestionCard({ q, index }: { q: InterviewQuestion; index: number }) {
           <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${diffColor}`}>{q.difficulty}</span>
           <p className="text-sm font-semibold text-gray-900 leading-snug mt-1">{q.question}</p>
         </div>
-        {open ? <ChevronUp className="h-4 w-4 shrink-0 text-gray-400 mt-0.5" /> : <ChevronDown className="h-4 w-4 shrink-0 text-gray-400 mt-0.5" />}
+        {open ? <ChevronUp className="h-4 w-4 shrink-0 text-gray-700 mt-0.5" /> : <ChevronDown className="h-4 w-4 shrink-0 text-gray-700 mt-0.5" />}
       </button>
       <AnimatePresence>
         {open && (
@@ -155,7 +155,7 @@ function QuestionCard({ q, index }: { q: InterviewQuestion; index: number }) {
             className="overflow-hidden border-t border-gray-200">
             <div className="p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-2">Model Answer</p>
-              <p className="text-sm text-gray-600 leading-relaxed">{q.model_answer}</p>
+              <p className="text-sm text-gray-800 leading-relaxed">{q.model_answer}</p>
             </div>
           </motion.div>
         )}
@@ -177,8 +177,8 @@ function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; on
   if (loading) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 flex items-center gap-2">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />
-        <span className="text-xs text-gray-400">Loading usage...</span>
+        <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-700" />
+        <span className="text-xs text-gray-700">Loading usage...</span>
       </div>
     );
   }
@@ -187,7 +187,7 @@ function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; on
     return (
       <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 flex items-center gap-2">
         <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-        <span className="text-xs text-gray-500">Could not load usage data</span>
+        <span className="text-xs text-gray-800">Could not load usage data</span>
         <button type="button" onClick={onRefresh} className="ml-auto text-xs text-blue-600 hover:text-blue-700">Retry</button>
       </div>
     );
@@ -203,18 +203,18 @@ function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; on
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Crown className="h-3.5 w-3.5 text-blue-600" />
-          <span className="text-xs font-bold text-gray-600 capitalize">{usage.planName} Plan</span>
+          <span className="text-xs font-bold text-gray-800 capitalize">{usage.planName} Plan</span>
           {usage.isUnlimited && (
             <span className="rounded-full bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">Unlimited</span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-700">
             {usage.isUnlimited
               ? `${usage.used} sessions used`
               : `${usage.used} / ${usage.limit} sessions used this month`}
           </span>
-          <button type="button" onClick={onRefresh} className="text-gray-400 hover:text-gray-500 transition-colors">
+          <button type="button" onClick={onRefresh} className="text-gray-700 hover:text-gray-800 transition-colors">
             <RefreshCw className="h-3 w-3" />
           </button>
         </div>
@@ -246,7 +246,7 @@ function UsageMeter({ usage, onRefresh, loading }: { usage: UsageInfo | null; on
 // ── Plan limits reference ─────────────────────────────────────────────────────
 
 const PLAN_LIMITS: { plan: string; color: string; badge: string; textLimit: string; audioLimit: string }[] = [
-  { plan: "Free",         color: "border-gray-300",         badge: "bg-gray-100 text-gray-500",           textLimit: "3 / mo",      audioLimit: "—" },
+  { plan: "Free",         color: "border-gray-300",         badge: "bg-gray-100 text-gray-800",           textLimit: "3 / mo",      audioLimit: "—" },
   { plan: "Professional", color: "border-blue-200",      badge: "bg-blue-100 text-blue-700",        textLimit: "20 / mo",     audioLimit: "10 / mo" },
   { plan: "Accelerator",  color: "border-blue-200",    badge: "bg-blue-100 text-blue-700",    textLimit: "50 / mo",     audioLimit: "25 / mo" },
   { plan: "Executive",    color: "border-amber-200",     badge: "bg-amber-100 text-amber-700",      textLimit: "Unlimited",   audioLimit: "Unlimited" },
@@ -256,7 +256,7 @@ const PLAN_LIMITS: { plan: string; color: string; badge: string; textLimit: stri
 
 function InterviewLoader() {
   return (
-    <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
+    <div className="flex items-center justify-center py-16 gap-2 text-gray-700">
       <Loader2 className="h-5 w-5 animate-spin" />
       <span className="text-sm">Loading interview engine...</span>
     </div>
@@ -360,7 +360,7 @@ export default function ExecInterviewPrep() {
           <UsageMonitor featureKey="interview_prep_access" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Interview Prep AI</h1>
-        <p className="text-sm text-gray-400 mt-1">Executive-specific prep for board, investor, founder, PE, and comp negotiation interviews.</p>
+        <p className="text-sm text-gray-700 mt-1">Executive-specific prep for board, investor, founder, PE, and comp negotiation interviews.</p>
       </div>
 
       {/* Tabs */}
@@ -376,7 +376,7 @@ export default function ExecInterviewPrep() {
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
               tab === key
                 ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-900"
+                : "text-gray-800 hover:text-gray-900"
             }`}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -391,14 +391,14 @@ export default function ExecInterviewPrep() {
           {/* Config panel */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3">Interview Type</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-3">Interview Type</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 {INTERVIEW_TYPES.map(t => (
                   <button key={t.key} type="button" onClick={() => setInterviewType(t.key)}
                     className={`rounded-xl border p-3 text-left transition-all ${interviewType === t.key ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}>
                     <span className="text-lg">{t.emoji}</span>
                     <p className="text-xs font-bold text-gray-900 mt-1">{t.label}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{t.desc}</p>
+                    <p className="text-[10px] text-gray-700 mt-0.5 leading-tight">{t.desc}</p>
                   </button>
                 ))}
               </div>
@@ -406,16 +406,16 @@ export default function ExecInterviewPrep() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Company (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Company (optional)</label>
                 <Input value={company} onChange={e => setCompany(e.target.value)}
                   placeholder="e.g. Stripe, KKR, Benchmark"
-                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
               </div>
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Your Role (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Your Role (optional)</label>
                 <Input value={role} onChange={e => setRole(e.target.value)}
                   placeholder="e.g. CTO, Board Director"
-                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
               </div>
             </div>
 
@@ -448,7 +448,7 @@ export default function ExecInterviewPrep() {
                     </div>
                     <ul className="space-y-2">
                       {pack.red_flags.map((flag, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-gray-600">
+                        <li key={i} className="flex gap-2 text-sm text-gray-800">
                           <span className="text-amber-500 shrink-0 mt-0.5">⚠</span>{flag}
                         </li>
                       ))}
@@ -462,7 +462,7 @@ export default function ExecInterviewPrep() {
                     </div>
                     <ul className="space-y-2">
                       {pack.questions_to_ask.map((q, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-gray-600">
+                        <li key={i} className="flex gap-2 text-sm text-gray-800">
                           <span className="text-emerald-500 shrink-0">→</span>{q}
                         </li>
                       ))}
@@ -477,7 +477,7 @@ export default function ExecInterviewPrep() {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-2">
                     {pack.prep_tips.map((tip, i) => (
-                      <div key={i} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-600">{tip}</div>
+                      <div key={i} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800">{tip}</div>
                     ))}
                   </div>
                 </div>
@@ -487,9 +487,9 @@ export default function ExecInterviewPrep() {
 
           {!pack && !loading && (
             <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-              <Mic className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-400 font-semibold">Select interview type and generate your prep pack</p>
-              <p className="text-xs text-gray-400 mt-1">AI generates tailored questions, model answers, and strategy in seconds</p>
+              <Mic className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-700 font-semibold">Select interview type and generate your prep pack</p>
+              <p className="text-xs text-gray-700 mt-1">AI generates tailored questions, model answers, and strategy in seconds</p>
             </div>
           )}
         </>
@@ -545,18 +545,18 @@ export default function ExecInterviewPrep() {
                         <MessageSquare className="h-6 w-6 text-blue-600" />
                       </div>
                       {isExhausted
-                        ? <Lock className="h-4 w-4 text-gray-400" />
+                        ? <Lock className="h-4 w-4 text-gray-700" />
                         : <span className="text-xs font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
                       }
                     </div>
                     <h3 className="text-base font-black text-gray-900 mb-1">Text Interview</h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-sm text-gray-800 leading-relaxed">
                       AI asks questions, you type your answers. Real-time validation, feedback panel, and full transcript export.
                     </p>
                     <div className="flex items-center gap-2 mt-4">
-                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Chat-based</span>
-                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">AI Feedback</span>
-                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Export Transcript</span>
+                      <span className="rounded-full bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5">Chat-based</span>
+                      <span className="rounded-full bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5">AI Feedback</span>
+                      <span className="rounded-full bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5">Export Transcript</span>
                     </div>
                   </button>
                 </motion.div>
@@ -578,18 +578,18 @@ export default function ExecInterviewPrep() {
                         <Video className="h-6 w-6 text-teal-600" />
                       </div>
                       {isExhausted
-                        ? <Lock className="h-4 w-4 text-gray-400" />
+                        ? <Lock className="h-4 w-4 text-gray-700" />
                         : <span className="text-xs font-bold text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
                       }
                     </div>
                     <h3 className="text-base font-black text-gray-900 mb-1">Audio Interview</h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-sm text-gray-800 leading-relaxed">
                       Speak your answers aloud. Voice-to-text transcription, presence detection, and AI-powered coaching after each response.
                     </p>
                     <div className="flex items-center gap-2 mt-4">
-                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Voice-to-Text</span>
-                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">Presence Check</span>
-                      <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5">AI Coaching</span>
+                      <span className="rounded-full bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5">Voice-to-Text</span>
+                      <span className="rounded-full bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5">Presence Check</span>
+                      <span className="rounded-full bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5">AI Coaching</span>
                     </div>
                   </button>
                 </motion.div>
@@ -598,7 +598,7 @@ export default function ExecInterviewPrep() {
               {/* Context note */}
               <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 flex items-center gap-3">
                 <Lightbulb className="h-4 w-4 text-blue-600 shrink-0" />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-800">
                   The interview AI will be pre-loaded with context from your selected type
                   {company ? ` at <strong>${company}</strong>` : ""}. Switch to <strong>Prep Pack</strong> tab to customize the interview context.
                 </p>
@@ -606,14 +606,14 @@ export default function ExecInterviewPrep() {
 
               {/* Plan limits table */}
               <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Interview Session Limits by Plan</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700 mb-3">Interview Session Limits by Plan</p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        <th className="text-left text-gray-400 font-bold pb-2 pr-4">Plan</th>
-                        <th className="text-center text-gray-400 font-bold pb-2 px-4">Text Sessions</th>
-                        <th className="text-center text-gray-400 font-bold pb-2 px-4">Audio Sessions</th>
+                        <th className="text-left text-gray-700 font-bold pb-2 pr-4">Plan</th>
+                        <th className="text-center text-gray-700 font-bold pb-2 px-4">Text Sessions</th>
+                        <th className="text-center text-gray-700 font-bold pb-2 px-4">Audio Sessions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200/60">
@@ -627,8 +627,8 @@ export default function ExecInterviewPrep() {
                               </span>
                               {isCurrent && <span className="ml-2 text-[9px] text-blue-600 font-bold">← current</span>}
                             </td>
-                            <td className="py-2 px-4 text-center font-semibold text-gray-600">{p.textLimit}</td>
-                            <td className="py-2 px-4 text-center font-semibold text-gray-600">{p.audioLimit}</td>
+                            <td className="py-2 px-4 text-center font-semibold text-gray-800">{p.textLimit}</td>
+                            <td className="py-2 px-4 text-center font-semibold text-gray-800">{p.audioLimit}</td>
                           </tr>
                         );
                       })}

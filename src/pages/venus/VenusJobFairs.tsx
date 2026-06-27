@@ -76,7 +76,7 @@ export default function VenusJobFairs() {
             <UsageMonitor featureKey="job_fairs_access" compact />
           </div>
           <h1 className="text-2xl font-black text-gray-900 mt-0.5">Job Fairs</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-700 mt-1">
             Upcoming executive career fairs and recruiting events.
             {!loading && fairs.length > 0 && (
               <span className="ml-1 text-blue-600 font-semibold">{filtered.length} event{filtered.length !== 1 ? "s" : ""}</span>
@@ -84,7 +84,7 @@ export default function VenusJobFairs() {
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}
-          className="shrink-0 border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-900">
+          className="shrink-0 border-gray-300 text-gray-800 hover:bg-gray-50 hover:text-gray-900">
           <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
@@ -130,7 +130,7 @@ export default function VenusJobFairs() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <p className="text-sm text-gray-400">Fetching latest job fair events…</p>
+          <p className="text-sm text-gray-700">Fetching latest job fair events…</p>
         </div>
       ) : filtered.length > 0 ? (
         <div className="grid md:grid-cols-2 gap-4">
@@ -149,7 +149,7 @@ export default function VenusJobFairs() {
                     <Building2 className="h-2.5 w-2.5" />
                     {fair.source || "General"}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                  <span className="flex items-center gap-1 text-xs text-gray-700">
                     <Calendar className="h-3 w-3" />
                     {fair.date_text || "Date TBA"}
                   </span>
@@ -159,8 +159,8 @@ export default function VenusJobFairs() {
                 <h3 className="text-base font-bold text-gray-900 leading-snug">{fair.title}</h3>
 
                 {/* Location */}
-                <p className="flex items-start gap-1.5 text-sm text-gray-500">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5 text-gray-400" />
+                <p className="flex items-start gap-1.5 text-sm text-gray-800">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5 text-gray-700" />
                   {fair.location || fair.city || "Online / Virtual"}
                 </p>
 
@@ -170,10 +170,10 @@ export default function VenusJobFairs() {
                     <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold border border-teal-100">Virtual</span>
                   )}
                   {fair.country && (
-                    <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 text-[10px] font-medium border border-gray-100">{fair.country}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-800 text-[10px] font-medium border border-gray-100">{fair.country}</span>
                   )}
                   {fair.city && (
-                    <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 text-[10px] font-medium border border-gray-100">{fair.city}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-800 text-[10px] font-medium border border-gray-100">{fair.city}</span>
                   )}
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function VenusJobFairs() {
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 ) : (
-                  <div className="w-full h-9 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center text-sm text-gray-400">
+                  <div className="w-full h-9 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center text-sm text-gray-700">
                     No link available
                   </div>
                 )}
@@ -202,12 +202,12 @@ export default function VenusJobFairs() {
       ) : (
         <div className="flex flex-col items-center justify-center py-20 rounded-2xl border border-dashed border-gray-200 bg-white text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50 border border-gray-200 mb-4">
-            <Calendar className="h-7 w-7 text-gray-300" />
+            <Calendar className="h-7 w-7 text-gray-700" />
           </div>
           <h3 className="text-base font-black text-gray-900 mb-1">
             {fairs.length === 0 ? "No Events Found" : "No Results Match Your Filters"}
           </h3>
-          <p className="text-sm text-gray-400 max-w-sm">
+          <p className="text-sm text-gray-700 max-w-sm">
             {fairs.length === 0
               ? "Check back later for upcoming job fairs and executive recruiting events."
               : "Try adjusting or clearing your location filters."}
@@ -238,7 +238,7 @@ export default function VenusJobFairs() {
           </div>
           <div>
             <p className="text-sm font-bold text-gray-900">Executive Networking Tip</p>
-            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+            <p className="text-xs text-gray-800 mt-0.5 leading-relaxed">
               Before attending any event, update your Hizorex profile so your EOS™ score and branding materials are current. First impressions at these events can open board and C-suite pipelines.
             </p>
           </div>

@@ -80,7 +80,7 @@ export default function ExecutiveProfileBuilder() {
           {STEPS.map((s, i) => (
             <div key={i} className="flex items-center gap-2 flex-1">
               <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-all ${
-                i < step ? "bg-blue-600 text-white" : i === step ? "bg-blue-600 text-white ring-2 ring-blue-200" : "bg-gray-100 text-gray-400"
+                i < step ? "bg-blue-600 text-white" : i === step ? "bg-blue-600 text-white ring-2 ring-blue-200" : "bg-gray-100 text-gray-700"
               }`}>
                 {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
               </div>
@@ -96,7 +96,7 @@ export default function ExecutiveProfileBuilder() {
           <div className="mb-6">
             <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-1">Step {step + 1} of {STEPS.length}</p>
             <h2 className="text-2xl font-black text-gray-900">{STEPS[step].title}</h2>
-            <p className="text-sm text-gray-500 mt-1">{STEPS[step].desc}</p>
+            <p className="text-sm text-gray-800 mt-1">{STEPS[step].desc}</p>
           </div>
 
           <AnimatePresence mode="wait">
@@ -115,7 +115,7 @@ export default function ExecutiveProfileBuilder() {
                       className={`rounded-xl border px-3 py-2.5 text-sm font-semibold text-left transition-all ${
                         profile.role === role
                           ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-gray-300 bg-gray-100 text-gray-600 hover:border-blue-400"
+                          : "border-gray-300 bg-gray-100 text-gray-800 hover:border-blue-400"
                       }`}
                     >
                       {role}
@@ -126,7 +126,7 @@ export default function ExecutiveProfileBuilder() {
 
               {step === 1 && (
                 <div className="space-y-3">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Pick up to 4 industries</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-800">Pick up to 4 industries</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {INDUSTRIES.map(ind => (
                       <button key={ind} type="button"
@@ -134,13 +134,13 @@ export default function ExecutiveProfileBuilder() {
                         className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-all ${
                           profile.industries?.includes(ind)
                             ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 bg-gray-100 text-gray-600 hover:border-blue-400"
+                            : "border-gray-300 bg-gray-100 text-gray-800 hover:border-blue-400"
                         }`}
                       >{ind}</button>
                     ))}
                   </div>
                   {(profile.industries?.length ?? 0) >= 4 && (
-                    <p className="text-xs text-gray-400">Maximum 4 selected. Deselect one to change.</p>
+                    <p className="text-xs text-gray-700">Maximum 4 selected. Deselect one to change.</p>
                   )}
                 </div>
               )}
@@ -148,14 +148,14 @@ export default function ExecutiveProfileBuilder() {
               {step === 2 && (
                 <div className="space-y-5">
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Years in Leadership</label>
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-2 block">Years in Leadership</label>
                     <Input type="number" min={1} max={40} value={profile.leadership_years}
                       onChange={e => set("leadership_years", Number(e.target.value))}
                       className="bg-gray-100 border-gray-300 text-gray-900 w-32"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Notable Exits / IPOs (optional)</label>
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-2 block">Notable Exits / IPOs (optional)</label>
                     <div className="space-y-2">
                       {(profile.exit_history || []).map((ex, i) => (
                         <div key={i} className="flex gap-2">
@@ -169,7 +169,7 @@ export default function ExecutiveProfileBuilder() {
                       ))}
                       <Button variant="outline" size="sm"
                         onClick={() => set("exit_history", [...(profile.exit_history||[]), { company: "", type: "Acquisition", year: 2023 }])}
-                        className="border-gray-300 text-gray-600 hover:bg-gray-100">
+                        className="border-gray-300 text-gray-800 hover:bg-gray-100">
                         + Add Exit
                       </Button>
                     </div>
@@ -184,7 +184,7 @@ export default function ExecutiveProfileBuilder() {
                       className={`rounded-xl border px-3 py-2.5 text-sm font-semibold text-left transition-all flex items-center gap-2 ${
                         profile.functional_strengths?.includes(s)
                           ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-gray-300 bg-gray-100 text-gray-600 hover:border-blue-400"
+                          : "border-gray-300 bg-gray-100 text-gray-800 hover:border-blue-400"
                       }`}
                     >
                       {profile.functional_strengths?.includes(s) && <Check className="h-3.5 w-3.5 shrink-0" />}
@@ -210,7 +210,7 @@ export default function ExecutiveProfileBuilder() {
                     >
                       <div className="text-left">
                         <p className="text-sm font-semibold text-gray-900">{label}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                        <p className="text-xs text-gray-800 mt-0.5">{desc}</p>
                       </div>
                       <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${
                         profile[key] ? "border-blue-500 bg-blue-600" : "border-gray-300"
@@ -223,9 +223,9 @@ export default function ExecutiveProfileBuilder() {
                   {/* Minimum acceptable base salary */}
                   <div className="rounded-xl border border-gray-300 bg-gray-100 px-4 py-4 space-y-2">
                     <p className="text-sm font-semibold text-gray-900">Minimum Base Salary</p>
-                    <p className="text-xs text-gray-500">Opportunities below this floor are filtered out of your matches</p>
+                    <p className="text-xs text-gray-800">Opportunities below this floor are filtered out of your matches</p>
                     <div className="relative mt-2">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-800 text-sm font-bold">$</span>
                       <Input
                         type="number"
                         min={0}
@@ -233,7 +233,7 @@ export default function ExecutiveProfileBuilder() {
                         value={profile.comp_floor ?? ""}
                         onChange={e => set("comp_floor", e.target.value ? Number(e.target.value) : undefined)}
                         placeholder="e.g. 300000"
-                        className="pl-7 bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl"
+                        className="pl-7 bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl"
                       />
                     </div>
                   </div>
@@ -241,7 +241,7 @@ export default function ExecutiveProfileBuilder() {
                   {/* Risk tolerance */}
                   <div className="rounded-xl border border-gray-300 bg-gray-100 px-4 py-4 space-y-2">
                     <p className="text-sm font-semibold text-gray-900">Risk Tolerance</p>
-                    <p className="text-xs text-gray-500">Affects EOS™ scoring weight for early-stage / high-equity opportunities</p>
+                    <p className="text-xs text-gray-800">Affects EOS™ scoring weight for early-stage / high-equity opportunities</p>
                     <div className="grid grid-cols-3 gap-2 mt-2">
                       {(['low', 'medium', 'high'] as const).map(level => (
                         <button
@@ -251,7 +251,7 @@ export default function ExecutiveProfileBuilder() {
                           className={`rounded-xl border py-2.5 text-sm font-bold capitalize transition-all ${
                             profile.risk_tolerance === level
                               ? "border-blue-500 bg-blue-50 text-blue-700"
-                              : "border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-900"
+                              : "border-gray-300 text-gray-800 hover:border-gray-400 hover:text-gray-900"
                           }`}
                         >
                           {level}
@@ -267,7 +267,7 @@ export default function ExecutiveProfileBuilder() {
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
             <Button variant="outline" onClick={() => step > 0 ? setStep(s => s - 1) : navigate(basePath)}
-              className="border-gray-300 text-gray-600 hover:bg-gray-100">
+              className="border-gray-300 text-gray-800 hover:bg-gray-100">
               <ChevronLeft className="h-4 w-4 mr-1" />
               {step === 0 ? "Cancel" : "Back"}
             </Button>

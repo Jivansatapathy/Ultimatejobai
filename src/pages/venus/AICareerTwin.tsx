@@ -143,7 +143,7 @@ function MessageBubble({ msg }: { msg: CareerTwinMessage }) {
       <div className={`shrink-0 h-8 w-8 rounded-xl flex items-center justify-center ${
         isUser ? "bg-gray-100" : "bg-gradient-to-br from-blue-600 to-blue-800"
       }`}>
-        {isUser ? <span className="text-xs font-bold text-gray-600">You</span> : <Crown className="h-4 w-4 text-white" />}
+        {isUser ? <span className="text-xs font-bold text-gray-800">You</span> : <Crown className="h-4 w-4 text-white" />}
       </div>
       <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${
         isUser ? "bg-blue-600 text-white rounded-tr-sm" : "bg-white border border-gray-200 text-gray-700 rounded-tl-sm"
@@ -155,7 +155,7 @@ function MessageBubble({ msg }: { msg: CareerTwinMessage }) {
               : part
           )}
         </div>
-        <p className="text-[10px] text-gray-400 mt-1.5">
+        <p className="text-[10px] text-gray-700 mt-1.5">
           {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
@@ -259,14 +259,14 @@ export default function AICareerTwin() {
           <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Priority 2 · AI</p>
           <h1 className="text-lg font-black text-gray-900">AI Career Twin</h1>
           {profile?.role && (
-            <p className="text-xs text-gray-400">Personalized for {profile.role}{profile.growth_stage ? ` · ${profile.growth_stage}` : ""}</p>
+            <p className="text-xs text-gray-700">Personalized for {profile.role}{profile.growth_stage ? ` · ${profile.growth_stage}` : ""}</p>
           )}
         </div>
         <div className="flex items-center gap-2">
           <UsageMonitor featureKey="career_twin_access" compact />
           {messages.length > 0 && (
             <Button size="sm" variant="outline" onClick={clearHistory}
-              className="border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-red-600 h-7 text-xs">
+              className="border-gray-300 text-gray-800 hover:bg-gray-100 hover:text-red-600 h-7 text-xs">
               <Trash2 className="h-3 w-3 mr-1" />
               Clear
             </Button>
@@ -283,17 +283,17 @@ export default function AICareerTwin() {
                 <Crown className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-lg font-black text-gray-900">Hizorex Career Twin</h2>
-              <p className="text-sm text-gray-500 mt-1 max-w-sm">
+              <p className="text-sm text-gray-800 mt-1 max-w-sm">
                 Your AI advisor trained on executive career strategy. Ask about comp negotiation, board positioning, role decisions, or PE diligence.
               </p>
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Or start with a common question:</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700 mb-3">Or start with a common question:</p>
               <div className="space-y-2">
                 {STARTER_PROMPTS.map((prompt, i) => (
                   <button key={i} type="button" onClick={() => send(prompt)}
-                    className="w-full text-left rounded-xl border border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-gray-100 px-4 py-3 text-sm text-gray-600 hover:text-gray-900 transition-all flex items-center gap-3">
+                    className="w-full text-left rounded-xl border border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-gray-100 px-4 py-3 text-sm text-gray-800 hover:text-gray-900 transition-all flex items-center gap-3">
                     <Sparkles className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                     {prompt}
                   </button>
@@ -320,7 +320,7 @@ export default function AICareerTwin() {
             onKeyDown={handleKeyDown}
             placeholder="Ask Hizorex anything about your executive career..."
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all max-h-32 overflow-y-auto"
+            className="flex-1 resize-none rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all max-h-32 overflow-y-auto"
             style={{ fieldSizing: "content" } as React.CSSProperties}
           />
           <Button onClick={() => send()} disabled={loading || !input.trim()}
@@ -328,7 +328,7 @@ export default function AICareerTwin() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
-        <p className="text-[10px] text-gray-400 mt-2 text-center">
+        <p className="text-[10px] text-gray-700 mt-2 text-center">
           Shift+Enter for new line · Enter to send · Conversation saved locally
         </p>
       </div>

@@ -33,11 +33,11 @@ function VersionCard({ version, onView, onDelete }: {
             {version.mode}
           </span>
         </div>
-        <p className="text-xs text-gray-400">{new Date(version.created_at).toLocaleDateString()} · {version.target_company || "General"}</p>
+        <p className="text-xs text-gray-700">{new Date(version.created_at).toLocaleDateString()} · {version.target_company || "General"}</p>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <Button size="sm" variant="outline" onClick={() => onView(version)}
-          className="h-7 text-xs border-gray-300 text-gray-500 hover:bg-gray-100">
+          className="h-7 text-xs border-gray-300 text-gray-800 hover:bg-gray-100">
           <Eye className="h-3 w-3 mr-1" /> View
         </Button>
         {version.id && (
@@ -60,19 +60,19 @@ function ResumePreview({ version, onClose }: { version: ResumeVersion; onClose: 
         <div className="flex items-center justify-between border-b border-gray-200 p-5 shrink-0">
           <div>
             <p className="text-sm font-black text-gray-900">{version.version_label}</p>
-            <p className="text-xs text-gray-400">{version.mode} · {version.target_company || "General"}</p>
+            <p className="text-xs text-gray-700">{version.mode} · {version.target_company || "General"}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline"
-              className="h-7 text-xs border-gray-300 text-gray-500 hover:bg-gray-100"
+              className="h-7 text-xs border-gray-300 text-gray-800 hover:bg-gray-100"
               onClick={() => { const b = new Blob([version.content], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `${version.version_label}.txt`; a.click(); }}>
               <Download className="h-3 w-3 mr-1" /> Download
             </Button>
-            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-900 text-xl leading-none">&times;</button>
+            <button type="button" onClick={onClose} className="text-gray-700 hover:text-gray-900 text-xl leading-none">&times;</button>
           </div>
         </div>
         <div className="overflow-y-auto p-6 flex-1">
-          <pre className="text-xs text-gray-600 font-mono whitespace-pre-wrap leading-relaxed">{version.content}</pre>
+          <pre className="text-xs text-gray-800 font-mono whitespace-pre-wrap leading-relaxed">{version.content}</pre>
         </div>
       </motion.div>
     </div>
@@ -142,37 +142,37 @@ export default function ExecutiveResumeStudio() {
           <UsageMonitor featureKey="resume_builder_access" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Executive Resume Studio</h1>
-        <p className="text-sm text-gray-400 mt-1">AI-tailored resumes for every type of executive opportunity.</p>
+        <p className="text-sm text-gray-700 mt-1">AI-tailored resumes for every type of executive opportunity.</p>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
         {/* Generator */}
         <div className="lg:col-span-3 space-y-4">
           <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Select Mode</p>
+            <p className="text-xs font-black uppercase tracking-widest text-gray-800">Select Mode</p>
             <div className="grid grid-cols-2 gap-2">
               {MODES.map(mode => (
                 <button key={mode.key} type="button" onClick={() => setSelectedMode(mode.key)}
                   className={`rounded-xl border p-3 text-left transition-all ${selectedMode === mode.key ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"}`}>
                   <span className="text-xl">{mode.icon}</span>
                   <p className="text-xs font-bold text-gray-900 mt-1">{mode.label}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{mode.desc}</p>
+                  <p className="text-[10px] text-gray-700 mt-0.5">{mode.desc}</p>
                 </button>
               ))}
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Target Company (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Target Company (optional)</label>
                 <Input value={targetCompany} onChange={e => setTargetCompany(e.target.value)}
                   placeholder="e.g. Stripe, Anthropic"
-                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
               </div>
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Target Role (optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Target Role (optional)</label>
                 <Input value={targetRole} onChange={e => setTargetRole(e.target.value)}
                   placeholder="e.g. CTO, COO, Board Director"
-                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+                  className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
               </div>
             </div>
 
@@ -188,18 +188,18 @@ export default function ExecutiveResumeStudio() {
         {/* Version history */}
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-gray-400" />
-            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Saved Versions</p>
+            <FileText className="h-4 w-4 text-gray-700" />
+            <p className="text-xs font-black uppercase tracking-widest text-gray-800">Saved Versions</p>
           </div>
           {loadingVersions ? (
-            <div className="flex items-center gap-2 text-gray-400 py-6">
+            <div className="flex items-center gap-2 text-gray-700 py-6">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-xs">Loading versions...</span>
             </div>
           ) : versions.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 py-10 text-center">
-              <FileText className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-xs text-gray-400">No versions yet</p>
+              <FileText className="h-8 w-8 text-gray-700 mx-auto mb-2" />
+              <p className="text-xs text-gray-700">No versions yet</p>
             </div>
           ) : (
             <AnimatePresence>

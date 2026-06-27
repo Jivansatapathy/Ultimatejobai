@@ -32,8 +32,8 @@ function ScenarioTable({ scenario }: { scenario: EquityScenario }) {
         <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-0.5">{scenario.stage} · {scenario.vesting_years}yr vest / {scenario.cliff_months}mo cliff</p>
         <h3 className="text-xl font-black text-gray-900">{scenario.company_name}</h3>
         <div className="flex gap-4 mt-2 text-sm">
-          <span className="text-gray-500">Grant: <span className="text-gray-900 font-bold">{scenario.grant_percent}%</span></span>
-          <span className="text-gray-500">Current val: <span className="text-gray-900 font-bold">{FmtM(scenario.current_valuation)}</span></span>
+          <span className="text-gray-800">Grant: <span className="text-gray-900 font-bold">{scenario.grant_percent}%</span></span>
+          <span className="text-gray-800">Current val: <span className="text-gray-900 font-bold">{FmtM(scenario.current_valuation)}</span></span>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -41,7 +41,7 @@ function ScenarioTable({ scenario }: { scenario: EquityScenario }) {
           <thead>
             <tr className="border-b border-gray-200">
               {["Exit Scenario","Multiple","Dilution","Gross Proceeds","Net (After Tax ~30%)"].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">{h}</th>
+                <th key={h} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-700">{h}</th>
               ))}
             </tr>
           </thead>
@@ -49,8 +49,8 @@ function ScenarioTable({ scenario }: { scenario: EquityScenario }) {
             {scenario.scenarios.map((row, i) => (
               <tr key={i} className={`border-b border-gray-200/50 ${i === scenario.scenarios.length - 1 ? "bg-blue-50" : ""}`}>
                 <td className="px-4 py-3 font-semibold text-gray-900">{row.label}</td>
-                <td className="px-4 py-3 text-gray-500">{row.multiple}×</td>
-                <td className="px-4 py-3 text-gray-500">{row.dilution}%</td>
+                <td className="px-4 py-3 text-gray-800">{row.multiple}×</td>
+                <td className="px-4 py-3 text-gray-800">{row.dilution}%</td>
                 <td className="px-4 py-3 font-bold text-emerald-600">{FmtM(row.gross)}</td>
                 <td className="px-4 py-3 font-black text-gray-900">{FmtM(row.net_after_tax)}</td>
               </tr>
@@ -58,7 +58,7 @@ function ScenarioTable({ scenario }: { scenario: EquityScenario }) {
           </tbody>
         </table>
       </div>
-      <div className="p-4 bg-gray-50 text-xs text-gray-400">
+      <div className="p-4 bg-gray-50 text-xs text-gray-700">
         * Dilution estimates typical for each exit stage. Tax rate 30% assumed. Secondary sale window typically Year 5–7.
       </div>
     </motion.div>
@@ -109,45 +109,45 @@ export default function EquityCalculator() {
           <UsageMonitor featureKey="equity_calculator_access" compact />
         </div>
         <h1 className="text-2xl font-black text-gray-900 mt-0.5">Equity Calculator</h1>
-        <p className="text-sm text-gray-400 mt-1">Model your equity payout across exit scenarios.</p>
+        <p className="text-sm text-gray-700 mt-1">Model your equity payout across exit scenarios.</p>
       </div>
 
       {/* Form */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Company Name</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Company Name</label>
             <Input value={form.company_name} onChange={e => set("company_name", e.target.value)}
               placeholder="e.g. Stripe, Acme Inc"
-              className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 rounded-xl" />
+              className="bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-700 rounded-xl" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Current Stage</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Current Stage</label>
             <select value={form.stage} onChange={e => set("stage", e.target.value)}
-              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-blue-500">
+              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-blue-500">
               {STAGES.map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Equity Grant (%)</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Equity Grant (%)</label>
             <Input type="number" step="0.01" min="0.01" max="20" value={form.grant_percent}
               onChange={e => set("grant_percent", parseFloat(e.target.value) || 0)}
               className="bg-gray-100 border-gray-300 text-gray-900 rounded-xl" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Current Valuation ($)</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Current Valuation ($)</label>
             <Input type="number" step="1000000" value={form.current_valuation}
               onChange={e => set("current_valuation", parseInt(e.target.value) || 0)}
               className="bg-gray-100 border-gray-300 text-gray-900 rounded-xl" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Vesting Period (years)</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Vesting Period (years)</label>
             <Input type="number" min={1} max={6} value={form.vesting_years}
               onChange={e => set("vesting_years", parseInt(e.target.value) || 4)}
               className="bg-gray-100 border-gray-300 text-gray-900 rounded-xl" />
           </div>
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5 block">Cliff (months)</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-1.5 block">Cliff (months)</label>
             <Input type="number" min={0} max={24} value={form.cliff_months}
               onChange={e => set("cliff_months", parseInt(e.target.value) || 12)}
               className="bg-gray-100 border-gray-300 text-gray-900 rounded-xl" />
@@ -156,7 +156,7 @@ export default function EquityCalculator() {
 
         {/* Summary line */}
         <div className="rounded-xl bg-gray-50 border border-gray-300 px-4 py-3 flex justify-between items-center text-sm">
-          <span className="text-gray-500">Grant value at current val:</span>
+          <span className="text-gray-800">Grant value at current val:</span>
           <span className="font-black text-gray-900">{FmtM(form.current_valuation * form.grant_percent / 100)}</span>
         </div>
 
@@ -170,9 +170,9 @@ export default function EquityCalculator() {
 
       {!result && !loading && (
         <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-          <TrendingUp className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 font-semibold">Enter your equity grant details above</p>
-          <p className="text-xs text-gray-400 mt-1">Models 2.5× through 15× exit scenarios with typical dilution</p>
+          <TrendingUp className="h-10 w-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-700 font-semibold">Enter your equity grant details above</p>
+          <p className="text-xs text-gray-700 mt-1">Models 2.5× through 15× exit scenarios with typical dilution</p>
         </div>
       )}
     </div>

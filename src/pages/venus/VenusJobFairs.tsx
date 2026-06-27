@@ -67,7 +67,7 @@ export default function VenusJobFairs() {
   const hasFilters = !!(filters.country || filters.state || filters.city);
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

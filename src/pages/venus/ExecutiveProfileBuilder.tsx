@@ -89,7 +89,7 @@ export default function ExecutiveProfileBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6">
+    <div className="min-h-full bg-white flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
@@ -259,7 +259,7 @@ export default function ExecutiveProfileBuilder() {
               {/* Step 3 — Impact */}
               {step === 3 && (
                 <div className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-2 block">Largest P&L Managed (USD)</label>
                       <p className="text-xs text-gray-700 mb-2">Revenue or budget you owned</p>
@@ -312,7 +312,7 @@ export default function ExecutiveProfileBuilder() {
                 <div className="space-y-5">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-2">Functional Strengths <span className="text-blue-600">(required)</span></p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {STRENGTHS.map(s => (
                         <button key={s} type="button" onClick={() => toggleArr("functional_strengths", s)}
                           className={`rounded-xl border px-3 py-2.5 text-sm font-semibold text-left transition-all flex items-center gap-2 ${

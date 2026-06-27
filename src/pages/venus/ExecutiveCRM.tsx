@@ -229,7 +229,7 @@ export default function ExecutiveCRM() {
   });
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
       {editing && <ContactForm initial={editing} onSave={save} onClose={() => setEditing(null)} />}
 
       <div className="flex items-center justify-between gap-3 flex-wrap">

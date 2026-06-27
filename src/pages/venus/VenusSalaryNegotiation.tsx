@@ -283,7 +283,7 @@ export default function VenusSalaryNegotiation() {
           <p className="text-sm text-gray-800 leading-relaxed">{scenario.context}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-gray-200 bg-white p-4">
             <p className="text-[10px] text-gray-700 uppercase tracking-wider mb-1">Company</p>
             <p className="font-bold text-gray-900 text-sm">{scenario.company}</p>
@@ -452,7 +452,7 @@ export default function VenusSalaryNegotiation() {
         </div>
 
         {/* Breakdown */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {([
             { label: "Confidence", val: score.confidence, icon: Star },
             { label: "Strategy", val: score.strategy, icon: Target },

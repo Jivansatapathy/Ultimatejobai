@@ -423,26 +423,7 @@ const App = () => (
                     </Route>
                   </Route>
                   {/* Hizorex AI Executive Career OS */}
-                  <Route path="/venus" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
-                    <Route index element={<VenusDashboard />} />
-                    <Route path="profile" element={<ExecutiveProfileBuilder />} />
-                    <Route path="opportunities" element={<ExecutiveOpportunityEngine />} />
-                    <Route path="company-intel" element={<CompanyIntelligence />} />
-                    <Route path="compensation" element={<CompensationIntelligence />} />
-                    <Route path="equity" element={<EquityCalculator />} />
-                    <Route path="network" element={<NetworkingEngine />} />
-                    <Route path="branding" element={<ExecutiveBranding />} />
-                    <Route path="interview-prep" element={<ExecInterviewPrep />} />
-                    <Route path="readiness-score" element={<ExecutiveReadinessScore />} />
-                    <Route path="career-twin" element={<AICareerTwin />} />
-                    <Route path="ai-insights" element={<VenusAIInsights />} />
-                    <Route path="job-fairs" element={<VenusJobFairs />} />
-                    <Route path="salary-negotiation" element={<VenusSalaryNegotiation />} />
-                  </Route>
-
-                  {/* Hizorex embedded inline under AI Mentor — same pages, mounted at a
-                      different base path so VenusShell's nav stays within /ai-mentor/* */}
-                  <Route path="/ai-mentor/venus" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
+                  <Route path="/hizorex-os" element={<ProtectedRoute><VenusShell /></ProtectedRoute>}>
                     <Route index element={<VenusDashboard />} />
                     <Route path="profile" element={<ExecutiveProfileBuilder />} />
                     <Route path="opportunities" element={<ExecutiveOpportunityEngine />} />

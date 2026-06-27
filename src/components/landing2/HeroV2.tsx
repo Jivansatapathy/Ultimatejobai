@@ -157,7 +157,7 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
         transition={{ duration: 0.5, delay: 0.35 }}
         className="relative mx-auto max-w-5xl px-4 sm:px-6 pb-10 sm:pb-14"
       >
-        <Link to="/venus" className="group block">
+        <Link to="/hizorex-os" className="group block">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-950 via-violet-900 to-indigo-900 border border-violet-700/40 shadow-[0_8px_40px_rgba(109,40,217,0.25)] hover:shadow-[0_12px_48px_rgba(109,40,217,0.4)] transition-all duration-300">
             {/* Glow blobs */}
             <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-violet-500/20 blur-2xl" />

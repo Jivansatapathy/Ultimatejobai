@@ -51,7 +51,7 @@ export default function CareerInsights() {
   useEffect(() => {
     const nextTab = searchParams.get("tab") || "skills";
     if (nextTab === "ai-insights") {
-      navigate("/ai-mentor/venus");
+      navigate("/hizorex-os");
       return;
     }
     setActiveTab(nextTab);
@@ -291,7 +291,7 @@ export default function CareerInsights() {
                       transition={{ delay: i * 0.08 }}
                       onClick={() => {
                         if (tab === "ai-insights") {
-                          navigate("/ai-mentor/venus");
+                          navigate("/hizorex-os");
                           return;
                         }
                         setActiveTab(tab);
@@ -439,7 +439,7 @@ export default function CareerInsights() {
                   value={activeTab}
                   onValueChange={(value) => {
                     if (value === "ai-insights") {
-                      navigate("/ai-mentor/venus");
+                      navigate("/hizorex-os");
                       return;
                     }
                     setActiveTab(value);

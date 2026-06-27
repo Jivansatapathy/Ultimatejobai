@@ -143,7 +143,6 @@ export default function CandidateInbox() {
                           name: userEmail || "You",
                           role: "candidate",
                         }}
-                        readOnly
                         emptyLabel="No messages from this employer yet."
                       />
                     </div>

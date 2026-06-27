@@ -20,7 +20,7 @@ const AUTH_NAV = [
   { name: "Find Jobs",  href: "/find-jobs",  icon: Search },
   { name: "Resume",     href: "/resume",     icon: FileText },
   { name: "Interview",  href: "/interview",  icon: Users },
-  { name: "AI Mentor",  href: "/hizorex-os", icon: BrainCircuit },
+  { name: "Hizorex OS", href: "/hizorex-os", icon: BrainCircuit },
   { name: "Inbox",      href: "/inbox",      icon: Inbox },
 ];
 

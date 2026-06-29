@@ -39,6 +39,7 @@ export const parseResumeFromFile = async (file: File): Promise<Partial<Resume>> 
         const response = await api.post("/api/resumes/parse/", formData, {
             headers: { "Content-Type": null },
             transformRequest: [(data: any) => data],
+            timeout: 120000,
         });
         return response.data;
     } catch (error: any) {

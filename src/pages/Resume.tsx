@@ -140,8 +140,8 @@ export default function Resume() {
       toast.error("Only PDF files are supported. Please upload a PDF.");
       return;
     }
-    if (file.size > 200 * 1024) {
-      toast.error("Resume must be under 200KB. Please compress your PDF and try again.");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Resume must be under 5MB. Please compress your PDF and try again.");
       return;
     }
     lastUploadedFileRef.current = file;

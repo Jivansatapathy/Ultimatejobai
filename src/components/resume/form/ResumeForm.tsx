@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Plus, Trash2, GripVertical, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 
 // Reusable bullet-point editor — renders each point as its own input row
 function BulletPointEditor({
@@ -106,28 +106,12 @@ export function ResumeForm() {
         addExtracurricular,
         updateExtracurricular,
         deleteExtracurricular,
-        updateTargetJobRole,
-        updateTargetJobDescription,
-        optimizeWithAI,
-        analyzeFileATS
     } = useResume();
 
     const [newSkill, setNewSkill] = useState("");
     const [newSoftSkill, setNewSoftSkill] = useState("");
-    const [isOptimizing, setIsOptimizing] = useState(false);
 
     if (!activeResume) return null;
-
-    const handleOptimize = async () => {
-        setIsOptimizing(true);
-        try {
-            await optimizeWithAI();
-        } catch (error) {
-            console.error("Optimization failed:", error);
-        } finally {
-            setIsOptimizing(false);
-        }
-    };
 
     const handlePersonalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         updatePersonalDetails({
@@ -339,12 +323,20 @@ export function ResumeForm() {
                                             placeholder="B.S. in Computer Science"
                                         />
                                     </div>
-                                    <div className="space-y-2 col-span-2">
+                                    <div className="space-y-2">
                                         <Label>Year</Label>
                                         <Input
                                             value={edu.year}
                                             onChange={(e) => updateEducation(edu.id, { year: e.target.value })}
                                             placeholder="2020"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>GPA (Optional)</Label>
+                                        <Input
+                                            value={edu.gpa || ""}
+                                            onChange={(e) => updateEducation(edu.id, { gpa: e.target.value })}
+                                            placeholder="3.8 / 4.0"
                                         />
                                     </div>
                                 </div>
@@ -382,7 +374,7 @@ export function ResumeForm() {
                                 {Array.isArray(activeResume.skills) && activeResume.skills.map((skill, index) => (
                                     <div key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-2">
                                         {skill}
-                                        <button onClick={() => updateSkills(activeResume.skills.filter(s => s !== skill))} className="hover:text-destructive">
+                                        <button onClick={() => updateSkills(activeResume.skills.filter((_, i) => i !== index))} className="hover:text-destructive">
                                             &times;
                                         </button>
                                     </div>
@@ -410,7 +402,7 @@ export function ResumeForm() {
                                 {Array.isArray(activeResume.softSkills) && activeResume.softSkills.map((skill, index) => (
                                     <div key={index} className="bg-accent/10 text-accent px-3 py-1 rounded-full text-sm flex items-center gap-2">
                                         {skill}
-                                        <button onClick={() => updateSoftSkills(activeResume.softSkills.filter(s => s !== skill))} className="hover:text-destructive">
+                                        <button onClick={() => updateSoftSkills(activeResume.softSkills.filter((_, i) => i !== index))} className="hover:text-destructive">
                                             &times;
                                         </button>
                                     </div>

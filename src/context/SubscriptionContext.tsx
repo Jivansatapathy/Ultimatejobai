@@ -15,6 +15,7 @@ interface SubscriptionContextType {
   checkoutLoadingSlug: string | null;
   selectPlan: (planSlug: string) => Promise<SubscriptionSummary | null>;
   initiateCheckout: (planSlug: string) => Promise<void>;
+  upgradePlan: (planSlug: string) => Promise<SubscriptionSummary | null>;
   refreshPlans: () => Promise<void>;
   refreshSummary: () => Promise<void>;
   hasFeature: (featureKey: string) => boolean;
@@ -73,6 +74,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return nextSummary;
   }, [isAuthenticated]);
 
+  const upgradePlan = useCallback(async (planSlug: string) => {
+    if (!isAuthenticated) {
+      return null;
+    }
+
+    const nextSummary = await subscriptionService.upgradePlan(planSlug);
+    setSummary(nextSummary);
+    return nextSummary;
+  }, [isAuthenticated]);
+
   const initiateCheckout = useCallback(async (planSlug: string) => {
     if (!isAuthenticated) {
       return;
@@ -121,6 +132,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       checkoutLoadingSlug,
       selectPlan,
       initiateCheckout,
+      upgradePlan,
       refreshPlans,
       refreshSummary,
       hasFeature: (_featureKey: string) => true, // All features unlocked for all users

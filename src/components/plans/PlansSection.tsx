@@ -203,7 +203,7 @@ const CARD_STYLES = {
 
 export function PlansSection({ compact = false }: PlansSectionProps) {
   const { isAuthenticated } = useAuth();
-  const { plans, summary, loadingPlans, checkoutLoadingSlug, selectPlan, initiateCheckout } = useSubscription();
+  const { plans, summary, loadingPlans, checkoutLoadingSlug, selectPlan, initiateCheckout, upgradePlan } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isSelectionFlow = searchParams.get("select") === "1";
@@ -219,6 +219,8 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
     );
   };
 
+  const isOnPaidPlan = summary?.plan && !summary.plan.is_default;
+
   const handlePlanAction = async (slug: string) => {
     if (!isAuthenticated) {
       const params = new URLSearchParams({ mode: "signup", plan: slug });
@@ -228,7 +230,13 @@ export function PlansSection({ compact = false }: PlansSectionProps) {
     }
     try {
       if (isPaidPlan(slug)) {
-        await initiateCheckout(slug);
+        if (isOnPaidPlan) {
+          await upgradePlan(slug);
+          toast.success("Plan updated successfully.");
+          if (isSelectionFlow) navigate("/dashboard");
+        } else {
+          await initiateCheckout(slug);
+        }
       } else {
         await selectPlan(slug);
         toast.success("Plan updated successfully.");

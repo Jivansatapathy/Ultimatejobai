@@ -76,4 +76,9 @@ export const subscriptionService = {
     const response = await api.post("/api/subscriptions/stripe/checkout/", { plan_slug: planSlug });
     return response.data;
   },
+
+  async upgradePlan(planSlug: string): Promise<SubscriptionSummary> {
+    const response = await api.post("/api/subscriptions/stripe/upgrade/", { plan_slug: planSlug });
+    return response.data;
+  },
 };

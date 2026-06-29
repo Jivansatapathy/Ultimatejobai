@@ -88,6 +88,7 @@ export const autoApplyService = {
             daily_applied_count: number;
             target_roles: string[];
             notification_email: string;
+            job_alert_email: string;
         }>('/api/bot/daily-auto-apply/');
         return res.data;
     },
@@ -100,6 +101,7 @@ export const autoApplyService = {
             enabled: boolean;
             daily_limit: number;
             notification_email: string;
+            job_alert_email: string;
             target_roles: string[];
         }>('/api/bot/daily-auto-apply/', body);
         return res.data;

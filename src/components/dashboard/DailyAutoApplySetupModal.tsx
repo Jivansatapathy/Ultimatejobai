@@ -9,6 +9,7 @@ interface DailyAutoApplySetupModalProps {
     onOpenChange: (open: boolean) => void;
     registeredEmail: string;
     currentNotifEmail: string;
+    isEnabling?: boolean;
     onConfirm: (notifEmail: string) => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ export function DailyAutoApplySetupModal({
     onOpenChange,
     registeredEmail,
     currentNotifEmail,
+    isEnabling = false,
     onConfirm,
 }: DailyAutoApplySetupModalProps) {
     const isOther = currentNotifEmail && currentNotifEmail !== registeredEmail;
@@ -59,7 +61,7 @@ export function DailyAutoApplySetupModal({
 
                 <div className="space-y-4 py-1">
                     <p className="text-sm text-gray-500 leading-relaxed">
-                        Apex™ will send you a morning summary every time it applies to jobs on your behalf. Where should those updates go?
+                        Job alert digests and auto-apply summaries will be sent here every morning. Where should those emails go?
                     </p>
 
                     <div className="space-y-2.5">
@@ -135,7 +137,7 @@ export function DailyAutoApplySetupModal({
                         className="bg-teal-600 hover:bg-teal-700 text-white"
                     >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        {saving ? "Saving…" : "Enable Auto-Apply"}
+                        {saving ? "Saving…" : isEnabling ? "Enable Auto-Apply" : "Save"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

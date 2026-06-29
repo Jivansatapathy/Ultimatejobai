@@ -137,10 +137,12 @@ export default function Dashboard() {
     daily_applied_count: number;
     target_roles: string[];
     notification_email: string;
+    job_alert_email: string;
   } | null>(null);
   const [dailyPrefLoading, setDailyPrefLoading] = useState(true);
   const [dailyToggling, setDailyToggling] = useState(false);
   const [showDailySetupModal, setShowDailySetupModal] = useState(false);
+  const [dailySetupEnabling, setDailySetupEnabling] = useState(false);
   const [editingRole, setEditingRole] = useState(false);
   const [roleInput, setRoleInput] = useState("");
 
@@ -226,6 +228,7 @@ export default function Dashboard() {
     if (!dailyPref || dailyToggling) return;
     if (!dailyPref.enabled) {
       // Enabling: show email setup modal first
+      setDailySetupEnabling(true);
       setShowDailySetupModal(true);
       return;
     }
@@ -244,17 +247,19 @@ export default function Dashboard() {
   const handleDailySetupConfirm = useCallback(async (notifEmail: string) => {
     setDailyToggling(true);
     try {
-      const updated = await autoApplyService.setDailyAutoApplyPref(true, undefined, notifEmail);
+      const newEnabled = dailySetupEnabling ? true : (dailyPref?.enabled ?? false);
+      const updated = await autoApplyService.setDailyAutoApplyPref(newEnabled, undefined, notifEmail);
       setDailyPref(prev => prev ? {
         ...prev,
-        enabled: true,
+        enabled: newEnabled,
         notification_email: updated.notification_email ?? notifEmail,
+        job_alert_email: updated.notification_email ?? notifEmail,
         target_roles: updated.target_roles ?? prev.target_roles,
       } : prev);
     } finally {
       setDailyToggling(false);
     }
-  }, []);
+  }, [dailySetupEnabling, dailyPref?.enabled]);
 
   const saveRole = useCallback(async () => {
     if (!roleInput.trim()) return;
@@ -972,6 +977,54 @@ export default function Dashboard() {
                 )}
               </motion.div>
 
+              {/* Job Alert Emails */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-teal-500" />
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 tracking-tight">Job Alert Emails</h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Daily digest of new matching jobs</p>
+                    </div>
+                  </div>
+                </div>
+
+                {dailyPrefLoading ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-3 w-3/4 bg-gray-100 rounded" />
+                    <div className="h-2.5 w-1/2 bg-gray-100 rounded" />
+                  </div>
+                ) : (dailyPref?.target_roles?.length ?? 0) === 0 ? (
+                  <p className="text-xs text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
+                    Set a target role in your profile to receive job alerts.
+                  </p>
+                ) : (
+                  <>
+                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-3 flex items-center gap-2.5 mb-3">
+                      <Mail className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                      <p className="text-xs text-gray-700 font-medium truncate flex-1 min-w-0" title={dailyPref!.job_alert_email}>
+                        {dailyPref!.job_alert_email}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => { setDailySetupEnabling(false); setShowDailySetupModal(true); }}
+                        className="text-[10px] text-teal-600 hover:text-teal-700 font-bold shrink-0 transition-colors"
+                      >
+                        Change
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                      Hizorex sends you a morning digest of new {dailyPref!.target_roles[0]} jobs every day — just like Naukri job alerts.
+                    </p>
+                  </>
+                )}
+              </motion.div>
+
               {/* Active Plan */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -1172,6 +1225,7 @@ export default function Dashboard() {
         onOpenChange={setShowDailySetupModal}
         registeredEmail={userEmail ?? ""}
         currentNotifEmail={dailyPref?.notification_email ?? ""}
+        isEnabling={dailySetupEnabling}
         onConfirm={handleDailySetupConfirm}
       />
       <DailyGoalModal

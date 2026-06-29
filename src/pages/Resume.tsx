@@ -355,7 +355,7 @@ export default function Resume() {
                   </div>
                   <div className="space-y-3">
                     {serverResumes.map((r) => {
-                      const name = (r.structured_data as any)?.name || `Resume — ${new Date(r.created_at).toLocaleDateString()}`;
+                      const name = r.file_name ? r.file_name.replace(/\.pdf$/i, "") : `Resume — ${new Date(r.created_at).toLocaleDateString()}`;
                       const url = r.firebase_download_url || r.file;
                       return (
                         <div key={r.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 hover:border-teal-300 hover:bg-teal-50/30 transition-all">

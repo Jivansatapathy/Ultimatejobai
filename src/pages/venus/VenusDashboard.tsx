@@ -63,8 +63,7 @@ export default function VenusDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   const firstName = userEmail?.split("@")[0]?.split(".")[0] || "Executive";
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greeting = "Hello";
 
   const [profileMissing, setProfileMissing] = useState(false);
 

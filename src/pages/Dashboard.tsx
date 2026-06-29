@@ -307,7 +307,7 @@ export default function Dashboard() {
               Career Intelligence
             </p>
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
-              Good morning, {greeting}
+              Hello, {greeting}
             </h1>
           </motion.div>
 

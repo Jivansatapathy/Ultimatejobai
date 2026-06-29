@@ -91,6 +91,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         if (legacyResumes) {
             const parsedLegacy = JSON.parse(legacyResumes) as Resume[];
             localStorage.setItem(scopedKey, JSON.stringify(parsedLegacy));
+            localStorage.removeItem('resumes'); // prevent other accounts from inheriting this data
             return parsedLegacy;
         }
 

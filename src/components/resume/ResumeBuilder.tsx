@@ -180,7 +180,7 @@ export function ResumeBuilder() {
             />
 
             <div className="flex-1 overflow-hidden">
-                <ResizablePanelGroup direction="horizontal">
+                <ResizablePanelGroup direction="horizontal" className="h-full">
                     <ResizablePanel defaultSize={45}>
                         <ScrollArea className="h-full p-6">
                             <ResumeForm />

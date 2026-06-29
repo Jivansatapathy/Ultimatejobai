@@ -140,34 +140,14 @@ export function AtsOptimizationModal({
     const runAutoFix = async (toastId: string | number): Promise<void> => {
         if (!activeResume) return;
 
-        const response = await api.post("/api/resumes/career-advice/", {
-            offer_text: `Act as an Elite Technical Recruiter and ATS Systems Architect. 
-            YOUR TASK: ENHANCE the provided resume to ACHIEVE A 90%+ ATS MATCH SCORE.
-            TARGET ROLE: '${targetRole}'.
-            TARGET DESCRIPTION: ${jobDescription}.
-            USER LOCATION: ${userLocation}.
-            
-            OPTIMIZATION COMMANDS:
-            1. NO DELETIONS: RETAIN ALL existing experience and education details.
-            2. SKILLS OPTIMIZATION: Do NOT just add skills. MERGE, DEDUPLICATE, and PRIORITIZE. Remove redundant or low-impact skills. Keep the list focused on the Target Role.
-            3. AGGRESSIVE EXPANSION: Identify missing keywords in the Job Description and seamlessly add them to existing bullet points.
-            4. QUANTIFICATION: Every single bullet point MUST have a numerical impact.
-            5. NO MARKDOWN: DO NOT use bolding or italics.
-            6. OMIT SCORE: Do not include a "score" or "suggestions" field in your JSON.
-            
-            IMPORTANT: Return ONLY the JSON object. No conversation.`,
-            resume_text: JSON.stringify(activeResume)
-        });
+        const response = await api.post("/api/resumes/optimize/", {
+            resume: activeResume,
+            target_role: targetRole,
+            job_description: jobDescription,
+            location: userLocation,
+        }, { timeout: 120000 });
 
-        const rawText = response.data.advice;
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-
-        if (!jsonMatch) {
-            throw new Error("No JSON structure found in AI response");
-        }
-
-        const cleanJson = jsonMatch[0].replace(/```json/g, '').replace(/```/g, '');
-        const fixedData: Resume = JSON.parse(cleanJson);
+        const fixedData: Resume = response.data;
 
         // Remove hallucinatory fields
         delete (fixedData as any).score;

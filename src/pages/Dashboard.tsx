@@ -1007,8 +1007,8 @@ export default function Dashboard() {
                   <>
                     <div className="bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-3 flex items-center gap-2.5 mb-3">
                       <Mail className="h-3.5 w-3.5 text-teal-500 shrink-0" />
-                      <p className="text-xs text-gray-700 font-medium truncate flex-1 min-w-0" title={dailyPref!.job_alert_email}>
-                        {dailyPref!.job_alert_email}
+                      <p className="text-xs text-gray-700 font-medium truncate flex-1 min-w-0" title={dailyPref!.job_alert_email || userEmail || ""}>
+                        {dailyPref!.job_alert_email || userEmail}
                       </p>
                       <button
                         type="button"

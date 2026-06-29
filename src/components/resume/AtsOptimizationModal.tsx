@@ -153,27 +153,35 @@ export function AtsOptimizationModal({
         delete (fixedData as any).score;
         delete (fixedData as any).suggestions;
 
-        // Robust sanitization
-        const ensureArray = (val: any) => Array.isArray(val) ? val : (typeof val === 'string' ? [val] : []);
+        // Robust sanitization — always produce arrays so .map() never crashes
+        const ensureArray = (val: any): any[] => Array.isArray(val) ? val : (typeof val === 'string' ? [val] : []);
         fixedData.personalDetails = fixedData.personalDetails || activeResume.personalDetails;
         fixedData.summary = fixedData.summary || activeResume.summary;
-        fixedData.skills = ensureArray(fixedData.skills || activeResume.skills);
-        fixedData.softSkills = ensureArray(fixedData.softSkills || activeResume.softSkills);
-        fixedData.experience = (fixedData.experience || activeResume.experience).map((exp: any) => ({
+        fixedData.skills = ensureArray(fixedData.skills ?? activeResume.skills);
+        fixedData.softSkills = ensureArray(fixedData.softSkills ?? activeResume.softSkills);
+        fixedData.experience = ensureArray(fixedData.experience ?? activeResume.experience).map((exp: any) => ({
             ...exp,
             id: exp.id || Math.random().toString(36).substr(2, 9),
             description: ensureArray(exp.description)
         }));
-        fixedData.education = (fixedData.education || activeResume.education).map((edu: any) => ({
+        fixedData.education = ensureArray(fixedData.education ?? activeResume.education).map((edu: any) => ({
             ...edu,
             id: edu.id || Math.random().toString(36).substr(2, 9)
         }));
-        fixedData.projects = (fixedData.projects || activeResume.projects).map((proj: any) => ({
+        fixedData.projects = ensureArray(fixedData.projects ?? activeResume.projects).map((proj: any) => ({
             ...proj,
             id: proj.id || Math.random().toString(36).substr(2, 9),
             description: ensureArray(proj.description)
         }));
-        fixedData.certifications = ensureArray(fixedData.certifications || activeResume.certifications);
+        fixedData.certifications = ensureArray(fixedData.certifications ?? activeResume.certifications).map((cert: any) => ({
+            ...cert,
+            id: cert.id || Math.random().toString(36).substr(2, 9)
+        }));
+        fixedData.extracurricularActivities = ensureArray(fixedData.extracurricularActivities ?? activeResume.extracurricularActivities).map((act: any) => ({
+            ...act,
+            id: act.id || Math.random().toString(36).substr(2, 9),
+            description: ensureArray(act.description)
+        }));
 
         // Apply sanitized data
         updateActiveResume(() => ({

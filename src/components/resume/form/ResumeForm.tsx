@@ -247,7 +247,7 @@ export function ResumeForm() {
                 <AccordionItem value="experience">
                     <AccordionTrigger>Experience</AccordionTrigger>
                     <AccordionContent className="space-y-4">
-                        {activeResume.experience.map((exp) => (
+                        {(activeResume.experience || []).map((exp) => (
                             <div key={exp.id} className="p-4 border rounded-lg space-y-4 relative group">
                                 <Button
                                     variant="ghost"
@@ -312,7 +312,7 @@ export function ResumeForm() {
                 <AccordionItem value="education">
                     <AccordionTrigger>Education</AccordionTrigger>
                     <AccordionContent className="space-y-4">
-                        {activeResume.education.map((edu) => (
+                        {(activeResume.education || []).map((edu) => (
                             <div key={edu.id} className="p-4 border rounded-lg space-y-4 relative group">
                                 <Button
                                     variant="ghost"
@@ -424,7 +424,7 @@ export function ResumeForm() {
                 <AccordionItem value="projects">
                     <AccordionTrigger>Projects</AccordionTrigger>
                     <AccordionContent className="space-y-4">
-                        {activeResume.projects.map((proj) => (
+                        {(activeResume.projects || []).map((proj) => (
                             <div key={proj.id} className="p-4 border rounded-lg space-y-4 relative group">
                                 <Button
                                     variant="ghost"
@@ -480,7 +480,7 @@ export function ResumeForm() {
                 <AccordionItem value="certifications">
                     <AccordionTrigger>Certifications</AccordionTrigger>
                     <AccordionContent className="space-y-4">
-                        {activeResume.certifications.map((cert) => (
+                        {(activeResume.certifications || []).map((cert) => (
                             <div key={cert.id} className="p-4 border rounded-lg space-y-4 relative group">
                                 <Button
                                     variant="ghost"
@@ -536,7 +536,7 @@ export function ResumeForm() {
                 <AccordionItem value="extracurriculars">
                     <AccordionTrigger>Extracurricular Activities</AccordionTrigger>
                     <AccordionContent className="space-y-4">
-                        {activeResume.extracurricularActivities.map((act) => (
+                        {(activeResume.extracurricularActivities || []).map((act) => (
                             <div key={act.id} className="p-4 border rounded-lg space-y-4 relative group">
                                 <Button
                                     variant="ghost"

@@ -18,6 +18,7 @@ import {
   Building2,
   ExternalLink,
   Repeat2,
+  Pencil,
 } from "lucide-react";
 
 import { autoApplyService, ApplicationHistoryItem } from "@/services/autoApplyService";
@@ -28,6 +29,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ActivityDetailsDialog } from "@/components/dashboard/ActivityDetailsDialog";
 import { AutoApplySettingsSheet } from "@/components/dashboard/AutoApplySettingsSheet";
 import { DailyGoalModal } from "@/components/dashboard/DailyGoalModal";
+import { DailyAutoApplySetupModal } from "@/components/dashboard/DailyAutoApplySetupModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import { activityService } from "@/services/activityService";
 import { careerService } from "@/services/careerService";
@@ -134,9 +136,15 @@ export default function Dashboard() {
     daily_limit: number;
     daily_applied_count: number;
     target_roles: string[];
+    notification_email: string;
+    job_alert_email: string;
   } | null>(null);
   const [dailyPrefLoading, setDailyPrefLoading] = useState(true);
   const [dailyToggling, setDailyToggling] = useState(false);
+  const [showDailySetupModal, setShowDailySetupModal] = useState(false);
+  const [dailySetupEnabling, setDailySetupEnabling] = useState(false);
+  const [editingRole, setEditingRole] = useState(false);
+  const [roleInput, setRoleInput] = useState("");
 
   const daysSince = (app: ApplicationHistoryItem) => {
     const date = app.sent_at || app.created_at;
@@ -218,16 +226,51 @@ export default function Dashboard() {
 
   const toggleDailyAutoApply = useCallback(async () => {
     if (!dailyPref || dailyToggling) return;
+    if (!dailyPref.enabled) {
+      // Enabling: show email setup modal first
+      setDailySetupEnabling(true);
+      setShowDailySetupModal(true);
+      return;
+    }
+    // Disabling: no modal needed
     setDailyToggling(true);
     try {
-      const updated = await autoApplyService.setDailyAutoApplyPref(!dailyPref.enabled);
-      setDailyPref(prev => prev ? { ...prev, enabled: updated.enabled } : prev);
+      const updated = await autoApplyService.setDailyAutoApplyPref(false);
+      setDailyPref(prev => prev ? { ...prev, enabled: false } : prev);
     } catch {
       // non-fatal
     } finally {
       setDailyToggling(false);
     }
   }, [dailyPref, dailyToggling]);
+
+  const handleDailySetupConfirm = useCallback(async (notifEmail: string) => {
+    setDailyToggling(true);
+    try {
+      const newEnabled = dailySetupEnabling ? true : (dailyPref?.enabled ?? false);
+      const updated = await autoApplyService.setDailyAutoApplyPref(newEnabled, undefined, notifEmail);
+      setDailyPref(prev => prev ? {
+        ...prev,
+        enabled: newEnabled,
+        notification_email: updated.notification_email ?? notifEmail,
+        job_alert_email: updated.notification_email ?? notifEmail,
+        target_roles: updated.target_roles ?? prev.target_roles,
+      } : prev);
+    } finally {
+      setDailyToggling(false);
+    }
+  }, [dailySetupEnabling, dailyPref?.enabled]);
+
+  const saveRole = useCallback(async () => {
+    if (!roleInput.trim()) return;
+    try {
+      await careerService.updateProfile({ target_roles: [roleInput.trim()] });
+      setDailyPref(prev => prev ? { ...prev, target_roles: [roleInput.trim()] } : prev);
+      setEditingRole(false);
+    } catch {
+      // non-fatal
+    }
+  }, [roleInput]);
 
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { loadApplications(); }, [loadApplications]);
@@ -307,7 +350,7 @@ export default function Dashboard() {
               Career Intelligence
             </p>
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
-              Good morning, {greeting}
+              Hello, {greeting}
             </h1>
           </motion.div>
 
@@ -802,6 +845,11 @@ export default function Dashboard() {
                     <div>
                       <h3 className="text-base font-bold text-gray-900 tracking-tight">Daily Auto-Apply</h3>
                       <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Bot applies 5 jobs for you every day</p>
+                      {dailyPref?.enabled && dailyPref.notification_email && (
+                        <p className="text-[10px] text-teal-600 font-medium mt-0.5 truncate max-w-[180px]" title={dailyPref.notification_email}>
+                          Updates → {dailyPref.notification_email}
+                        </p>
+                      )}
                     </div>
                   </div>
                   {/* Toggle */}
@@ -831,17 +879,66 @@ export default function Dashboard() {
                   <>
                     {/* Target roles */}
                     {(dailyPref?.target_roles?.length ?? 0) > 0 ? (
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {dailyPref!.target_roles.slice(0, 3).map(role => (
-                          <span key={role} className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 border border-gray-200 text-gray-600 px-2.5 py-1 rounded-full truncate max-w-[140px]">
-                            {role}
-                          </span>
-                        ))}
+                      <div className="mb-4">
+                        {editingRole ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={roleInput}
+                              onChange={e => setRoleInput(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter") saveRole(); if (e.key === "Escape") setEditingRole(false); }}
+                              placeholder="e.g. Software Engineer"
+                              autoFocus
+                              className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-400"
+                            />
+                            <button type="button" onClick={saveRole} className="text-xs font-bold text-teal-600 hover:text-teal-700 shrink-0">Save</button>
+                            <button type="button" onClick={() => setEditingRole(false)} className="text-xs text-gray-400 hover:text-gray-600 shrink-0">Cancel</button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            {dailyPref!.target_roles.slice(0, 3).map(role => (
+                              <span key={role} className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 border border-gray-200 text-gray-600 px-2.5 py-1 rounded-full truncate max-w-[130px]">
+                                {role}
+                              </span>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => { setRoleInput(dailyPref!.target_roles[0] || ""); setEditingRole(true); }}
+                              className="flex items-center gap-0.5 text-[10px] text-gray-400 hover:text-teal-600 transition-colors font-medium"
+                              title="Edit target role"
+                            >
+                              <Pencil className="h-2.5 w-2.5" />Edit
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <p className="text-xs text-amber-600 font-semibold mb-4 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
-                        Set a target role in your profile to enable daily apply.
-                      </p>
+                      <div className="mb-4">
+                        <p className="text-xs text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl mb-2">
+                          Set a target role to enable daily apply.
+                        </p>
+                        {editingRole ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={roleInput}
+                              onChange={e => setRoleInput(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter") saveRole(); if (e.key === "Escape") setEditingRole(false); }}
+                              placeholder="e.g. Software Engineer"
+                              autoFocus
+                              className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-400"
+                            />
+                            <button type="button" onClick={saveRole} className="text-xs font-bold text-teal-600 hover:text-teal-700 shrink-0">Save</button>
+                            <button type="button" onClick={() => setEditingRole(false)} className="text-xs text-gray-400 hover:text-gray-600 shrink-0">Cancel</button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setRoleInput(""); setEditingRole(true); }}
+                            className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 font-semibold transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" /> Add Target Role
+                          </button>
+                        )}
+                      </div>
                     )}
 
                     {/* Today's progress */}
@@ -876,6 +973,54 @@ export default function Dashboard() {
                         Toggle on to let Apex™ apply to new jobs every morning — completely hands-free.
                       </p>
                     )}
+                  </>
+                )}
+              </motion.div>
+
+              {/* Job Alert Emails */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-teal-500" />
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 tracking-tight">Job Alert Emails</h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5 font-medium">Daily digest of new matching jobs</p>
+                    </div>
+                  </div>
+                </div>
+
+                {dailyPrefLoading ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-3 w-3/4 bg-gray-100 rounded" />
+                    <div className="h-2.5 w-1/2 bg-gray-100 rounded" />
+                  </div>
+                ) : (dailyPref?.target_roles?.length ?? 0) === 0 ? (
+                  <p className="text-xs text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
+                    Set a target role in your profile to receive job alerts.
+                  </p>
+                ) : (
+                  <>
+                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-3 flex items-center gap-2.5 mb-3">
+                      <Mail className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                      <p className="text-xs text-gray-700 font-medium truncate flex-1 min-w-0" title={dailyPref!.job_alert_email || userEmail || ""}>
+                        {dailyPref!.job_alert_email || userEmail}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => { setDailySetupEnabling(false); setShowDailySetupModal(true); }}
+                        className="text-[10px] text-teal-600 hover:text-teal-700 font-bold shrink-0 transition-colors"
+                      >
+                        Change
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                      Hizorex sends you a morning digest of new {dailyPref!.target_roles[0]} jobs every day — just like Naukri job alerts.
+                    </p>
                   </>
                 )}
               </motion.div>
@@ -1075,6 +1220,14 @@ export default function Dashboard() {
         {showActivityDetails && <ActivityDetailsDialog open={showActivityDetails} onOpenChange={setShowActivityDetails} />}
       </AnimatePresence>
       <AutoApplySettingsSheet open={showAutoApply} onOpenChange={setShowAutoApply} />
+      <DailyAutoApplySetupModal
+        open={showDailySetupModal}
+        onOpenChange={setShowDailySetupModal}
+        registeredEmail={userEmail ?? ""}
+        currentNotifEmail={dailyPref?.notification_email ?? ""}
+        isEnabling={dailySetupEnabling}
+        onConfirm={handleDailySetupConfirm}
+      />
       <DailyGoalModal
         currentCount={dashboardStats.daily_applied_count}
         targetCount={dashboardStats.daily_goal_target}

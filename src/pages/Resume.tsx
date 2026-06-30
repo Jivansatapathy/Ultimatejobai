@@ -140,8 +140,8 @@ export default function Resume() {
       toast.error("Only PDF files are supported. Please upload a PDF.");
       return;
     }
-    if (file.size > 200 * 1024) {
-      toast.error("Resume must be under 200KB. Please compress your PDF and try again.");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Resume must be under 5MB. Please compress your PDF and try again.");
       return;
     }
     lastUploadedFileRef.current = file;
@@ -488,9 +488,9 @@ export default function Resume() {
                       <SelectTrigger className="w-full bg-white border-gray-200 text-gray-900 h-9">
                         <SelectValue placeholder="Choose a resume..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
+                      <SelectContent className="bg-white border-gray-200 text-gray-900">
                         {resumes.map((resume) => (
-                          <SelectItem key={resume.id} value={resume.id} className="text-sm text-gray-900 focus:bg-teal-50">
+                          <SelectItem key={resume.id} value={resume.id} className="text-sm text-gray-900 focus:bg-teal-50 focus:text-gray-900">
                             {resume.personalDetails.fullName || `Untitled Resume (${resume.id.slice(0, 4)})`}
                           </SelectItem>
                         ))}

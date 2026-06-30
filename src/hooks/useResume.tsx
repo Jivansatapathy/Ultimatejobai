@@ -91,6 +91,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         if (legacyResumes) {
             const parsedLegacy = JSON.parse(legacyResumes) as Resume[];
             localStorage.setItem(scopedKey, JSON.stringify(parsedLegacy));
+            localStorage.removeItem('resumes'); // prevent other accounts from inheriting this data
             return parsedLegacy;
         }
 
@@ -140,7 +141,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
     const createNewResume = () => {
         const newResume = { ...initialResume, id: uuidv4(), lastEdited: new Date().toISOString() };
+        const updatedResumes = [...resumes, newResume];
+        setResumes(updatedResumes);
         setActiveResume(newResume);
+        saveToLocalStorage(updatedResumes);
         return newResume.id;
     };
 
@@ -442,11 +446,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         try {
             const analysis = await analyzeResume(activeResume, activeResume.targetJobDescription);
 
+            const rawScore = analysis.score || 0;
+            const normalizedScore = rawScore <= 1 && rawScore > 0 ? Math.round(rawScore * 100) : Math.round(rawScore);
             updateActiveResume((prev) => ({
                 ...prev,
-                score: analysis.score,
+                score: normalizedScore,
                 detailedScores: [
-                    { name: 'ATS Match', score: analysis.score, status: (analysis.score > 80 ? 'excellent' : 'good') as "excellent" | "good" | "warning" },
+                    { name: 'ATS Match', score: normalizedScore, status: (normalizedScore > 80 ? 'excellent' : 'good') as "excellent" | "good" | "warning" },
                     { name: 'Formatting', score: analysis.formattingScore, status: (analysis.formattingScore > 80 ? 'excellent' : 'good') as "excellent" | "good" | "warning" }
                 ],
                 suggestions: [

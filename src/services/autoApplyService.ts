@@ -87,17 +87,23 @@ export const autoApplyService = {
             daily_limit: number;
             daily_applied_count: number;
             target_roles: string[];
+            notification_email: string;
+            job_alert_email: string;
         }>('/api/bot/daily-auto-apply/');
         return res.data;
     },
 
-    async setDailyAutoApplyPref(enabled: boolean, daily_limit?: number) {
+    async setDailyAutoApplyPref(enabled: boolean, daily_limit?: number, notification_email?: string) {
         const body: Record<string, unknown> = { enabled };
         if (daily_limit !== undefined) body.daily_limit = daily_limit;
-        const res = await api.patch<{ enabled: boolean; daily_limit: number }>(
-            '/api/bot/daily-auto-apply/',
-            body,
-        );
+        if (notification_email !== undefined) body.notification_email = notification_email;
+        const res = await api.patch<{
+            enabled: boolean;
+            daily_limit: number;
+            notification_email: string;
+            job_alert_email: string;
+            target_roles: string[];
+        }>('/api/bot/daily-auto-apply/', body);
         return res.data;
     },
 };

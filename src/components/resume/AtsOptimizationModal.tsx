@@ -60,7 +60,7 @@ export function AtsOptimizationModal({
         const syncWithProfile = async () => {
             try {
                 const profile = await careerService.getProfile();
-                if (profile?.target_roles?.length > 0 && !targetRole) {
+                if (profile?.target_roles?.length > 0 && !activeResume?.targetJobRole) {
                     setTargetRole(profile.target_roles[0]);
                 }
             } catch (err) {
@@ -137,7 +137,7 @@ export function AtsOptimizationModal({
     };
 
     // Core AI rewrite logic — shared by both handleAutoFix and handleApplyAndOpenEditor
-    const runAutoFix = async (toastId: string | number): Promise<void> => {
+    const runAutoFix = async (toastId: string | number): Promise<number> => {
         if (!activeResume) return;
 
         const response = await api.post("/api/resumes/optimize/", {
@@ -205,6 +205,7 @@ export function AtsOptimizationModal({
                 return { type: 'improvement', text: text.replace(/\*\*|\*|__/g, '') };
             })
         }));
+        return normalizedScore;
     };
 
     const handleAutoFix = async () => {
@@ -212,9 +213,8 @@ export function AtsOptimizationModal({
         setIsFixing(true);
         const toastId = toast.loading("AI is rewriting your resume for maximum impact...");
         try {
-            await runAutoFix(toastId);
-            const currentScore = score;
-            if (currentScore >= 90) {
+            const newScore = await runAutoFix(toastId);
+            if (newScore >= 90) {
                 toast.success("Elite Grade Achieved!", { id: toastId });
             } else {
                 toast.info(`Score updated! Review the new suggestions.`, { id: toastId });

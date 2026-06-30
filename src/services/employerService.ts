@@ -342,20 +342,12 @@ export async function createCompanyReview(
 }
 
 // ─── LinkedIn Employer Auth ─────────────────────────────────────
+// The OAuth code exchange happens entirely server-side: this just gets the
+// LinkedIn authorization URL to redirect to. The backend's callback view
+// then redirects back to /employer/auth with the issued tokens as query
+// params — there is no separate "complete" call from the frontend.
 export async function initiateEmployerLinkedInAuth() {
-  const response = await api.get<{ auth_url: string }>("/api/employer/auth/linkedin/");
-  return response.data;
-}
-
-export async function completeEmployerLinkedInAuth(code: string, state: string) {
-  const response = await api.post<{
-    access: string;
-    refresh: string;
-    is_admin: boolean;
-    email: string;
-    role: string;
-    company_name: string;
-  }>("/api/employer/auth/linkedin/callback/", { code, state });
+  const response = await api.get<{ auth_url: string }>("/api/auth/employer/linkedin/init/");
   return response.data;
 }
 

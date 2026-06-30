@@ -10,7 +10,7 @@ import { useSubscription } from "@/context/SubscriptionContext";
 import { getApiErrorMessage, isPlanLimitError } from "@/lib/utils";
 
 const CONTENT_TYPES = [
-  { key: "linkedin_post", label: "LinkedIn Post", icon: MessageSquare, desc: "Thought leadership, 150–300 words" },
+  { key: "linkedin_post", label: "Share it On LinkedIn Post", icon: MessageSquare, desc: "Thought leadership, 150–300 words" },
   { key: "thought_leadership", label: "Article", icon: BookOpen, desc: "Long-form, 600–1200 words" },
   { key: "video_script", label: "Video Script", icon: Video, desc: "2–4 min talking points" },
   { key: "board_bio", label: "Board Bio", icon: PenLine, desc: "50–80 word exec bio" },

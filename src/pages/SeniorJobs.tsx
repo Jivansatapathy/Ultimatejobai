@@ -928,7 +928,7 @@ export default function FindJobs() {
         </FilterSection>
 
         {/* Seniority */}
-        <FilterSection title="Seniority Level" icon={Crown}>
+        <FilterSection title="Role" icon={Crown}>
           <div className="grid grid-cols-3 gap-1.5">
             {(["C-Suite", "VP", "Director"] as const).map((s) => {
               const SIcon = SENIORITY_ICONS[s];

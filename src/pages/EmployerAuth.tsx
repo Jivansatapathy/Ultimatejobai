@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { sanitizeString, sanitizeEmail } from "@/lib/sanitization";
-import { acceptEmployerInvite, completeEmployerLinkedInAuth, getEmployerInvitePreview, initiateEmployerLinkedInAuth, registerEmployerAccount } from "@/services/employerService";
+import { acceptEmployerInvite, getEmployerInvitePreview, initiateEmployerLinkedInAuth, registerEmployerAccount } from "@/services/employerService";
 import { auth } from "@/lib/firebase";
 
 const features = [
@@ -137,28 +137,30 @@ export default function EmployerAuth() {
   const normalizedDisplayName = sanitizeString(form.displayName, 100);
   const normalizedCompanyName = sanitizeString(form.companyName, 100);
 
-  // Handle LinkedIn OAuth callback
+  // Handle LinkedIn OAuth redirect back from the backend. The code/token
+  // exchange already happened server-side — this page just receives the
+  // issued JWTs (or an error) as query params.
   useEffect(() => {
-    const linkedinCode = searchParams.get("code");
-    const linkedinState = searchParams.get("state");
-    if (!linkedinCode || !linkedinState) {
+    const linkedinError = searchParams.get("error");
+    const access = searchParams.get("access");
+    const refresh = searchParams.get("refresh");
+    const isAdmin = searchParams.get("is_admin") === "true";
+    const email = searchParams.get("email");
+    const role = searchParams.get("role");
+    const companyName = searchParams.get("company_name");
+    if (!linkedinError && !(access && refresh)) {
       return;
     }
     setSearchParams({}, { replace: true });
-    const handleLinkedInCallback = async () => {
-      setLinkedInLoading(true);
-      try {
-        const response = await completeEmployerLinkedInAuth(linkedinCode, linkedinState);
-        login(response.access, response.refresh, response.is_admin, response.email, response.role, response.company_name);
-        toast.success("Signed in with LinkedIn successfully.");
-        navigate(nextPath, { replace: true });
-      } catch (error: any) {
-        toast.error(getErrorMessage(error, "LinkedIn authentication failed. Please try again."));
-      } finally {
-        setLinkedInLoading(false);
-      }
-    };
-    handleLinkedInCallback();
+
+    if (linkedinError) {
+      toast.error("LinkedIn authentication failed. Please try again.");
+      return;
+    }
+
+    login(access!, refresh!, isAdmin, email, role, companyName);
+    toast.success("Signed in with LinkedIn successfully.");
+    navigate(nextPath, { replace: true });
   }, [searchParams]);
 
   useEffect(() => {

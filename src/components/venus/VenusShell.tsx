@@ -24,7 +24,7 @@ function getNav(base: string) {
     { label: "Opportunities",      href: `${base}/opportunities`,         icon: Star },
     { label: "Company Intel",      href: `${base}/company-intel`,         icon: Building2 },
     { label: "Compensation",       href: `${base}/compensation`,          icon: DollarSign },
-    { label: "Equity Calc",        href: `${base}/equity`,                icon: TrendingUp },
+    { label: "Equity Calculator",        href: `${base}/equity`,                icon: TrendingUp },
     { label: "Network",            href: `${base}/network`,               icon: Network },
     { label: "Branding",           href: `${base}/branding`,              icon: Megaphone },
     { label: "Interview Prep",     href: `${base}/interview-prep`,        icon: Mic },

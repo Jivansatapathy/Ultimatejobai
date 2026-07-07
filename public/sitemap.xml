@@ -64,6 +64,37 @@
   <url><loc>https://ultimatejobai.vercel.app/fractional/cpo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
   <url><loc>https://ultimatejobai.vercel.app/fractional/clo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
 
+  <!-- Startup roles hub + individual pages -->
+  <url><loc>https://ultimatejobai.vercel.app/startup</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/ceo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/cto</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/cfo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/coo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/cmo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/cro</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/founding-engineer</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/startup-advisor</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/startup/co-founder</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+
+  <!-- Board roles hub + individual pages -->
+  <url><loc>https://ultimatejobai.vercel.app/board</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/board/board-member</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/board/board-chair</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/board/independent-director</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/board/board-advisor</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/board/audit-committee-chair</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Investor roles hub + individual pages -->
+  <url><loc>https://ultimatejobai.vercel.app/investors</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/managing-partner</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/general-partner</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/venture-partner</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/operating-partner</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/portfolio-ceo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/portfolio-cfo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/private-equity-principal</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/investors/growth-equity-partner</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
   <!-- Static pages -->
   <url><loc>https://ultimatejobai.vercel.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://ultimatejobai.vercel.app/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>

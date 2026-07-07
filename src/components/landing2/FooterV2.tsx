@@ -18,6 +18,21 @@ const LINKS = {
     { label: "Fractional COO", href: "/fractional/coo" },
     { label: "All Fractional Roles", href: "/fractional" },
   ],
+  "Startup & Board": [
+    { label: "Startup CEO", href: "/startup/ceo" },
+    { label: "Startup CTO", href: "/startup/cto" },
+    { label: "Co-Founder", href: "/startup/co-founder" },
+    { label: "Board Member", href: "/board/board-member" },
+    { label: "Independent Director", href: "/board/independent-director" },
+    { label: "All Startup Roles", href: "/startup" },
+  ],
+  "Investors": [
+    { label: "Managing Partner", href: "/investors/managing-partner" },
+    { label: "General Partner", href: "/investors/general-partner" },
+    { label: "Operating Partner", href: "/investors/operating-partner" },
+    { label: "Portfolio CEO", href: "/investors/portfolio-ceo" },
+    { label: "All Investor Roles", href: "/investors" },
+  ],
   "Platform": [
     { label: "Browse Executive Jobs", href: "/find-jobs" },
     { label: "How It Works", href: "/v2#how-it-works" },
@@ -36,9 +51,9 @@ const LINKS = {
 export const FooterV2 = () => (
   <footer className="bg-gray-900 text-white">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8">
         {/* Brand col */}
-        <div className="col-span-2 md:col-span-1">
+        <div className="col-span-2 lg:col-span-1">
           <Link to="/" className="flex items-center gap-2.5 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
               <Bot className="h-4 w-4 text-white" />

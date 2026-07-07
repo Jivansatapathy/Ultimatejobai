@@ -63,6 +63,12 @@ const ExecutiveRolesHub = lazy(() => import("./pages/ExecutiveRolesHub"));
 const ExecutiveRolePage = lazy(() => import("./pages/ExecutiveRolePage"));
 const FractionalHub = lazy(() => import("./pages/FractionalHub"));
 const FractionalRolePage = lazy(() => import("./pages/FractionalRolePage"));
+const StartupHub = lazy(() => import("./pages/StartupHub"));
+const StartupRolePage = lazy(() => import("./pages/StartupRolePage"));
+const BoardHub = lazy(() => import("./pages/BoardHub"));
+const BoardRolePage = lazy(() => import("./pages/BoardRolePage"));
+const InvestorHub = lazy(() => import("./pages/InvestorHub"));
+const InvestorRolePage = lazy(() => import("./pages/InvestorRolePage"));
 const BookACall = lazy(() => import("./pages/BookACall"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Plans = lazy(() => import("./pages/Plans"));
@@ -342,6 +348,12 @@ const App = () => (
                   <Route path="/executive-roles/:role" element={<ExecutiveRolePage />} />
                   <Route path="/fractional" element={<FractionalHub />} />
                   <Route path="/fractional/:role" element={<FractionalRolePage />} />
+                  <Route path="/startup" element={<StartupHub />} />
+                  <Route path="/startup/:role" element={<StartupRolePage />} />
+                  <Route path="/board" element={<BoardHub />} />
+                  <Route path="/board/:role" element={<BoardRolePage />} />
+                  <Route path="/investors" element={<InvestorHub />} />
+                  <Route path="/investors/:role" element={<InvestorRolePage />} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
                   <Route path="/inbox" element={<CandidateRoute><CandidateInbox /></CandidateRoute>} />

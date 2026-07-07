@@ -29,6 +29,31 @@ const FRACTIONAL_MENU = [
   { label: "Browse All Fractional →", href: "/fractional", bold: true },
 ];
 
+const STARTUP_MENU = [
+  { label: "Startup CEO", href: "/startup/ceo" },
+  { label: "Startup CTO", href: "/startup/cto" },
+  { label: "Co-Founder", href: "/startup/co-founder" },
+  { label: "Founding Engineer", href: "/startup/founding-engineer" },
+  { label: "Startup CFO", href: "/startup/cfo" },
+  { label: "Browse All Startup →", href: "/startup", bold: true },
+];
+
+const BOARD_MENU = [
+  { label: "Board Member", href: "/board/board-member" },
+  { label: "Board Chair", href: "/board/board-chair" },
+  { label: "Independent Director", href: "/board/independent-director" },
+  { label: "Board Advisor", href: "/board/board-advisor" },
+  { label: "Browse All Board Roles →", href: "/board", bold: true },
+];
+
+const INVESTOR_MENU = [
+  { label: "Managing Partner", href: "/investors/managing-partner" },
+  { label: "General Partner", href: "/investors/general-partner" },
+  { label: "Operating Partner", href: "/investors/operating-partner" },
+  { label: "Portfolio CEO", href: "/investors/portfolio-ceo" },
+  { label: "Browse All Investor Roles →", href: "/investors", bold: true },
+];
+
 const AUTH_NAV = [
   { name: "Dashboard", href: "/dashboard",  icon: LayoutDashboard },
   { name: "Find Jobs",  href: "/find-jobs",  icon: Search },
@@ -47,6 +72,9 @@ export const NavbarV2 = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [fracOpen, setFracOpen] = useState(false);
+  const [startupOpen, setStartupOpen] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [investorOpen, setInvestorOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { isAuthenticated, logout, userEmail } = useAuth();
   const { pathname } = useLocation();
@@ -149,7 +177,7 @@ export const NavbarV2 = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => { setFracOpen(!fracOpen); setCatOpen(false); }}
+                      onClick={() => { setFracOpen(!fracOpen); setCatOpen(false); setStartupOpen(false); setBoardOpen(false); setInvestorOpen(false); }}
                       className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
                     >
                       Fractional <ChevronDown className="h-3.5 w-3.5" />
@@ -163,6 +191,96 @@ export const NavbarV2 = () => {
                             to={c.href}
                             onClick={() => setFracOpen(false)}
                             className={`block px-4 py-2.5 text-sm hover:bg-violet-50 hover:text-violet-700 transition-colors ${c.bold ? "font-bold text-violet-600" : "text-gray-700"}`}
+                          >
+                            {c.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Startup dropdown */}
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setStartupOpen(true)}
+                    onMouseLeave={() => setStartupOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setStartupOpen(!startupOpen); setCatOpen(false); setFracOpen(false); setBoardOpen(false); setInvestorOpen(false); }}
+                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                    >
+                      Startup <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    {startupOpen && <div className="absolute top-full left-0 right-0 h-2" />}
+                    {startupOpen && (
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
+                        {STARTUP_MENU.map(c => (
+                          <Link
+                            key={c.href}
+                            to={c.href}
+                            onClick={() => setStartupOpen(false)}
+                            className={`block px-4 py-2.5 text-sm hover:bg-orange-50 hover:text-orange-700 transition-colors ${c.bold ? "font-bold text-orange-600" : "text-gray-700"}`}
+                          >
+                            {c.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Board dropdown */}
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setBoardOpen(true)}
+                    onMouseLeave={() => setBoardOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setBoardOpen(!boardOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setInvestorOpen(false); }}
+                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                    >
+                      Board <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    {boardOpen && <div className="absolute top-full left-0 right-0 h-2" />}
+                    {boardOpen && (
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
+                        {BOARD_MENU.map(c => (
+                          <Link
+                            key={c.href}
+                            to={c.href}
+                            onClick={() => setBoardOpen(false)}
+                            className={`block px-4 py-2.5 text-sm hover:bg-slate-50 hover:text-slate-700 transition-colors ${c.bold ? "font-bold text-slate-700" : "text-gray-700"}`}
+                          >
+                            {c.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Investors dropdown */}
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setInvestorOpen(true)}
+                    onMouseLeave={() => setInvestorOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setInvestorOpen(!investorOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); }}
+                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                    >
+                      Investors <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    {investorOpen && <div className="absolute top-full left-0 right-0 h-2" />}
+                    {investorOpen && (
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
+                        {INVESTOR_MENU.map(c => (
+                          <Link
+                            key={c.href}
+                            to={c.href}
+                            onClick={() => setInvestorOpen(false)}
+                            className={`block px-4 py-2.5 text-sm hover:bg-emerald-50 hover:text-emerald-700 transition-colors ${c.bold ? "font-bold text-emerald-700" : "text-gray-700"}`}
                           >
                             {c.label}
                           </Link>
@@ -382,9 +500,11 @@ export const NavbarV2 = () => {
                     <div className="space-y-0.5 mb-4">
                       <Link to="/" onClick={closeMenu} className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all ${isHome ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"}`}>Home</Link>
                       <Link to="/find-jobs" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Browse Jobs</Link>
-                      {CATEGORIES.map(c => (
-                        <Link key={c.href} to={c.href} onClick={closeMenu} className="flex items-center gap-3 px-6 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-50 transition-all">{c.label}</Link>
-                      ))}
+                      <Link to="/executive-roles" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-all">Executive Roles</Link>
+                      <Link to="/fractional" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-violet-700 hover:bg-violet-50 transition-all">Fractional</Link>
+                      <Link to="/startup" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-orange-700 hover:bg-orange-50 transition-all">Startup</Link>
+                      <Link to="/board" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all">Board</Link>
+                      <Link to="/investors" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-all">Investors</Link>
                       <a href="/v2#pricing" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Pricing</a>
                       <Link
                         to="/hizorex-os"

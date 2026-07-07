@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Core pages -->
+  <url><loc>https://ultimatejobai.vercel.app/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/find-jobs</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional-jobs</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/plans</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Executive Roles hub -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- Finance roles -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/cfo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/controller</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/vp-finance</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-finance</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Technology roles -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/cto</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/cio</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-engineering</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-ai</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-data</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-devops</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/ciso</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Sales roles -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/cro</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/vp-sales</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-sales</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Marketing roles -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/cmo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/director-of-marketing</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Operations roles -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/coo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-operations</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/director-of-operations</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- HR roles -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/chro</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/director-of-hr</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-talent</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Product roles -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/cpo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/head-of-product</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/director-of-product</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Legal / Security -->
+  <url><loc>https://ultimatejobai.vercel.app/executive-roles/clo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Fractional hub -->
+  <url><loc>https://ultimatejobai.vercel.app/fractional</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/cfo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/cto</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/coo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/cmo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/cio</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/cro</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/chro</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/cpo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/fractional/clo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Static pages -->
+  <url><loc>https://ultimatejobai.vercel.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/contact</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+
+</urlset>

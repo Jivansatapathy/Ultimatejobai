@@ -6,14 +6,14 @@ import {
 } from "lucide-react";
 
 const CATEGORIES = [
-  { icon: Crown,       label: "C-Suite",         sub: "CEO, CFO, CTO & more",  count: "12,400+", color: "bg-blue-50 border-blue-200 text-blue-700",  icon_bg: "bg-blue-600", q: "seniority=C-Suite" },
-  { icon: TrendingUp,  label: "VP Level",         sub: "VP Engineering, Sales…", count: "8,200+",  color: "bg-violet-50 border-violet-200 text-violet-700", icon_bg: "bg-violet-600", q: "seniority=VP" },
-  { icon: Users2,      label: "Director",         sub: "Dir. Operations, HR…",  count: "11,800+", color: "bg-emerald-50 border-emerald-200 text-emerald-700", icon_bg: "bg-emerald-600", q: "seniority=Director" },
-  { icon: Cpu,         label: "Technology",       sub: "CTO, CIO, VP Eng…",     count: "9,100+",  color: "bg-sky-50 border-sky-200 text-sky-700",    icon_bg: "bg-sky-600", q: "q=technology" },
-  { icon: DollarSign,  label: "Finance",          sub: "CFO, VP Finance…",      count: "5,600+",  color: "bg-amber-50 border-amber-200 text-amber-700", icon_bg: "bg-amber-600", q: "q=finance" },
-  { icon: Globe,       label: "Operations",       sub: "COO, Dir. Operations…", count: "7,300+",  color: "bg-teal-50 border-teal-200 text-teal-700",  icon_bg: "bg-teal-600", q: "q=operations" },
-  { icon: HeartPulse,  label: "Human Resources",  sub: "CHRO, VP HR, Dir. HR…", count: "4,200+",  color: "bg-pink-50 border-pink-200 text-pink-700",  icon_bg: "bg-pink-600", q: "q=human+resources" },
-  { icon: Briefcase,   label: "General Mgmt",     sub: "GM, Business Unit Head", count: "6,100+",  color: "bg-orange-50 border-orange-200 text-orange-700", icon_bg: "bg-orange-600", q: "q=general+manager" },
+  { icon: Crown,       label: "C-Suite",         sub: "CEO, CFO, CTO & more",   count: "12,400+", color: "bg-blue-50 border-blue-200 text-blue-700",      icon_bg: "bg-blue-600",   href: "/executive-roles" },
+  { icon: TrendingUp,  label: "VP Level",         sub: "VP Engineering, Sales…", count: "8,200+",  color: "bg-violet-50 border-violet-200 text-violet-700", icon_bg: "bg-violet-600", href: "/find-jobs?seniority=VP" },
+  { icon: Users2,      label: "Director",         sub: "Dir. Operations, HR…",   count: "11,800+", color: "bg-emerald-50 border-emerald-200 text-emerald-700", icon_bg: "bg-emerald-600", href: "/find-jobs?seniority=Director" },
+  { icon: Cpu,         label: "Technology",       sub: "CTO, CIO, VP Eng…",      count: "9,100+",  color: "bg-sky-50 border-sky-200 text-sky-700",         icon_bg: "bg-sky-600",    href: "/executive-roles/cto" },
+  { icon: DollarSign,  label: "Finance",          sub: "CFO, VP Finance…",       count: "5,600+",  color: "bg-amber-50 border-amber-200 text-amber-700",   icon_bg: "bg-amber-600",  href: "/executive-roles/cfo" },
+  { icon: Globe,       label: "Fractional",       sub: "Part-time C-suite roles",count: "7,300+",  color: "bg-teal-50 border-teal-200 text-teal-700",      icon_bg: "bg-teal-600",   href: "/fractional" },
+  { icon: HeartPulse,  label: "Human Resources",  sub: "CHRO, VP HR, Dir. HR…",  count: "4,200+",  color: "bg-pink-50 border-pink-200 text-pink-700",      icon_bg: "bg-pink-600",   href: "/executive-roles/chro" },
+  { icon: Briefcase,   label: "Operations",       sub: "COO, Dir. Operations…",  count: "6,100+",  color: "bg-orange-50 border-orange-200 text-orange-700",icon_bg: "bg-orange-600", href: "/executive-roles/coo" },
 ];
 
 export const CategoriesV2 = () => (
@@ -54,7 +54,7 @@ export const CategoriesV2 = () => (
             transition={{ duration: 0.35, delay: i * 0.05 }}
           >
             <Link
-              to={`/find-jobs?${cat.q}`}
+              to={cat.href}
               className={`group flex flex-col gap-4 rounded-2xl border p-5 bg-white hover:shadow-md transition-all duration-200 ${cat.color}`}
             >
               <div className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${cat.icon_bg}`}>

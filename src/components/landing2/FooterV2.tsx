@@ -2,28 +2,34 @@
 import { Bot } from "lucide-react";
 
 const LINKS = {
-  "Job Seekers": [
-    { label: "Browse Jobs", href: "/find-jobs" },
-    { label: "Upload Resume", href: "/resume" },
-    { label: "Interview Prep", href: "/interview" },
-    { label: "Career Planner", href: "/career-planner" },
-    { label: "AI Mentor", href: "/ai-mentor" },
+  "Popular Roles": [
+    { label: "CFO Jobs", href: "/executive-roles/cfo" },
+    { label: "CTO Jobs", href: "/executive-roles/cto" },
+    { label: "COO Jobs", href: "/executive-roles/coo" },
+    { label: "CMO Jobs", href: "/executive-roles/cmo" },
+    { label: "CRO Jobs", href: "/executive-roles/cro" },
+    { label: "CHRO Jobs", href: "/executive-roles/chro" },
+    { label: "All Executive Roles", href: "/executive-roles" },
+  ],
+  "Fractional": [
+    { label: "Fractional CFO", href: "/fractional/cfo" },
+    { label: "Fractional CTO", href: "/fractional/cto" },
+    { label: "Fractional CMO", href: "/fractional/cmo" },
+    { label: "Fractional COO", href: "/fractional/coo" },
+    { label: "All Fractional Roles", href: "/fractional" },
   ],
   "Platform": [
+    { label: "Browse Executive Jobs", href: "/find-jobs" },
     { label: "How It Works", href: "/v2#how-it-works" },
-    { label: "Apex™ Bot", href: "/v2#features" },
+    { label: "Apex™ AI Apply Bot", href: "/v2#features" },
     { label: "Pricing", href: "/v2#pricing" },
-    { label: "Dashboard", href: "/dashboard" },
-  ],
-  "Employers": [
-    { label: "Post a Job", href: "/employer/auth" },
-    { label: "Employer Login", href: "/employer/auth" },
-    { label: "Talent Pool", href: "/employer/auth" },
+    { label: "For Employers", href: "/employer/auth" },
   ],
   "Company": [
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms of Service", href: "/terms-of-service" },
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
     { label: "Return Policy", href: "/return-policy" },
+    { label: "Contact", href: "/contact" },
   ],
 };
 

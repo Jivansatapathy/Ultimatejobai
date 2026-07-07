@@ -8,12 +8,25 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-const CATEGORIES = [
-  { label: "C-Suite Roles", href: "/find-jobs?seniority=C-Suite" },
-  { label: "VP Level", href: "/find-jobs?seniority=VP" },
-  { label: "Director Roles", href: "/find-jobs?seniority=Director" },
-  { label: "Fractional Roles", href: "/fractional-jobs" },
-  { label: "All Executive Jobs", href: "/find-jobs" },
+const EXEC_MENU = [
+  { label: "All Executive Jobs", href: "/find-jobs", bold: true },
+  { label: "CFO Jobs", href: "/executive-roles/cfo" },
+  { label: "CTO Jobs", href: "/executive-roles/cto" },
+  { label: "COO Jobs", href: "/executive-roles/coo" },
+  { label: "CMO Jobs", href: "/executive-roles/cmo" },
+  { label: "CRO Jobs", href: "/executive-roles/cro" },
+  { label: "CHRO Jobs", href: "/executive-roles/chro" },
+  { label: "CPO Jobs", href: "/executive-roles/cpo" },
+  { label: "Browse All Roles →", href: "/executive-roles", bold: true },
+];
+
+const FRACTIONAL_MENU = [
+  { label: "All Fractional Jobs", href: "/fractional-jobs", bold: true },
+  { label: "Fractional CFO", href: "/fractional/cfo" },
+  { label: "Fractional CTO", href: "/fractional/cto" },
+  { label: "Fractional CMO", href: "/fractional/cmo" },
+  { label: "Fractional COO", href: "/fractional/coo" },
+  { label: "Browse All Fractional →", href: "/fractional", bold: true },
 ];
 
 const AUTH_NAV = [
@@ -33,6 +46,7 @@ const AUTH_SIDE = [
 export const NavbarV2 = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [fracOpen, setFracOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { isAuthenticated, logout, userEmail } = useAuth();
   const { pathname } = useLocation();
@@ -97,6 +111,7 @@ export const NavbarV2 = () => {
                     Home
                   </Link>
 
+                  {/* Executive Roles dropdown */}
                   <div
                     className="relative"
                     onMouseEnter={() => setCatOpen(true)}
@@ -104,20 +119,50 @@ export const NavbarV2 = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => setCatOpen(!catOpen)}
+                      onClick={() => { setCatOpen(!catOpen); setFracOpen(false); }}
                       className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
                     >
-                      Categories <ChevronDown className="h-3.5 w-3.5" />
+                      Executive Roles <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                     {catOpen && <div className="absolute top-full left-0 right-0 h-2" />}
                     {catOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
-                        {CATEGORIES.map(c => (
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
+                        {EXEC_MENU.map(c => (
                           <Link
                             key={c.href}
                             to={c.href}
                             onClick={() => setCatOpen(false)}
-                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                            className={`block px-4 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors ${c.bold ? "font-bold text-blue-600" : "text-gray-700"}`}
+                          >
+                            {c.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Fractional dropdown */}
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setFracOpen(true)}
+                    onMouseLeave={() => setFracOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setFracOpen(!fracOpen); setCatOpen(false); }}
+                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                    >
+                      Fractional <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    {fracOpen && <div className="absolute top-full left-0 right-0 h-2" />}
+                    {fracOpen && (
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
+                        {FRACTIONAL_MENU.map(c => (
+                          <Link
+                            key={c.href}
+                            to={c.href}
+                            onClick={() => setFracOpen(false)}
+                            className={`block px-4 py-2.5 text-sm hover:bg-violet-50 hover:text-violet-700 transition-colors ${c.bold ? "font-bold text-violet-600" : "text-gray-700"}`}
                           >
                             {c.label}
                           </Link>

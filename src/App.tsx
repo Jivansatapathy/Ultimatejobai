@@ -59,6 +59,10 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
 const SeniorJobs = lazy(() => import("./pages/SeniorJobs"));
 const FractionalJobs = lazy(() => import("./pages/FractionalJobs"));
+const ExecutiveRolesHub = lazy(() => import("./pages/ExecutiveRolesHub"));
+const ExecutiveRolePage = lazy(() => import("./pages/ExecutiveRolePage"));
+const FractionalHub = lazy(() => import("./pages/FractionalHub"));
+const FractionalRolePage = lazy(() => import("./pages/FractionalRolePage"));
 const BookACall = lazy(() => import("./pages/BookACall"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Plans = lazy(() => import("./pages/Plans"));
@@ -333,6 +337,11 @@ const App = () => (
                   <Route path="/jobs" element={<CandidateRoute><Jobs /></CandidateRoute>} />
                   <Route path="/find-jobs" element={<CandidateRoute><SeniorJobs /></CandidateRoute>} />
                   <Route path="/fractional-jobs" element={<CandidateRoute><FractionalJobs /></CandidateRoute>} />
+                  {/* SEO public role pages — no auth required */}
+                  <Route path="/executive-roles" element={<ExecutiveRolesHub />} />
+                  <Route path="/executive-roles/:role" element={<ExecutiveRolePage />} />
+                  <Route path="/fractional" element={<FractionalHub />} />
+                  <Route path="/fractional/:role" element={<FractionalRolePage />} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
                   <Route path="/inbox" element={<CandidateRoute><CandidateInbox /></CandidateRoute>} />

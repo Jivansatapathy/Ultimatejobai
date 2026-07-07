@@ -58,7 +58,31 @@ export default function PublicLinkedInJob() {
     );
   }
 
+  // JSON-LD JobPosting for Google Jobs integration
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": job.title,
+    "description": job.description || `${job.title} at ${job.company}`,
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": job.company,
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": { "@type": "PostalAddress", "addressLocality": job.location },
+    },
+    "datePosted": job.posted_at || new Date().toISOString().split("T")[0],
+    "employmentType": job.employment_type || "FULL_TIME",
+    "directApply": false,
+    "url": typeof window !== "undefined" ? window.location.href : "",
+    "applyUrl": job.apply_url || job.url,
+  };
+
   return (
+    <>
+      <title>{job.title} at {job.company} | Hizorex</title>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)] px-4 py-10">
       <div className="mx-auto max-w-4xl">
         <div className="rounded-[36px] border border-white/80 bg-white/95 p-6 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.45)] backdrop-blur md:p-10">
@@ -123,5 +147,6 @@ export default function PublicLinkedInJob() {
         </div>
       </div>
     </main>
+    </>
   );
 }

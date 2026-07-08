@@ -33,6 +33,13 @@ const LINKS = {
     { label: "Portfolio CEO", href: "/investors/portfolio-ceo" },
     { label: "All Investor Roles", href: "/investors" },
   ],
+  "Resources": [
+    { label: "Interim Roles", href: "/interim" },
+    { label: "Salary Guide", href: "/salary" },
+    { label: "CFO Salary", href: "/salary/cfo" },
+    { label: "CTO Salary", href: "/salary/cto" },
+    { label: "Browse All Roles A–Z", href: "/browse-roles" },
+  ],
   "Platform": [
     { label: "Browse Executive Jobs", href: "/find-jobs" },
     { label: "How It Works", href: "/v2#how-it-works" },
@@ -51,7 +58,7 @@ const LINKS = {
 export const FooterV2 = () => (
   <footer className="bg-gray-900 text-white">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
         {/* Brand col */}
         <div className="col-span-2 lg:col-span-1">
           <Link to="/" className="flex items-center gap-2.5 mb-4">

@@ -54,6 +54,15 @@ const INVESTOR_MENU = [
   { label: "Browse All Investor Roles →", href: "/investors", bold: true },
 ];
 
+const INTERIM_MENU = [
+  { label: "All Interim Jobs", href: "/find-jobs?q=interim", bold: true },
+  { label: "Interim CFO", href: "/interim/cfo" },
+  { label: "Interim CTO", href: "/interim/cto" },
+  { label: "Interim CMO", href: "/interim/cmo" },
+  { label: "Interim COO", href: "/interim/coo" },
+  { label: "Browse All Interim →", href: "/interim", bold: true },
+];
+
 const AUTH_NAV = [
   { name: "Dashboard", href: "/dashboard",  icon: LayoutDashboard },
   { name: "Find Jobs",  href: "/find-jobs",  icon: Search },
@@ -75,6 +84,7 @@ export const NavbarV2 = () => {
   const [startupOpen, setStartupOpen] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
   const [investorOpen, setInvestorOpen] = useState(false);
+  const [interimOpen, setInterimOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { isAuthenticated, logout, userEmail } = useAuth();
   const { pathname } = useLocation();
@@ -267,7 +277,7 @@ export const NavbarV2 = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => { setInvestorOpen(!investorOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); }}
+                      onClick={() => { setInvestorOpen(!investorOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); setInterimOpen(false); }}
                       className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
                     >
                       Investors <ChevronDown className="h-3.5 w-3.5" />
@@ -288,6 +298,43 @@ export const NavbarV2 = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Interim dropdown */}
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setInterimOpen(true)}
+                    onMouseLeave={() => setInterimOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setInterimOpen(!interimOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); setInvestorOpen(false); }}
+                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                    >
+                      Interim <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    {interimOpen && <div className="absolute top-full left-0 right-0 h-2" />}
+                    {interimOpen && (
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
+                        {INTERIM_MENU.map(c => (
+                          <Link
+                            key={c.href}
+                            to={c.href}
+                            onClick={() => setInterimOpen(false)}
+                            className={`block px-4 py-2.5 text-sm hover:bg-teal-50 hover:text-teal-700 transition-colors ${c.bold ? "font-bold text-teal-700" : "text-gray-700"}`}
+                          >
+                            {c.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <Link
+                    to="/salary"
+                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                  >
+                    Salary Guide
+                  </Link>
 
                   <Link
                     to="/employer/auth"
@@ -505,6 +552,9 @@ export const NavbarV2 = () => {
                       <Link to="/startup" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-orange-700 hover:bg-orange-50 transition-all">Startup</Link>
                       <Link to="/board" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all">Board</Link>
                       <Link to="/investors" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-all">Investors</Link>
+                      <Link to="/interim" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-teal-700 hover:bg-teal-50 transition-all">Interim</Link>
+                      <Link to="/salary" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Salary Guide</Link>
+                      <Link to="/browse-roles" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Browse A–Z</Link>
                       <a href="/v2#pricing" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Pricing</a>
                       <Link
                         to="/hizorex-os"

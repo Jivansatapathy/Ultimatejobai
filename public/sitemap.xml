@@ -95,6 +95,34 @@
   <url><loc>https://ultimatejobai.vercel.app/investors/private-equity-principal</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
   <url><loc>https://ultimatejobai.vercel.app/investors/growth-equity-partner</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
 
+  <!-- Interim roles hub + individual pages -->
+  <url><loc>https://ultimatejobai.vercel.app/interim</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/cfo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/ceo</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/cto</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/coo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/cmo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/cro</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/chro</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/cpo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/cio</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/clo</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/interim/ciso</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <!-- Salary guide hub + individual pages -->
+  <url><loc>https://ultimatejobai.vercel.app/salary</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/cfo</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/cto</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/coo</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/cmo</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/cro</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/chro</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/cpo</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ultimatejobai.vercel.app/salary/ciso</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Browse A-Z -->
+  <url><loc>https://ultimatejobai.vercel.app/browse-roles</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
   <!-- Static pages -->
   <url><loc>https://ultimatejobai.vercel.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://ultimatejobai.vercel.app/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>

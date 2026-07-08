@@ -69,6 +69,11 @@ const BoardHub = lazy(() => import("./pages/BoardHub"));
 const BoardRolePage = lazy(() => import("./pages/BoardRolePage"));
 const InvestorHub = lazy(() => import("./pages/InvestorHub"));
 const InvestorRolePage = lazy(() => import("./pages/InvestorRolePage"));
+const InterimHub = lazy(() => import("./pages/InterimHub"));
+const InterimRolePage = lazy(() => import("./pages/InterimRolePage"));
+const SalaryHub = lazy(() => import("./pages/SalaryHub"));
+const SalaryRolePage = lazy(() => import("./pages/SalaryRolePage"));
+const BrowseRoles = lazy(() => import("./pages/BrowseRoles"));
 const BookACall = lazy(() => import("./pages/BookACall"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Plans = lazy(() => import("./pages/Plans"));
@@ -354,6 +359,11 @@ const App = () => (
                   <Route path="/board/:role" element={<BoardRolePage />} />
                   <Route path="/investors" element={<InvestorHub />} />
                   <Route path="/investors/:role" element={<InvestorRolePage />} />
+                  <Route path="/interim" element={<InterimHub />} />
+                  <Route path="/interim/:role" element={<InterimRolePage />} />
+                  <Route path="/salary" element={<SalaryHub />} />
+                  <Route path="/salary/:role" element={<SalaryRolePage />} />
+                  <Route path="/browse-roles" element={<BrowseRoles />} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
                   <Route path="/inbox" element={<CandidateRoute><CandidateInbox /></CandidateRoute>} />

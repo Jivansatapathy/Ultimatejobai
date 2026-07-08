@@ -231,6 +231,7 @@ export const NavbarV2 = () => {
                             { label: "Investors / PE", href: "/investors", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
                             { label: "Salary Guide", href: "/salary", color: "text-gray-700 bg-gray-100 border-gray-200" },
                             { label: "Browse A–Z →", href: "/browse-roles", color: "text-blue-700 bg-blue-50 border-blue-200" },
+                            { label: "Blog", href: "/blog", color: "text-indigo-700 bg-indigo-50 border-indigo-200" },
                           ].map(l => (
                             <Link
                               key={l.href}
@@ -622,6 +623,7 @@ export const NavbarV2 = () => {
                       <Link to="/interim" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-teal-700 hover:bg-teal-50 transition-all">Interim</Link>
                       <Link to="/salary" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Salary Guide</Link>
                       <Link to="/browse-roles" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Browse A–Z</Link>
+                      <Link to="/blog" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition-all">Blog</Link>
                       <a href="/v2#pricing" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Pricing</a>
                       <Link
                         to="/hizorex-os"

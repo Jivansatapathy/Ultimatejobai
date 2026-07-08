@@ -39,6 +39,7 @@ const LINKS = {
     { label: "CFO Salary", href: "/salary/cfo" },
     { label: "CTO Salary", href: "/salary/cto" },
     { label: "Browse All Roles A–Z", href: "/browse-roles" },
+    { label: "Blog & Insights", href: "/blog" },
   ],
   "Platform": [
     { label: "Browse Executive Jobs", href: "/find-jobs" },

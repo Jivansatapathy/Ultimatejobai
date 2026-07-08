@@ -74,6 +74,9 @@ const InterimRolePage = lazy(() => import("./pages/InterimRolePage"));
 const SalaryHub = lazy(() => import("./pages/SalaryHub"));
 const SalaryRolePage = lazy(() => import("./pages/SalaryRolePage"));
 const BrowseRoles = lazy(() => import("./pages/BrowseRoles"));
+const BlogList = lazy(() => import("./pages/BlogList"));
+const BlogPostPage = lazy(() => import("./pages/BlogPost"));
+const BlogAdmin = lazy(() => import("./pages/BlogAdmin"));
 const BookACall = lazy(() => import("./pages/BookACall"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Plans = lazy(() => import("./pages/Plans"));
@@ -364,6 +367,10 @@ const App = () => (
                   <Route path="/salary" element={<SalaryHub />} />
                   <Route path="/salary/:role" element={<SalaryRolePage />} />
                   <Route path="/browse-roles" element={<BrowseRoles />} />
+                  {/* Blog */}
+                  <Route path="/blog" element={<BlogList />} />
+                  <Route path="/blog/:slug" element={<BlogPostPage />} />
+                  <Route path="/blog-admin" element={<BlogAdmin />} />
                   <Route path="/job/:jobId" element={<PublicLinkedInJob />} />
                   <Route path="/companies/:slug" element={<CandidateRoute><CompanyProfile /></CandidateRoute>} />
                   <Route path="/inbox" element={<CandidateRoute><CandidateInbox /></CandidateRoute>} />

@@ -1,8 +1,74 @@
 import { motion, useInView, animate } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import { Search, MapPin, Crown, ArrowRight, Sparkles, Target, DollarSign, Network } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search, MapPin, Crown, ArrowRight, Sparkles, Target, DollarSign, Network, ChevronRight } from "lucide-react";
 import type { HeroContent } from "@/services/landingService";
+
+// All role suggestions — title + url
+const ROLE_SUGGESTIONS = [
+  // Executive
+  { label: "CFO", sub: "Chief Financial Officer", href: "/executive-roles/cfo" },
+  { label: "CTO", sub: "Chief Technology Officer", href: "/executive-roles/cto" },
+  { label: "COO", sub: "Chief Operating Officer", href: "/executive-roles/coo" },
+  { label: "CMO", sub: "Chief Marketing Officer", href: "/executive-roles/cmo" },
+  { label: "CRO", sub: "Chief Revenue Officer", href: "/executive-roles/cro" },
+  { label: "CHRO", sub: "Chief Human Resources Officer", href: "/executive-roles/chro" },
+  { label: "CPO", sub: "Chief Product Officer", href: "/executive-roles/cpo" },
+  { label: "CISO", sub: "Chief Information Security Officer", href: "/executive-roles/ciso" },
+  { label: "CLO", sub: "Chief Legal Officer", href: "/executive-roles/clo" },
+  { label: "CIO", sub: "Chief Information Officer", href: "/executive-roles/cio" },
+  { label: "Head of Engineering", sub: "Executive", href: "/executive-roles/head-of-engineering" },
+  { label: "Head of AI", sub: "Executive", href: "/executive-roles/head-of-ai" },
+  { label: "Head of Sales", sub: "Executive", href: "/executive-roles/head-of-sales" },
+  { label: "Head of Product", sub: "Executive", href: "/executive-roles/head-of-product" },
+  { label: "Head of Finance", sub: "Executive", href: "/executive-roles/head-of-finance" },
+  { label: "Head of Data", sub: "Executive", href: "/executive-roles/head-of-data" },
+  { label: "Head of DevOps", sub: "Executive", href: "/executive-roles/head-of-devops" },
+  { label: "VP Sales", sub: "Executive", href: "/executive-roles/vp-sales" },
+  { label: "VP Finance", sub: "Executive", href: "/executive-roles/vp-finance" },
+  { label: "Controller", sub: "Finance", href: "/executive-roles/controller" },
+  // Fractional
+  { label: "Fractional CFO", sub: "Fractional", href: "/fractional/cfo" },
+  { label: "Fractional CTO", sub: "Fractional", href: "/fractional/cto" },
+  { label: "Fractional CMO", sub: "Fractional", href: "/fractional/cmo" },
+  { label: "Fractional COO", sub: "Fractional", href: "/fractional/coo" },
+  { label: "Fractional CHRO", sub: "Fractional", href: "/fractional/chro" },
+  // Interim
+  { label: "Interim CFO", sub: "Interim", href: "/interim/cfo" },
+  { label: "Interim CTO", sub: "Interim", href: "/interim/cto" },
+  { label: "Interim CMO", sub: "Interim", href: "/interim/cmo" },
+  { label: "Interim COO", sub: "Interim", href: "/interim/coo" },
+  // Startup
+  { label: "Startup CEO", sub: "Startup", href: "/startup/ceo" },
+  { label: "Startup CTO", sub: "Startup", href: "/startup/cto" },
+  { label: "Startup CFO", sub: "Startup", href: "/startup/cfo" },
+  { label: "Co-Founder", sub: "Startup", href: "/startup/co-founder" },
+  { label: "Founding Engineer", sub: "Startup", href: "/startup/founding-engineer" },
+  // Board
+  { label: "Board Member", sub: "Board", href: "/board/board-member" },
+  { label: "Independent Director", sub: "Board", href: "/board/independent-director" },
+  { label: "Board Chair", sub: "Board", href: "/board/board-chair" },
+  // Investor
+  { label: "Managing Partner", sub: "Investor / PE", href: "/investors/managing-partner" },
+  { label: "General Partner", sub: "Investor / PE", href: "/investors/general-partner" },
+  { label: "Operating Partner", sub: "Investor / PE", href: "/investors/operating-partner" },
+  { label: "Portfolio CEO", sub: "Investor / PE", href: "/investors/portfolio-ceo" },
+  // Salary
+  { label: "CFO Salary", sub: "Salary Guide", href: "/salary/cfo" },
+  { label: "CTO Salary", sub: "Salary Guide", href: "/salary/cto" },
+  { label: "CMO Salary", sub: "Salary Guide", href: "/salary/cmo" },
+];
+
+const SUB_COLORS: Record<string, string> = {
+  Fractional: "text-violet-600",
+  Interim: "text-teal-600",
+  Startup: "text-orange-600",
+  Board: "text-slate-600",
+  "Investor / PE": "text-emerald-600",
+  "Salary Guide": "text-gray-500",
+  Executive: "text-blue-600",
+  Finance: "text-amber-600",
+};
 
 function CountUp({ to, suffix }: { to: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -27,14 +93,35 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
   const navigate = useNavigate();
   const [role, setRole] = useState("");
   const [location, setLocation] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
-  const goSearch = (roleOverride?: string) => {
+  const suggestions = role.trim().length >= 1
+    ? ROLE_SUGGESTIONS.filter(s =>
+        s.label.toLowerCase().includes(role.toLowerCase()) ||
+        s.sub.toLowerCase().includes(role.toLowerCase())
+      ).slice(0, 7)
+    : [];
+
+  const goSearch = useCallback((roleOverride?: string) => {
     const r = roleOverride ?? role;
     const params = new URLSearchParams();
     if (r) params.set("q", r);
     if (location) params.set("location", location);
+    setShowSuggestions(false);
     navigate(`/find-jobs${params.toString() ? `?${params.toString()}` : ""}`);
-  };
+  }, [role, location, navigate]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-10 sm:pt-16 pb-0">
@@ -95,37 +182,74 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
           onSubmit={(e) => { e.preventDefault(); goSearch(); }}
           className="mx-auto mb-5 sm:mb-6 max-w-3xl"
         >
-          <div className="flex flex-col sm:flex-row rounded-2xl border border-gray-200 bg-white shadow-[0_8px_40px_rgba(37,99,235,0.12)] overflow-hidden">
-            {/* Role input */}
-            <div className="flex items-center flex-1 border-b sm:border-b-0 sm:border-r border-gray-100 px-3 sm:px-4 py-1">
-              <Search className="h-4 w-4 text-gray-300 shrink-0" />
-              <input
-                type="text"
-                placeholder={hero.search_role_placeholder}
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full px-3 py-3 sm:py-3.5 bg-transparent text-sm sm:text-base text-gray-800 placeholder:text-gray-400 outline-none"
-              />
+          <div ref={searchRef} className="relative">
+            <div className="flex flex-col sm:flex-row rounded-2xl border border-gray-200 bg-white shadow-[0_8px_40px_rgba(37,99,235,0.12)] overflow-hidden">
+              {/* Role input */}
+              <div className="flex items-center flex-1 border-b sm:border-b-0 sm:border-r border-gray-100 px-3 sm:px-4 py-1">
+                <Search className="h-4 w-4 text-gray-300 shrink-0" />
+                <input
+                  type="text"
+                  placeholder={hero.search_role_placeholder}
+                  value={role}
+                  onChange={(e) => { setRole(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={(e) => { if (e.key === "Escape") setShowSuggestions(false); }}
+                  className="w-full px-3 py-3 sm:py-3.5 bg-transparent text-sm sm:text-base text-gray-800 placeholder:text-gray-400 outline-none"
+                  autoComplete="off"
+                />
+              </div>
+              {/* Location input */}
+              <div className="flex items-center flex-1 border-b sm:border-b-0 sm:border-r border-gray-100 px-3 sm:px-4 py-1">
+                <MapPin className="h-4 w-4 text-gray-300 shrink-0" />
+                <input
+                  type="text"
+                  placeholder={hero.search_location_placeholder}
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full px-3 py-3 sm:py-3.5 bg-transparent text-sm sm:text-base text-gray-800 placeholder:text-gray-400 outline-none"
+                />
+              </div>
+              {/* CTA */}
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base transition-colors shrink-0"
+              >
+                <Search className="h-4 w-4" />
+                Search Jobs
+              </button>
             </div>
-            {/* Location input */}
-            <div className="flex items-center flex-1 border-b sm:border-b-0 sm:border-r border-gray-100 px-3 sm:px-4 py-1">
-              <MapPin className="h-4 w-4 text-gray-300 shrink-0" />
-              <input
-                type="text"
-                placeholder={hero.search_location_placeholder}
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-3 py-3 sm:py-3.5 bg-transparent text-sm sm:text-base text-gray-800 placeholder:text-gray-400 outline-none"
-              />
-            </div>
-            {/* CTA */}
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base transition-colors shrink-0"
-            >
-              <Search className="h-4 w-4" />
-              Search Jobs
-            </button>
+
+            {/* Autocomplete dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      if (s.sub === "Salary Guide" || ["Fractional","Interim","Startup","Board","Investor / PE"].includes(s.sub)) {
+                        navigate(s.href);
+                        setShowSuggestions(false);
+                      } else {
+                        setRole(s.label);
+                        goSearch(s.label);
+                      }
+                    }}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-blue-50 transition-colors text-left group border-b border-gray-50 last:border-0"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Search className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="text-sm font-semibold text-gray-900">{s.label}</span>
+                        <span className={`ml-2 text-xs font-medium ${SUB_COLORS[s.sub] ?? "text-gray-400"}`}>{s.sub}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-blue-500 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </motion.form>
 

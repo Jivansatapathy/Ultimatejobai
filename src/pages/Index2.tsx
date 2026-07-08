@@ -2,6 +2,7 @@ import { NavbarV2 } from "@/components/landing2/NavbarV2";
 import { HeroV2 } from "@/components/landing2/HeroV2";
 import { LatestJobsV2 } from "@/components/landing2/LatestJobsV2";
 import { CategoriesV2 } from "@/components/landing2/CategoriesV2";
+import { RoleHubsV2 } from "@/components/landing2/RoleHubsV2";
 import { TrustedCompaniesV2 } from "@/components/landing2/TrustedCompaniesV2";
 import { HowItWorksV2 } from "@/components/landing2/HowItWorksV2";
 import { FeaturesV2 } from "@/components/landing2/FeaturesV2";
@@ -21,6 +22,7 @@ const Index2 = () => {
         <HeroV2 hero={content.hero} />
         <LatestJobsV2 />
         <CategoriesV2 />
+        <RoleHubsV2 />
         <TrustedCompaniesV2 />
         <HowItWorksV2 steps={content.how_it_works} />
         <FeaturesV2 features={content.features} />

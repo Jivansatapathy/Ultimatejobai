@@ -8,16 +8,50 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-const EXEC_MENU = [
-  { label: "All Executive Jobs", href: "/find-jobs", bold: true },
-  { label: "CFO Jobs", href: "/executive-roles/cfo" },
-  { label: "CTO Jobs", href: "/executive-roles/cto" },
-  { label: "COO Jobs", href: "/executive-roles/coo" },
-  { label: "CMO Jobs", href: "/executive-roles/cmo" },
-  { label: "CRO Jobs", href: "/executive-roles/cro" },
-  { label: "CHRO Jobs", href: "/executive-roles/chro" },
-  { label: "CPO Jobs", href: "/executive-roles/cpo" },
-  { label: "Browse All Roles →", href: "/executive-roles", bold: true },
+const MEGA_COLS = [
+  {
+    dept: "Finance",
+    color: "text-amber-600",
+    roles: [
+      { label: "CFO", href: "/executive-roles/cfo" },
+      { label: "Controller", href: "/executive-roles/controller" },
+      { label: "VP Finance", href: "/executive-roles/vp-finance" },
+      { label: "Head of Finance", href: "/executive-roles/head-of-finance" },
+    ],
+  },
+  {
+    dept: "Technology",
+    color: "text-sky-600",
+    roles: [
+      { label: "CTO", href: "/executive-roles/cto" },
+      { label: "Head of Engineering", href: "/executive-roles/head-of-engineering" },
+      { label: "Head of AI", href: "/executive-roles/head-of-ai" },
+      { label: "Head of Data", href: "/executive-roles/head-of-data" },
+      { label: "Head of DevOps", href: "/executive-roles/head-of-devops" },
+    ],
+  },
+  {
+    dept: "Sales & Marketing",
+    color: "text-blue-600",
+    roles: [
+      { label: "CRO", href: "/executive-roles/cro" },
+      { label: "CMO", href: "/executive-roles/cmo" },
+      { label: "VP Sales", href: "/executive-roles/vp-sales" },
+      { label: "Head of Sales", href: "/executive-roles/head-of-sales" },
+      { label: "Head of Growth", href: "/executive-roles/head-of-growth" },
+    ],
+  },
+  {
+    dept: "Operations & HR",
+    color: "text-emerald-600",
+    roles: [
+      { label: "COO", href: "/executive-roles/coo" },
+      { label: "CHRO", href: "/executive-roles/chro" },
+      { label: "CPO", href: "/executive-roles/cpo" },
+      { label: "CISO", href: "/executive-roles/ciso" },
+      { label: "CLO", href: "/executive-roles/clo" },
+    ],
+  },
 ];
 
 const FRACTIONAL_MENU = [
@@ -149,7 +183,7 @@ export const NavbarV2 = () => {
                     Home
                   </Link>
 
-                  {/* Executive Roles dropdown */}
+                  {/* Executive Roles — Mega Menu */}
                   <div
                     className="relative"
                     onMouseEnter={() => setCatOpen(true)}
@@ -157,24 +191,57 @@ export const NavbarV2 = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => { setCatOpen(!catOpen); setFracOpen(false); }}
+                      onClick={() => { setCatOpen(!catOpen); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); setInvestorOpen(false); setInterimOpen(false); }}
                       className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
                     >
                       Executive Roles <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                     {catOpen && <div className="absolute top-full left-0 right-0 h-2" />}
                     {catOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
-                        {EXEC_MENU.map(c => (
-                          <Link
-                            key={c.href}
-                            to={c.href}
-                            onClick={() => setCatOpen(false)}
-                            className={`block px-4 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors ${c.bold ? "font-bold text-blue-600" : "text-gray-700"}`}
-                          >
-                            {c.label}
-                          </Link>
-                        ))}
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-[640px] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                        {/* Top: columns */}
+                        <div className="grid grid-cols-4 gap-0 p-5 border-b border-gray-100">
+                          {MEGA_COLS.map(col => (
+                            <div key={col.dept}>
+                              <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 ${col.color}`}>{col.dept}</p>
+                              <ul className="space-y-1">
+                                {col.roles.map(r => (
+                                  <li key={r.href}>
+                                    <Link
+                                      to={r.href}
+                                      onClick={() => setCatOpen(false)}
+                                      className="block text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg px-2 py-1.5 transition-colors font-medium"
+                                    >
+                                      {r.label}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Bottom: quick links */}
+                        <div className="flex items-center gap-1 px-5 py-3 bg-gray-50 flex-wrap">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mr-2">Also:</span>
+                          {[
+                            { label: "Fractional", href: "/fractional", color: "text-violet-700 bg-violet-50 border-violet-200" },
+                            { label: "Interim", href: "/interim", color: "text-teal-700 bg-teal-50 border-teal-200" },
+                            { label: "Startup", href: "/startup", color: "text-orange-700 bg-orange-50 border-orange-200" },
+                            { label: "Board", href: "/board", color: "text-slate-700 bg-slate-100 border-slate-200" },
+                            { label: "Investors / PE", href: "/investors", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
+                            { label: "Salary Guide", href: "/salary", color: "text-gray-700 bg-gray-100 border-gray-200" },
+                            { label: "Browse A–Z →", href: "/browse-roles", color: "text-blue-700 bg-blue-50 border-blue-200" },
+                          ].map(l => (
+                            <Link
+                              key={l.href}
+                              to={l.href}
+                              onClick={() => setCatOpen(false)}
+                              className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${l.color} hover:opacity-80 transition-opacity`}
+                            >
+                              {l.label}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

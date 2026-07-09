@@ -12,44 +12,106 @@ const MEGA_COLS = [
   {
     dept: "Finance",
     color: "text-amber-600",
+    viewAllHref: "/executive-roles",
     roles: [
-      { label: "CFO", href: "/executive-roles/cfo" },
-      { label: "Controller", href: "/executive-roles/controller" },
-      { label: "VP Finance", href: "/executive-roles/vp-finance" },
-      { label: "Head of Finance", href: "/executive-roles/head-of-finance" },
+      { label: "CFO",                      href: "/executive-roles/cfo" },
+      { label: "Controller",               href: "/executive-roles/controller" },
+      { label: "VP Finance",               href: "/executive-roles/vp-finance" },
+      { label: "Head of Finance",          href: "/executive-roles/head-of-finance" },
+      { label: "FP&A Director",            href: "/find-jobs?q=FP%26A+Director" },
+      { label: "Chief Accounting Officer", href: "/find-jobs?q=Chief+Accounting+Officer" },
+      { label: "Treasurer",                href: "/find-jobs?q=Treasurer" },
+      { label: "VP Tax",                   href: "/find-jobs?q=VP+Tax" },
     ],
   },
   {
     dept: "Technology",
     color: "text-sky-600",
+    viewAllHref: "/executive-roles",
     roles: [
-      { label: "CTO", href: "/executive-roles/cto" },
-      { label: "Head of Engineering", href: "/executive-roles/head-of-engineering" },
-      { label: "Head of AI", href: "/executive-roles/head-of-ai" },
-      { label: "Head of Data", href: "/executive-roles/head-of-data" },
-      { label: "Head of DevOps", href: "/executive-roles/head-of-devops" },
+      { label: "CTO",                  href: "/executive-roles/cto" },
+      { label: "VP Engineering",       href: "/find-jobs?q=VP+Engineering" },
+      { label: "Head of Engineering",  href: "/executive-roles/head-of-engineering" },
+      { label: "Head of AI",           href: "/executive-roles/head-of-ai" },
+      { label: "Head of Data",         href: "/executive-roles/head-of-data" },
+      { label: "Head of DevOps",       href: "/executive-roles/head-of-devops" },
+      { label: "Head of Platform",     href: "/find-jobs?q=Head+of+Platform" },
+      { label: "Head of Architecture", href: "/find-jobs?q=Head+of+Architecture" },
     ],
   },
   {
     dept: "Sales & Marketing",
     color: "text-blue-600",
+    viewAllHref: "/executive-roles",
     roles: [
-      { label: "CRO", href: "/executive-roles/cro" },
-      { label: "CMO", href: "/executive-roles/cmo" },
-      { label: "VP Sales", href: "/executive-roles/vp-sales" },
-      { label: "Head of Sales", href: "/executive-roles/head-of-sales" },
-      { label: "Head of Growth", href: "/executive-roles/head-of-growth" },
+      { label: "CRO",                href: "/executive-roles/cro" },
+      { label: "CMO",                href: "/executive-roles/cmo" },
+      { label: "VP Sales",           href: "/executive-roles/vp-sales" },
+      { label: "VP Marketing",       href: "/find-jobs?q=VP+Marketing" },
+      { label: "Head of Sales",      href: "/executive-roles/head-of-sales" },
+      { label: "Head of Growth",     href: "/executive-roles/head-of-growth" },
+      { label: "Head of Demand Gen", href: "/find-jobs?q=Head+of+Demand+Generation" },
+      { label: "Head of Brand",      href: "/find-jobs?q=Head+of+Brand" },
     ],
   },
   {
     dept: "Operations & HR",
     color: "text-emerald-600",
+    viewAllHref: "/executive-roles",
     roles: [
-      { label: "COO", href: "/executive-roles/coo" },
-      { label: "CHRO", href: "/executive-roles/chro" },
-      { label: "CPO", href: "/executive-roles/cpo" },
-      { label: "CISO", href: "/executive-roles/ciso" },
-      { label: "CLO", href: "/executive-roles/clo" },
+      { label: "COO",             href: "/executive-roles/coo" },
+      { label: "CHRO",            href: "/executive-roles/chro" },
+      { label: "CPO",             href: "/executive-roles/cpo" },
+      { label: "CISO",            href: "/executive-roles/ciso" },
+      { label: "CLO",             href: "/executive-roles/clo" },
+      { label: "Chief of Staff",  href: "/find-jobs?q=Chief+of+Staff" },
+      { label: "VP Operations",   href: "/find-jobs?q=VP+Operations" },
+      { label: "General Counsel", href: "/find-jobs?q=General+Counsel" },
+    ],
+  },
+  {
+    dept: "Interim",
+    color: "text-teal-600",
+    viewAllHref: "/interim",
+    roles: [
+      { label: "Interim CFO",  href: "/interim/cfo" },
+      { label: "Interim CTO",  href: "/interim/cto" },
+      { label: "Interim CMO",  href: "/interim/cmo" },
+      { label: "Interim COO",  href: "/interim/coo" },
+      { label: "Interim CHRO", href: "/interim/chro" },
+      { label: "Interim CIO",  href: "/interim/cio" },
+      { label: "Interim CPO",  href: "/interim/cpo" },
+      { label: "Interim CRO",  href: "/interim/cro" },
+    ],
+  },
+  {
+    dept: "Fractional",
+    color: "text-violet-600",
+    viewAllHref: "/fractional",
+    roles: [
+      { label: "All Fractional Jobs",  href: "/fractional-jobs" },
+      { label: "Fractional CFO",       href: "/fractional/cfo" },
+      { label: "Fractional CTO",       href: "/fractional/cto" },
+      { label: "Fractional CMO",       href: "/fractional/cmo" },
+      { label: "Fractional COO",       href: "/fractional/coo" },
+      { label: "Fractional CIO",       href: "/fractional/cio" },
+      { label: "Fractional CPO",       href: "/fractional/cpo" },
+      { label: "Fractional CHRO",      href: "/fractional/chro" },
+    ],
+  },
+  {
+    dept: "Startup",
+    color: "text-orange-600",
+    viewAllHref: "/startup",
+    roles: [
+      { label: "Startup CEO",       href: "/startup/ceo" },
+      { label: "Startup CTO",       href: "/startup/cto" },
+      { label: "Startup CFO",       href: "/startup/cfo" },
+      { label: "Startup COO",       href: "/startup/coo" },
+      { label: "Co-Founder",        href: "/startup/co-founder" },
+      { label: "Founding Engineer", href: "/startup/founding-engineer" },
+      { label: "Startup CRO",       href: "/startup/cro" },
+      { label: "Startup Advisor",   href: "/startup/startup-advisor" },
     ],
   },
 ];
@@ -114,15 +176,11 @@ const AUTH_SIDE = [
 export const NavbarV2 = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
-  const [fracOpen, setFracOpen] = useState(false);
-  const [startupOpen, setStartupOpen] = useState(false);
+  const [activeDept, setActiveDept] = useState(0);
   const [boardOpen, setBoardOpen] = useState(false);
-  const [investorOpen, setInvestorOpen] = useState(false);
-  const [interimOpen, setInterimOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { isAuthenticated, logout, userEmail } = useAuth();
   const { pathname } = useLocation();
-  const isHome = pathname === "/" || pathname === "/v2";
   const isActive = (path: string) => pathname === path;
 
   const handleLogout = async () => {
@@ -141,7 +199,7 @@ export const NavbarV2 = () => {
     <>
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-6">
+          <div className="flex h-16 items-center justify-between gap-2">
 
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
@@ -154,7 +212,7 @@ export const NavbarV2 = () => {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-1 flex-1">
+            <nav className="hidden lg:flex items-center gap-0 flex-1">
               {isAuthenticated ? (
                 AUTH_NAV.map((link) => (
                   <Link
@@ -172,17 +230,6 @@ export const NavbarV2 = () => {
                 ))
               ) : (
                 <>
-                  <Link
-                    to="/"
-                    className={`px-4 py-2 text-sm font-semibold transition-colors ${
-                      isHome
-                        ? "text-blue-600 border-b-2 border-blue-600"
-                        : "text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50"
-                    }`}
-                  >
-                    Home
-                  </Link>
-
                   {/* Executive Roles — Mega Menu */}
                   <div
                     className="relative"
@@ -191,53 +238,80 @@ export const NavbarV2 = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => { setCatOpen(!catOpen); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); setInvestorOpen(false); setInterimOpen(false); }}
-                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                      onClick={() => { setCatOpen(!catOpen); setBoardOpen(false); }}
+                      className="flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50 whitespace-nowrap"
                     >
-                      Executive Roles <ChevronDown className="h-3.5 w-3.5" />
+                      Executive Roles <ChevronDown className="h-3.5 w-3.5 shrink-0" />
                     </button>
                     {catOpen && <div className="absolute top-full left-0 right-0 h-2" />}
                     {catOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-[640px] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
-                        {/* Top: columns */}
-                        <div className="grid grid-cols-4 gap-0 p-5 border-b border-gray-100">
-                          {MEGA_COLS.map(col => (
-                            <div key={col.dept}>
-                              <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 ${col.color}`}>{col.dept}</p>
-                              <ul className="space-y-1">
-                                {col.roles.map(r => (
-                                  <li key={r.href}>
-                                    <Link
-                                      to={r.href}
-                                      onClick={() => setCatOpen(false)}
-                                      className="block text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg px-2 py-1.5 transition-colors font-medium"
-                                    >
-                                      {r.label}
-                                    </Link>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ))}
+                      <div className="absolute top-[calc(100%+4px)] left-0 w-[660px] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col">
+                        {/* Two-panel body */}
+                        <div className="flex flex-1 min-h-0">
+                          {/* Left sidebar — department list */}
+                          <div className="w-44 shrink-0 bg-gray-50 border-r border-gray-100 py-2">
+                            {MEGA_COLS.map((col, i) => (
+                              <button
+                                key={col.dept}
+                                type="button"
+                                onMouseEnter={() => setActiveDept(i)}
+                                onClick={() => setActiveDept(i)}
+                                className={`w-full text-left flex items-center justify-between px-4 py-2.5 text-sm font-semibold transition-colors
+                                  ${activeDept === i
+                                    ? `bg-white border-r-2 ${col.color.replace("text-", "border-")} ${col.color}`
+                                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                                  }`}
+                              >
+                                {col.dept}
+                                {activeDept === i && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Right panel — roles for active dept */}
+                          <div className="flex-1 p-5">
+                            <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 ${MEGA_COLS[activeDept].color}`}>
+                              {MEGA_COLS[activeDept].dept}
+                            </p>
+                            <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
+                              {MEGA_COLS[activeDept].roles.map(r => (
+                                <li key={r.href}>
+                                  <Link
+                                    to={r.href}
+                                    onClick={() => setCatOpen(false)}
+                                    className={`flex items-center gap-1.5 text-sm text-gray-700 rounded-lg px-3 py-2 transition-colors font-medium
+                                      hover:bg-blue-50 hover:text-blue-700 group`}
+                                  >
+                                    <ChevronRight className={`h-3 w-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${MEGA_COLS[activeDept].color}`} />
+                                    {r.label}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                            <Link
+                              to={MEGA_COLS[activeDept].viewAllHref}
+                              onClick={() => setCatOpen(false)}
+                              className={`inline-flex items-center gap-1 mt-5 text-xs font-bold ${MEGA_COLS[activeDept].color} hover:opacity-80 transition-opacity`}
+                            >
+                              View all {MEGA_COLS[activeDept].dept} roles <ChevronRight className="h-3.5 w-3.5" />
+                            </Link>
+                          </div>
                         </div>
-                        {/* Bottom: quick links */}
-                        <div className="flex items-center gap-1 px-5 py-3 bg-gray-50 flex-wrap">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mr-2">Also:</span>
+
+                        {/* Bottom: quick links — single line */}
+                        <div className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 border-t border-gray-100 overflow-x-auto scrollbar-none">
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 shrink-0 mr-0.5">Also:</span>
                           {[
-                            { label: "Fractional", href: "/fractional", color: "text-violet-700 bg-violet-50 border-violet-200" },
-                            { label: "Interim", href: "/interim", color: "text-teal-700 bg-teal-50 border-teal-200" },
-                            { label: "Startup", href: "/startup", color: "text-orange-700 bg-orange-50 border-orange-200" },
                             { label: "Board", href: "/board", color: "text-slate-700 bg-slate-100 border-slate-200" },
                             { label: "Investors / PE", href: "/investors", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
-                            { label: "Salary Guide", href: "/salary", color: "text-gray-700 bg-gray-100 border-gray-200" },
-                            { label: "Browse A–Z →", href: "/browse-roles", color: "text-blue-700 bg-blue-50 border-blue-200" },
+                            { label: "Browse A–Z", href: "/browse-roles", color: "text-blue-700 bg-blue-50 border-blue-200" },
                             { label: "Blog", href: "/blog", color: "text-indigo-700 bg-indigo-50 border-indigo-200" },
                           ].map(l => (
                             <Link
                               key={l.href}
                               to={l.href}
                               onClick={() => setCatOpen(false)}
-                              className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${l.color} hover:opacity-80 transition-opacity`}
+                              className={`shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${l.color} hover:opacity-80 transition-opacity whitespace-nowrap`}
                             >
                               {l.label}
                             </Link>
@@ -247,67 +321,7 @@ export const NavbarV2 = () => {
                     )}
                   </div>
 
-                  {/* Fractional dropdown */}
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setFracOpen(true)}
-                    onMouseLeave={() => setFracOpen(false)}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => { setFracOpen(!fracOpen); setCatOpen(false); setStartupOpen(false); setBoardOpen(false); setInvestorOpen(false); }}
-                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
-                    >
-                      Fractional <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-                    {fracOpen && <div className="absolute top-full left-0 right-0 h-2" />}
-                    {fracOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
-                        {FRACTIONAL_MENU.map(c => (
-                          <Link
-                            key={c.href}
-                            to={c.href}
-                            onClick={() => setFracOpen(false)}
-                            className={`block px-4 py-2.5 text-sm hover:bg-violet-50 hover:text-violet-700 transition-colors ${c.bold ? "font-bold text-violet-600" : "text-gray-700"}`}
-                          >
-                            {c.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Startup dropdown */}
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setStartupOpen(true)}
-                    onMouseLeave={() => setStartupOpen(false)}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => { setStartupOpen(!startupOpen); setCatOpen(false); setFracOpen(false); setBoardOpen(false); setInvestorOpen(false); }}
-                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
-                    >
-                      Startup <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-                    {startupOpen && <div className="absolute top-full left-0 right-0 h-2" />}
-                    {startupOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
-                        {STARTUP_MENU.map(c => (
-                          <Link
-                            key={c.href}
-                            to={c.href}
-                            onClick={() => setStartupOpen(false)}
-                            className={`block px-4 py-2.5 text-sm hover:bg-orange-50 hover:text-orange-700 transition-colors ${c.bold ? "font-bold text-orange-600" : "text-gray-700"}`}
-                          >
-                            {c.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Board dropdown */}
+                  {/* Board & Investors — merged two-column dropdown */}
                   <div
                     className="relative"
                     onMouseEnter={() => setBoardOpen(true)}
@@ -315,114 +329,113 @@ export const NavbarV2 = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => { setBoardOpen(!boardOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setInvestorOpen(false); }}
-                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                      onClick={() => { setBoardOpen(!boardOpen); setCatOpen(false); }}
+                      className="flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50 whitespace-nowrap"
                     >
-                      Board <ChevronDown className="h-3.5 w-3.5" />
+                      Board & Investors <ChevronDown className="h-3.5 w-3.5 shrink-0" />
                     </button>
                     {boardOpen && <div className="absolute top-full left-0 right-0 h-2" />}
                     {boardOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
-                        {BOARD_MENU.map(c => (
-                          <Link
-                            key={c.href}
-                            to={c.href}
-                            onClick={() => setBoardOpen(false)}
-                            className={`block px-4 py-2.5 text-sm hover:bg-slate-50 hover:text-slate-700 transition-colors ${c.bold ? "font-bold text-slate-700" : "text-gray-700"}`}
-                          >
-                            {c.label}
-                          </Link>
-                        ))}
+                      <div className="absolute top-[calc(100%+4px)] right-0 w-[460px] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                        <div className="grid grid-cols-2">
+
+                          {/* Board column */}
+                          <div className="border-r border-gray-100">
+                            <div className="px-5 pt-4 pb-3 border-b border-gray-100 bg-slate-50">
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Board Roles</p>
+                            </div>
+                            <div className="px-3 py-3 space-y-0.5">
+                              {[
+                                { label: "Board Member",           href: "/board/board-member" },
+                                { label: "Board Chair",            href: "/board/board-chair" },
+                                { label: "Independent Director",   href: "/board/independent-director" },
+                                { label: "Board Advisor",          href: "/board/board-advisor" },
+                                { label: "Audit Committee Chair",  href: "/board/audit-committee-chair" },
+                                { label: "Nominating Committee",   href: "/find-jobs?q=Nominating+Committee" },
+                              ].map(r => (
+                                <Link
+                                  key={r.href}
+                                  to={r.href}
+                                  onClick={() => setBoardOpen(false)}
+                                  className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-slate-50 hover:text-slate-900 transition-colors font-medium group"
+                                >
+                                  {r.label}
+                                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
+                                </Link>
+                              ))}
+                            </div>
+                            <div className="px-5 pb-4">
+                              <Link
+                                to="/board"
+                                onClick={() => setBoardOpen(false)}
+                                className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
+                              >
+                                View all board roles <ChevronRight className="h-3 w-3" />
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* Investors column */}
+                          <div>
+                            <div className="px-5 pt-4 pb-3 border-b border-gray-100 bg-emerald-50">
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Investors & PE</p>
+                            </div>
+                            <div className="px-3 py-3 space-y-0.5">
+                              {[
+                                { label: "Managing Partner",  href: "/investors/managing-partner" },
+                                { label: "General Partner",   href: "/investors/general-partner" },
+                                { label: "Venture Partner",   href: "/investors/venture-partner" },
+                                { label: "Operating Partner", href: "/investors/operating-partner" },
+                                { label: "Portfolio CEO",     href: "/investors/portfolio-ceo" },
+                                { label: "PE Principal",      href: "/investors/pe-principal" },
+                              ].map(r => (
+                                <Link
+                                  key={r.href}
+                                  to={r.href}
+                                  onClick={() => setBoardOpen(false)}
+                                  className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors font-medium group"
+                                >
+                                  {r.label}
+                                  <ChevronRight className="h-3.5 w-3.5 text-emerald-300 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
+                                </Link>
+                              ))}
+                            </div>
+                            <div className="px-5 pb-4">
+                              <Link
+                                to="/investors"
+                                onClick={() => setBoardOpen(false)}
+                                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-900 transition-colors"
+                              >
+                                View all investor roles <ChevronRight className="h-3 w-3" />
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+
                       </div>
                     )}
                   </div>
-
-                  {/* Investors dropdown */}
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setInvestorOpen(true)}
-                    onMouseLeave={() => setInvestorOpen(false)}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => { setInvestorOpen(!investorOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); setInterimOpen(false); }}
-                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
-                    >
-                      Investors <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-                    {investorOpen && <div className="absolute top-full left-0 right-0 h-2" />}
-                    {investorOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
-                        {INVESTOR_MENU.map(c => (
-                          <Link
-                            key={c.href}
-                            to={c.href}
-                            onClick={() => setInvestorOpen(false)}
-                            className={`block px-4 py-2.5 text-sm hover:bg-emerald-50 hover:text-emerald-700 transition-colors ${c.bold ? "font-bold text-emerald-700" : "text-gray-700"}`}
-                          >
-                            {c.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Interim dropdown */}
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setInterimOpen(true)}
-                    onMouseLeave={() => setInterimOpen(false)}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => { setInterimOpen(!interimOpen); setCatOpen(false); setFracOpen(false); setStartupOpen(false); setBoardOpen(false); setInvestorOpen(false); }}
-                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
-                    >
-                      Interim <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-                    {interimOpen && <div className="absolute top-full left-0 right-0 h-2" />}
-                    {interimOpen && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
-                        {INTERIM_MENU.map(c => (
-                          <Link
-                            key={c.href}
-                            to={c.href}
-                            onClick={() => setInterimOpen(false)}
-                            className={`block px-4 py-2.5 text-sm hover:bg-teal-50 hover:text-teal-700 transition-colors ${c.bold ? "font-bold text-teal-700" : "text-gray-700"}`}
-                          >
-                            {c.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <Link
-                    to="/salary"
-                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
-                  >
-                    Salary Guide
-                  </Link>
 
                   <Link
                     to="/employer/auth"
-                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                    className="px-3 py-1.5 text-[13px] font-medium text-gray-500 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50 whitespace-nowrap"
                   >
                     For Employers
                   </Link>
-                  <a
-                    href="/v2#pricing"
-                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById("pricing");
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      } else {
+                        window.location.href = "/#pricing";
+                      }
+                    }}
+                    className="px-3 py-1.5 text-[13px] font-medium text-gray-500 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50 whitespace-nowrap"
                   >
                     Pricing
-                  </a>
-                  <Link
-                    to="/hizorex-os"
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-violet-700 hover:text-violet-900 transition-colors rounded-lg hover:bg-violet-50"
-                  >
-                    <Crown className="h-3.5 w-3.5" />
-                    Hizorex AI
-                  </Link>
+                  </button>
                 </>
               )}
             </nav>
@@ -431,24 +444,27 @@ export const NavbarV2 = () => {
             <div className="hidden lg:flex items-center gap-2 shrink-0">
               {!isAuthenticated ? (
                 <>
+                  {/* Hizorex AI — accent pill */}
+                  <Link
+                    to="/hizorex-os"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-200 bg-violet-50 text-[13px] font-bold text-violet-700 hover:bg-violet-100 transition-colors whitespace-nowrap"
+                  >
+                    <Crown className="h-3.5 w-3.5 shrink-0" />
+                    Hizorex AI
+                  </Link>
+                  <div className="h-5 w-px bg-gray-200" />
                   <Link
                     to="/find-jobs"
-                    className="px-4 py-2 rounded-lg border border-blue-600 text-blue-600 text-sm font-semibold hover:bg-blue-50 transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg border border-blue-600 text-blue-600 text-[13px] font-semibold hover:bg-blue-50 transition-colors whitespace-nowrap"
                   >
                     Browse Jobs
                   </Link>
                   <Link
                     to="/auth"
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold transition-colors whitespace-nowrap"
                   >
-                    <LogIn className="h-3.5 w-3.5" />
+                    <LogIn className="h-3.5 w-3.5 shrink-0" />
                     Sign In
-                  </Link>
-                  <Link
-                    to="/auth?mode=signup"
-                    className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors"
-                  >
-                    Get Started
                   </Link>
                 </>
               ) : (
@@ -613,7 +629,6 @@ export const NavbarV2 = () => {
                 ) : (
                   <>
                     <div className="space-y-0.5 mb-4">
-                      <Link to="/" onClick={closeMenu} className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all ${isHome ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"}`}>Home</Link>
                       <Link to="/find-jobs" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Browse Jobs</Link>
                       <Link to="/executive-roles" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-all">Executive Roles</Link>
                       <Link to="/fractional" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-violet-700 hover:bg-violet-50 transition-all">Fractional</Link>
@@ -621,10 +636,23 @@ export const NavbarV2 = () => {
                       <Link to="/board" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all">Board</Link>
                       <Link to="/investors" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-all">Investors</Link>
                       <Link to="/interim" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-teal-700 hover:bg-teal-50 transition-all">Interim</Link>
-                      <Link to="/salary" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Salary Guide</Link>
                       <Link to="/browse-roles" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Browse A–Z</Link>
                       <Link to="/blog" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition-all">Blog</Link>
-                      <a href="/v2#pricing" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Pricing</a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMenu();
+                          const el = document.getElementById("pricing");
+                          if (el) {
+                            setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+                          } else {
+                            window.location.href = "/#pricing";
+                          }
+                        }}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all w-full text-left"
+                      >
+                        Pricing
+                      </button>
                       <Link
                         to="/hizorex-os"
                         onClick={closeMenu}

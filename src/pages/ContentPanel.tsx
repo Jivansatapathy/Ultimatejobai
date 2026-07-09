@@ -652,7 +652,7 @@ function TestimonialsTab({ token }: { token: string }) {
 // ─── Login form ───────────────────────────────────────────────────────────────
 
 function LoginForm({ onLogin }: { onLogin: (token: string, email: string) => void }) {
-  const [email, setEmail] = useState("Dipayan@venushiring.ca");
+  const [email, setEmail] = useState("dipayan@venushiring.ca");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

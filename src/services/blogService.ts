@@ -28,7 +28,8 @@ function authHeaders(): Record<string, string> {
 export async function fetchPublishedPosts(): Promise<BlogPost[]> {
   const res = await fetch(`${API}/api/blog/posts/`);
   if (!res.ok) throw new Error("Failed to load posts");
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.results ?? []);
 }
 
 export async function fetchPostBySlug(slug: string): Promise<BlogPostDetail> {
@@ -57,7 +58,9 @@ export async function adminFetchAllPosts(): Promise<BlogPost[]> {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error("Unauthorized");
-  return res.json();
+  const data = await res.json();
+  // Handle DRF pagination wrapper { count, results } or plain array
+  return Array.isArray(data) ? data : (data.results ?? []);
 }
 
 export async function adminFetchPost(id: number): Promise<BlogPostDetail> {

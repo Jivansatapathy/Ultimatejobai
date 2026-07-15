@@ -1,5 +1,5 @@
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
-import { Footer } from "@/components/layout/Footer";
+import { FooterV2 } from "@/components/landing2/FooterV2";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { BrowseRolesSection } from "@/components/landing/BrowseRolesSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
@@ -21,7 +21,7 @@ const Index = () => {
         <PlansSection compact />
         <CTASection />
       </main>
-      <Footer />
+      <FooterV2 />
     </div>
   );
 };

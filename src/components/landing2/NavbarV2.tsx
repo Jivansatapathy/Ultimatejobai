@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bot, ChevronDown, Menu, X, LogIn, Loader2, LogOut, Crown,
+  ChevronDown, Menu, X, LogIn, Loader2, LogOut, Crown,
   LayoutDashboard, FileText, Search, Users, BrainCircuit,
   Sparkles, Settings as SettingsIcon, Inbox, ChevronRight,
 } from "lucide-react";
@@ -202,10 +202,8 @@ export const NavbarV2 = () => {
           <div className="flex h-16 items-center justify-between gap-2">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                <Bot className="h-4 w-4 text-white" />
-              </div>
+            <Link to="/" className="flex items-center gap-2 shrink-0">
+              <img src="/hizorex-logo.jpg" alt="Hizorex" className="h-8 w-8 rounded-lg object-cover" />
               <span className="text-[1.05rem] font-extrabold tracking-tight text-gray-900">
                 Hizorex
               </span>
@@ -539,10 +537,8 @@ export const NavbarV2 = () => {
             >
               {/* Drawer header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <Link to="/" onClick={closeMenu} className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                    <Bot className="h-4 w-4 text-white" />
-                  </div>
+                <Link to="/" onClick={closeMenu} className="flex items-center gap-2">
+                  <img src="/hizorex-logo.jpg" alt="Hizorex" className="h-8 w-8 rounded-lg object-cover" />
                   <span className="text-[1.05rem] font-extrabold tracking-tight text-gray-900">Hizorex</span>
                 </Link>
                 <button

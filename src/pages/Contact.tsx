@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
-import { Footer } from "@/components/layout/Footer";
+import { FooterV2 } from "@/components/landing2/FooterV2";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
 import {
@@ -335,7 +335,7 @@ export default function Contact() {
         </div>
       </main>
 
-      <Footer />
+      <FooterV2 />
     </div>
   );
 }

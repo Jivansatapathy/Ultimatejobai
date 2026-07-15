@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
-import { Footer } from "@/components/layout/Footer";
+import { FooterV2 } from "@/components/landing2/FooterV2";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
@@ -322,7 +322,7 @@ export default function BookACall() {
         </div>
       </main>
 
-      <Footer />
+      <FooterV2 />
     </div>
   );
 }

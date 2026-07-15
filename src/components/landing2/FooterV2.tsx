@@ -1,50 +1,34 @@
-﻿import { Link } from "react-router-dom";
-import { Bot } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 
 const LINKS = {
-  "Popular Roles": [
+  "Executive Roles": [
     { label: "CFO Jobs", href: "/executive-roles/cfo" },
     { label: "CTO Jobs", href: "/executive-roles/cto" },
     { label: "COO Jobs", href: "/executive-roles/coo" },
     { label: "CMO Jobs", href: "/executive-roles/cmo" },
-    { label: "CRO Jobs", href: "/executive-roles/cro" },
-    { label: "CHRO Jobs", href: "/executive-roles/chro" },
-    { label: "All Executive Roles", href: "/executive-roles" },
+    { label: "All Executive Roles", href: "/executive-roles", bold: true },
   ],
-  "Fractional": [
+  "Fractional & Startup": [
     { label: "Fractional CFO", href: "/fractional/cfo" },
-    { label: "Fractional CTO", href: "/fractional/cto" },
-    { label: "Fractional CMO", href: "/fractional/cmo" },
-    { label: "Fractional COO", href: "/fractional/coo" },
-    { label: "All Fractional Roles", href: "/fractional" },
-  ],
-  "Startup & Board": [
     { label: "Startup CEO", href: "/startup/ceo" },
-    { label: "Startup CTO", href: "/startup/cto" },
     { label: "Co-Founder", href: "/startup/co-founder" },
-    { label: "Board Member", href: "/board/board-member" },
-    { label: "Independent Director", href: "/board/independent-director" },
-    { label: "All Startup Roles", href: "/startup" },
+    { label: "All Fractional Roles", href: "/fractional", bold: true },
   ],
-  "Investors": [
+  "Board & Investors": [
+    { label: "Board Member", href: "/board/board-member" },
     { label: "Managing Partner", href: "/investors/managing-partner" },
-    { label: "General Partner", href: "/investors/general-partner" },
-    { label: "Operating Partner", href: "/investors/operating-partner" },
     { label: "Portfolio CEO", href: "/investors/portfolio-ceo" },
-    { label: "All Investor Roles", href: "/investors" },
+    { label: "All Investor Roles", href: "/investors", bold: true },
   ],
   "Resources": [
-    { label: "Interim Roles", href: "/interim" },
     { label: "Salary Guide", href: "/salary" },
-    { label: "CFO Salary", href: "/salary/cfo" },
-    { label: "CTO Salary", href: "/salary/cto" },
+    { label: "Interim Roles", href: "/interim" },
     { label: "Browse All Roles A–Z", href: "/browse-roles" },
     { label: "Blog & Insights", href: "/blog" },
   ],
   "Platform": [
-    { label: "Browse Executive Jobs", href: "/find-jobs" },
-    { label: "How It Works", href: "/v2#how-it-works" },
-    { label: "Apex™ AI Apply Bot", href: "/v2#features" },
+    { label: "Browse Jobs", href: "/find-jobs" },
     { label: "Pricing", href: "/v2#pricing" },
     { label: "For Employers", href: "/employer/auth" },
   ],
@@ -61,27 +45,13 @@ const LINKS = {
 export const FooterV2 = () => (
   <footer className="bg-gray-900 text-white">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
-      <div className="mb-10 sm:mb-14 pb-10 sm:pb-14 border-b border-gray-800 max-w-3xl">
-        <h2 className="text-lg font-extrabold text-white mb-3">Executive Careers for Today's Leaders</h2>
-        <p className="text-sm text-gray-400 leading-relaxed">
-          Hizorex is an AI-powered Executive Career Platform built for experienced professionals seeking leadership
-          opportunities across finance, technology, operations, sales, marketing, product, and emerging AI roles.
-          Whether you're searching for Executive Jobs, Leadership Jobs, Fractional Executive Jobs, Startup Executive
-          Jobs, Board Member Jobs, or executive positions with venture-backed companies, our platform combines
-          intelligent AI Job Search, personalized AI Job Matching, resume optimization, interview preparation, and
-          career resources to simplify every stage of your executive career journey. Organizations also benefit from
-          an advanced Executive Hiring Platform that streamlines executive recruitment while connecting with highly
-          qualified leadership talent.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8 lg:gap-6">
         {/* Brand col */}
         <div className="col-span-2 lg:col-span-1">
-          <Link to="/" className="flex items-center gap-2.5 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <Bot className="h-4 w-4 text-white" />
-            </div>
+          <Link to="/" className="flex items-center gap-2 mb-4">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white p-1">
+              <img src="/hizorex-logo.jpg" alt="Hizorex" className="h-full w-full rounded object-cover" />
+            </span>
             <span className="text-base font-extrabold tracking-tight text-white">
               Hizorex
             </span>
@@ -100,9 +70,16 @@ export const FooterV2 = () => (
                 <li key={l.href}>
                   <Link
                     to={l.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className={`group inline-flex items-center gap-1 text-sm transition-colors ${
+                      "bold" in l && l.bold
+                        ? "text-gray-300 hover:text-white font-semibold"
+                        : "text-gray-400 hover:text-white"
+                    }`}
                   >
                     {l.label}
+                    {"bold" in l && l.bold && (
+                      <ChevronRight className="h-3 w-3 text-gray-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    )}
                   </Link>
                 </li>
               ))}

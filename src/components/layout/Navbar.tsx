@@ -15,7 +15,6 @@ import {
   Sparkles,
   Menu,
   X,
-  Bot,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import NotificationBell from "@/components/NotificationBell";
@@ -63,8 +62,6 @@ export const Navbar = () => {
   const navBg    = dark ? "bg-zinc-950/95 backdrop-blur-md border-zinc-900"  : "bg-white/95 backdrop-blur-md border-black/[0.07]";
   const logoText = dark ? "text-white"   : "text-black";
   const logoSub  = dark ? "text-zinc-500" : "text-black/40";
-  const logoIcon = dark ? "bg-white"     : "bg-black";
-  const logoIconColor = dark ? "text-black" : "text-white";
 
   const linkBase    = dark
     ? "text-zinc-500 hover:text-white hover:bg-zinc-900"
@@ -98,10 +95,8 @@ export const Navbar = () => {
           <div className="flex h-[60px] items-center justify-between gap-4">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 shrink-0 group" onClick={close}>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${logoIcon}`}>
-                <Bot className={`h-4 w-4 ${logoIconColor}`} />
-              </div>
+            <Link to="/" className="flex items-center gap-2 shrink-0 group" onClick={close}>
+              <img src="/hizorex-logo.jpg" alt="Hizorex" className="h-8 w-8 rounded-lg object-cover" />
               <span className={`text-[1.05rem] font-extrabold tracking-tight ${logoText}`}>
                 Hizorex
               </span>

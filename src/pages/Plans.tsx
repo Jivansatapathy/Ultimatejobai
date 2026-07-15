@@ -1,5 +1,5 @@
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
-import { Footer } from "@/components/layout/Footer";
+import { FooterV2 } from "@/components/landing2/FooterV2";
 import { PlansSection } from "@/components/plans/PlansSection";
 
 // Triggering re-compile
@@ -10,7 +10,7 @@ export default function Plans() {
       <main className="pt-16">
         <PlansSection />
       </main>
-      <Footer />
+      <FooterV2 />
     </div>
   );
 }

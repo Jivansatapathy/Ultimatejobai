@@ -1,6 +1,6 @@
 ﻿import React from "react";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
-import { Footer } from "@/components/layout/Footer";
+import { FooterV2 } from "@/components/landing2/FooterV2";
 
 const ReturnPolicy = () => {
   return (
@@ -62,7 +62,7 @@ const ReturnPolicy = () => {
           </section>
         </div>
       </main>
-      <Footer />
+      <FooterV2 />
     </div>
   );
 };

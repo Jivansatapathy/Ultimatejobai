@@ -36,7 +36,7 @@ export default function FractionalRolePage() {
 
   useEffect(() => {
     setLoading(true);
-    searchSeniorJobs({ text: role.searchQ, page: 1, page_size: 6 })
+    searchSeniorJobs({ q: role.searchQ, page: 1, page_size: 6 })
       .then(res => { setJobs(res.results as Job[]); setJobCount(res.count); })
       .catch(() => {})
       .finally(() => setLoading(false));

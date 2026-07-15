@@ -59,6 +59,20 @@ const LINKS = {
 export const FooterV2 = () => (
   <footer className="bg-gray-900 text-white">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
+      <div className="mb-10 sm:mb-14 pb-10 sm:pb-14 border-b border-gray-800 max-w-3xl">
+        <h2 className="text-lg font-extrabold text-white mb-3">Executive Careers for Today's Leaders</h2>
+        <p className="text-sm text-gray-400 leading-relaxed">
+          Hizorex is an AI-powered Executive Career Platform built for experienced professionals seeking leadership
+          opportunities across finance, technology, operations, sales, marketing, product, and emerging AI roles.
+          Whether you're searching for Executive Jobs, Leadership Jobs, Fractional Executive Jobs, Startup Executive
+          Jobs, Board Member Jobs, or executive positions with venture-backed companies, our platform combines
+          intelligent AI Job Search, personalized AI Job Matching, resume optimization, interview preparation, and
+          career resources to simplify every stage of your executive career journey. Organizations also benefit from
+          an advanced Executive Hiring Platform that streamlines executive recruitment while connecting with highly
+          qualified leadership talent.
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
         {/* Brand col */}
         <div className="col-span-2 lg:col-span-1">

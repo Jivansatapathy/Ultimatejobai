@@ -89,6 +89,11 @@ function CountUp({ to, suffix }: { to: number; suffix: string }) {
   return <span ref={ref}>0{suffix}</span>;
 }
 
+const HEADLINE_LINE1 = "Executive Jobs";
+const HEADLINE_LINE2 = "C-Level Careers & AI Job Matching";
+const SUBTITLE =
+  "Find executive, fractional, board, and startup leadership jobs with AI-powered job matching and career insights.";
+
 export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
   const navigate = useNavigate();
   const [role, setRole] = useState("");
@@ -152,16 +157,13 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
           className="mb-4 sm:mb-5 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.06] text-gray-900"
         >
           <span className="relative inline-block text-blue-600">
-            {hero.headline_line1}
+            {HEADLINE_LINE1}
             <svg className="absolute -bottom-1 sm:-bottom-2 left-0 w-full" height="6" viewBox="0 0 300 6" fill="none" preserveAspectRatio="none">
               <path d="M0 5 Q150 0 300 5" stroke="#2563EB" strokeWidth="3" fill="none" strokeLinecap="round" />
             </svg>
           </span>
-          <span className="text-gray-900"> for </span>
           <br />
-          <span className="text-gray-800">{hero.headline_line2}</span>
-          <br />
-          <span className="text-gray-400 text-2xl sm:text-4xl md:text-5xl font-bold">{hero.headline_suffix}</span>
+          <span className="text-gray-800">{HEADLINE_LINE2}</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -171,7 +173,7 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
           transition={{ duration: 0.4, delay: 0.14 }}
           className="mx-auto mb-7 sm:mb-10 max-w-2xl text-base sm:text-lg md:text-xl text-gray-500 leading-relaxed"
         >
-          {hero.subtitle}
+          {SUBTITLE}
         </motion.p>
 
         {/* Search bar */}
@@ -258,7 +260,7 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.28 }}
-          className="mb-10 sm:mb-14 flex flex-wrap items-center justify-center gap-2"
+          className="mb-6 flex flex-wrap items-center justify-center gap-2"
         >
           <span className="text-sm text-gray-400 font-medium mr-1">Popular:</span>
           {hero.quick_roles.map((r) => (
@@ -271,6 +273,22 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
               {r}
             </button>
           ))}
+        </motion.div>
+
+        {/* Browse Companies */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.32 }}
+          className="mb-10 sm:mb-14"
+        >
+          <Link
+            to="/find-jobs"
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all"
+          >
+            Browse Jobs
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </motion.div>
       </div>
 
@@ -359,17 +377,6 @@ export const HeroV2 = ({ hero }: { hero: HeroContent }) => {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Explore link */}
-        <div className="border-t border-gray-100 flex justify-center py-3">
-          <a
-            href="#categories"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors font-semibold"
-          >
-            Explore job categories
-            <ArrowRight className="h-4 w-4" />
-          </a>
         </div>
       </motion.div>
     </section>

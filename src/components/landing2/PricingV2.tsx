@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Check, ArrowRight, Sparkles, Briefcase, Crown, Phone, Clock, Loader2 } from "lucide-react";
@@ -9,16 +8,15 @@ import { toast } from "sonner";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const formatPrice = (plan: any, annual: boolean): string => {
+const formatPrice = (plan: any): string => {
   if (plan.slug === "free" || plan.is_default) return "Free";
   const pd = plan.price_data;
   if (pd?.amount != null) {
-    const amount = annual ? Math.round(pd.amount * 0.8) : pd.amount;
     const cur = (pd.currency || "usd").toUpperCase();
     return new Intl.NumberFormat(undefined, {
       style: "currency", currency: cur,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(pd.amount);
   }
   return plan.price_display || plan.price || "";
 };
@@ -56,14 +54,14 @@ const fallbackConfig = { icon: Phone };
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
 function PricingCard({
-  plan, index, annual, onSelect, isCurrent, isLoading, disabled,
+  plan, index, onSelect, isCurrent, isLoading, disabled,
 }: {
-  plan: any; index: number; annual: boolean; onSelect: () => void; isCurrent: boolean; isLoading: boolean; disabled: boolean;
+  plan: any; index: number; onSelect: () => void; isCurrent: boolean; isLoading: boolean; disabled: boolean;
 }) {
   const ui       = planUiConfig[plan.slug] || planUiConfig.free;
   const config   = PLAN_CONFIG[plan.slug] || fallbackConfig;
   const Icon     = config.icon;
-  const price    = formatPrice(plan, annual);
+  const price    = formatPrice(plan);
   const isFree   = price === "Free";
   const features = getFeatures(plan, ui);
 
@@ -105,9 +103,6 @@ function PricingCard({
           <span className="text-5xl font-black tracking-tight leading-none">{price}</span>
           {!isFree && <span className="text-blue-300 text-base font-semibold mb-1">/{ui.subtitle || "mo"}</span>}
         </div>
-        {annual && !isFree && (
-          <p className="text-blue-200 text-xs font-semibold mb-3">Billed annually · 20% off</p>
-        )}
 
         {/* Divider */}
         <p className="text-blue-100/80 text-sm leading-relaxed mt-3 mb-6 pb-6 border-b border-white/20">
@@ -192,9 +187,6 @@ function PricingCard({
         <span className="text-4xl font-black text-gray-900 tracking-tight leading-none">{price}</span>
         {!isFree && <span className="text-gray-400 text-base font-semibold mb-1">/{ui.subtitle || "mo"}</span>}
       </div>
-      {annual && !isFree && (
-        <p className="text-emerald-600 text-xs font-semibold mb-1">Billed annually · save 20%</p>
-      )}
 
       {/* Description */}
       <p className="text-gray-500 text-sm leading-relaxed mt-3 mb-6 pb-6 border-b border-gray-100">
@@ -245,7 +237,6 @@ function PricingCard({
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 export const PricingV2 = () => {
-  const [annual, setAnnual] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { plans, summary, loadingPlans, checkoutLoadingSlug, selectPlan, initiateCheckout } = useSubscription();
@@ -310,31 +301,6 @@ export const PricingV2 = () => {
           <p className="text-gray-500 text-lg max-w-xl mx-auto leading-relaxed">
             From a free 15-minute career consultation to a dedicated executive recruiter — every plan includes full AI platform access.
           </p>
-
-          {/* Billing toggle */}
-          <div className="mt-8 inline-flex items-center gap-4 rounded-2xl bg-gray-100 p-1.5">
-            <button
-              type="button"
-              onClick={() => setAnnual(false)}
-              className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${
-                !annual ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              onClick={() => setAnnual(true)}
-              className={`px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
-                annual ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Annual
-              <span className="rounded-full bg-emerald-100 text-emerald-700 text-xs font-black px-2 py-0.5">
-                −20%
-              </span>
-            </button>
-          </div>
         </motion.div>
 
         {/* Loading skeletons */}
@@ -354,7 +320,6 @@ export const PricingV2 = () => {
                 key={plan.slug}
                 plan={plan}
                 index={i}
-                annual={annual}
                 onSelect={() => handleSelect(plan.slug)}
                 isCurrent={summary?.plan?.slug === plan.slug}
                 isLoading={checkoutLoadingSlug === plan.slug}

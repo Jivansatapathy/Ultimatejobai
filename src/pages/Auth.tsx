@@ -45,6 +45,15 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState({
+    terms: false,
+    privacy: false,
+    aiUsage: false,
+    dataProcessing: false,
+    marketing: true,
+  });
+  const allRequiredConsentGiven =
+    consent.terms && consent.privacy && consent.aiUsage && consent.dataProcessing;
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isLocalhost =
@@ -139,6 +148,11 @@ export default function Auth() {
       return;
     }
 
+    if (isSignUp && !allRequiredConsentGiven) {
+      toast.error("Please accept all required consents to create your account.");
+      return;
+    }
+
     setLoading(true);
     let redirectingToCheckout = false;
 
@@ -174,6 +188,7 @@ export default function Auth() {
       const response = await api.post("/api/auth/firebase-login/", {
         token,
         selected_plan_slug: selectedPlanSlug,
+        marketing_consent: isSignUp ? consent.marketing : undefined,
       });
 
       const { access, refresh, is_new_user, is_admin } = response.data;
@@ -463,9 +478,96 @@ export default function Auth() {
                 </div>
               )}
 
+              {isSignUp && (
+                <div className="space-y-2.5 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                  <p className="text-xs font-bold text-zinc-700 uppercase tracking-wide mb-1">
+                    Consent Required
+                  </p>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={consent.terms}
+                      onChange={(e) => setConsent({ ...consent, terms: e.target.checked })}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-black focus:ring-black focus:ring-offset-0"
+                    />
+                    <span className="text-xs text-zinc-600 leading-relaxed">
+                      I agree to the{" "}
+                      <Link
+                        to="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-black font-semibold hover:underline underline-offset-2"
+                      >
+                        Terms of Service
+                      </Link>
+                      .
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={consent.privacy}
+                      onChange={(e) => setConsent({ ...consent, privacy: e.target.checked })}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-black focus:ring-black focus:ring-offset-0"
+                    />
+                    <span className="text-xs text-zinc-600 leading-relaxed">
+                      I acknowledge the{" "}
+                      <Link
+                        to="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-black font-semibold hover:underline underline-offset-2"
+                      >
+                        Privacy Policy
+                      </Link>
+                      .
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={consent.aiUsage}
+                      onChange={(e) => setConsent({ ...consent, aiUsage: e.target.checked })}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-black focus:ring-black focus:ring-offset-0"
+                    />
+                    <span className="text-xs text-zinc-600 leading-relaxed">
+                      I understand that Hizorex uses Artificial Intelligence to assist with resume
+                      generation, cover letters, job recommendations, and candidate matching.
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={consent.dataProcessing}
+                      onChange={(e) => setConsent({ ...consent, dataProcessing: e.target.checked })}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-black focus:ring-black focus:ring-offset-0"
+                    />
+                    <span className="text-xs text-zinc-600 leading-relaxed">
+                      I consent to my personal information being processed for recruitment purposes.
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1 border-t border-zinc-200">
+                    <input
+                      type="checkbox"
+                      checked={consent.marketing}
+                      onChange={(e) => setConsent({ ...consent, marketing: e.target.checked })}
+                      className="mt-1.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-black focus:ring-black focus:ring-offset-0"
+                    />
+                    <span className="text-xs text-zinc-500 leading-relaxed pt-1">
+                      <span className="font-semibold text-zinc-600">(Optional)</span> I agree to receive job alerts and marketing communications.
+                    </span>
+                  </label>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (isSignUp && !allRequiredConsentGiven)}
                 className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-black hover:bg-zinc-800 text-white text-sm font-bold transition-all mt-2 disabled:opacity-60"
               >
                 {loading ? (
@@ -482,23 +584,25 @@ export default function Auth() {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-xs text-zinc-400">
-              By continuing, you agree to our{" "}
-              <Link
-                to="/terms"
-                className="text-black font-semibold hover:underline underline-offset-2"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                to="/privacy"
-                className="text-black font-semibold hover:underline underline-offset-2"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </p>
+            {!isSignUp && (
+              <p className="mt-6 text-center text-xs text-zinc-400">
+                By continuing, you agree to our{" "}
+                <Link
+                  to="/terms"
+                  className="text-black font-semibold hover:underline underline-offset-2"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy"
+                  className="text-black font-semibold hover:underline underline-offset-2"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            )}
           </motion.div>
         </div>
       </div>

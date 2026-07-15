@@ -57,6 +57,8 @@ const PublicLinkedInJob = lazy(() => import("./pages/PublicLinkedInJob"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const AcceptableUsePolicy = lazy(() => import("./pages/AcceptableUsePolicy"));
 const SeniorJobs = lazy(() => import("./pages/SeniorJobs"));
 const FractionalJobs = lazy(() => import("./pages/FractionalJobs"));
 const ExecutiveRolesHub = lazy(() => import("./pages/ExecutiveRolesHub"));
@@ -481,6 +483,8 @@ const App = () => (
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/return-policy" element={<ReturnPolicy />} />
+                  <Route path="/cookie-policy" element={<CookiePolicy />} />
+                  <Route path="/acceptable-use-policy" element={<AcceptableUsePolicy />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/book-a-call" element={<BookACall />} />
                   <Route path="/plans" element={<Plans />} />

@@ -480,25 +480,6 @@ export default function EmployerAuth() {
                 </p>
               </div>
 
-              {/* LinkedIn — login only */}
-              {mode === "login" && (
-                <div className="space-y-4 mb-6">
-                  <button
-                    type="button"
-                    onClick={handleLinkedInLogin}
-                    disabled={linkedInLoading || loading}
-                    className="w-full flex items-center justify-center gap-3 h-12 rounded-2xl bg-[#0A66C2] hover:bg-[#004182] text-white font-bold text-sm transition-colors disabled:opacity-60"
-                  >
-                    {linkedInLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Linkedin className="h-5 w-5" />}
-                    Continue with LinkedIn
-                  </button>
-                  <div className="relative flex items-center gap-3">
-                    <div className="flex-1 h-px bg-gray-200" />
-                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">or email</span>
-                    <div className="flex-1 h-px bg-gray-200" />
-                  </div>
-                </div>
-              )}
 
               {/* Invite banner */}
               {invitePreview && (

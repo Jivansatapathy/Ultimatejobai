@@ -4,6 +4,7 @@ import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { FooterV2 } from "@/components/landing2/FooterV2";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
+import api from "@/services/api";
 import {
   Mail,
   Phone,
@@ -102,11 +103,10 @@ export default function Contact() {
     setSending(true);
     setError("");
     try {
-      // Replace with your real contact API endpoint
-      await new Promise(res => setTimeout(res, 1200)); // placeholder delay
+      await api.post("/api/landing/contact/", form);
       setSent(true);
-    } catch {
-      setError("Failed to send message. Please try again or email us directly.");
+    } catch (err: any) {
+      setError(err?.response?.data?.error || "Failed to send message. Please try again or email us directly.");
     } finally {
       setSending(false);
     }

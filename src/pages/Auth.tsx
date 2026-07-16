@@ -10,7 +10,6 @@ import {
   ArrowRight,
   Check,
   Building2,
-  Bot,
 } from "lucide-react";
 import api from "@/services/api";
 import { subscriptionService } from "@/services/subscriptionService";
@@ -297,9 +296,7 @@ export default function Auth() {
         {/* Top bar */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black">
-              <Bot className="h-4 w-4 text-white" />
-            </div>
+            <img src="/hizorex-logo.jpg" alt="Hizorex" className="h-8 w-8 rounded-lg object-cover" />
             <span className="text-[1rem] font-extrabold tracking-tight text-black">
               Hizorex
             </span>

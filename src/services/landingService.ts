@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "https://jobai-production-7672.up.railway.app";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://jobai-production-83b7.up.railway.app";
 
 export interface HeroContent {
   badge_text: string;

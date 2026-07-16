@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Search, X, MapPin, Building2, Briefcase, Globe2,
   Loader2, Crown, TrendingUp, Users2, ChevronDown,
@@ -717,8 +717,14 @@ function JobDetailDrawer({ job, onClose }: { job: SeniorJob | null; onClose: () 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function FindJobs() {
-  const [filters, setFilters] = useState<PageFilters>(EMPTY);
-  const [textInput, setTextInput] = useState("");
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+
+  const [filters, setFilters] = useState<PageFilters>(() => ({
+    ...EMPTY,
+    text: initialQuery,
+  }));
+  const [textInput, setTextInput] = useState(initialQuery);
 
   const [jobs, setJobs] = useState<SeniorJob[]>([]);
   const [total, setTotal] = useState(0);
@@ -746,6 +752,7 @@ export default function FindJobs() {
   }, []);
 
   useEffect(() => {
+    if (initialQuery) return; // an explicit search from the URL takes priority over the profile auto-fill
     venusService.getProfile().then(profile => {
       if (!profile?.role) return;
       const searchText = ROLE_TO_SEARCH[profile.role] ?? profile.role;
@@ -760,7 +767,7 @@ export default function FindJobs() {
       setTextInput(searchText);
       setVenusPreFill({ role: profile.role, industry: profile.industries?.[0] ?? "" });
     }).catch(() => {});
-  }, []);
+  }, [initialQuery]);
 
   const runSearch = useCallback(async (f: PageFilters, pg: number, append: boolean) => {
     if (append) setLoadingMore(true); else setLoading(true);

@@ -256,22 +256,28 @@ const PageLoader = () => (
   </>
 );
 
+const NON_CANDIDATE_PATH_PREFIXES = ["/admin", "/superadmin", "/employer", "/blog-admin", "/content-panel"];
+
 function AppChecklist() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appCount, setAppCount] = useState(0);
   const [interviewDone, setInterviewDone] = useState(false);
   const isEmployer = localStorage.getItem("current_user_role") === "employer";
+  const location = useLocation();
+  const isNonCandidateScreen = NON_CANDIDATE_PATH_PREFIXES.some(
+    prefix => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`)
+  );
 
   // All hooks must run unconditionally — conditional logic goes inside each effect
   useEffect(() => {
-    if (isEmployer) return;
+    if (isEmployer || isNonCandidateScreen) return;
     import("./services/notificationService").then(({ notificationService }) => {
       notificationService.checkAndFireDailyReminder();
     });
-  }, [isEmployer]);
+  }, [isEmployer, isNonCandidateScreen]);
 
   useEffect(() => {
-    if (isEmployer) return;
+    if (isEmployer || isNonCandidateScreen) return;
     const token = localStorage.getItem("access_token");
     if (!token) return;
     import("./services/api").then(({ default: api }) =>
@@ -284,9 +290,9 @@ function AppChecklist() {
         .then((logs: any[]) => setInterviewDone(logs.some(l => l.activity_type === "INTERVIEW")))
         .catch(() => {})
     );
-  }, [isEmployer]);
+  }, [isEmployer, isNonCandidateScreen]);
 
-  if (isEmployer) return null;
+  if (isEmployer || isNonCandidateScreen) return null;
 
   return (
     <>

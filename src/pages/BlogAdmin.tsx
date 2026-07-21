@@ -8,7 +8,7 @@ import {
 import {
   adminLogin, adminFetchAllPosts, adminFetchPost,
   adminCreatePost, adminUpdatePost, adminDeletePost,
-  adminTogglePublish, BlogPost, BlogPostDetail,
+  adminTogglePublish, requestPasswordReset, BlogPost, BlogPostDetail,
 } from "@/services/blogService";
 
 // ── Tiny TipTap-like rich text toolbar (no external deps) ─────────────────────
@@ -156,6 +156,7 @@ function slugify(s: string) {
 // ── Login screen ──────────────────────────────────────────────────────────────
 
 function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
+  const [mode, setMode] = useState<"login" | "forgot" | "sent">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -170,6 +171,20 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
       onLogin(token);
     } catch {
       setError("Invalid email or password. Staff account required.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await requestPasswordReset(email);
+      setMode("sent");
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -192,46 +207,116 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
           </div>
         </div>
 
-        <form onSubmit={submit} className="bg-gray-900 rounded-2xl p-7 border border-gray-800 space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-red-400 bg-red-950 rounded-xl px-4 py-2.5 border border-red-900">
-              <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+        {mode === "login" && (
+          <form onSubmit={submit} className="bg-gray-900 rounded-2xl p-7 border border-gray-800 space-y-4">
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-950 rounded-xl px-4 py-2.5 border border-red-900">
+                <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoFocus
+                placeholder="admin@hizorex.com"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
+              />
             </div>
-          )}
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              autoFocus
-              placeholder="admin@hizorex.com"
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
-            />
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMode("forgot"); setError(""); }}
+              className="w-full text-center text-xs font-semibold text-gray-500 hover:text-white transition-colors"
+            >
+              Forgot password?
+            </button>
+          </form>
+        )}
+
+        {mode === "forgot" && (
+          <form onSubmit={submitForgot} className="bg-gray-900 rounded-2xl p-7 border border-gray-800 space-y-4">
+            <p className="text-sm text-gray-400">
+              Enter your email and we'll send you a link to reset your password.
+            </p>
+
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-950 rounded-xl px-4 py-2.5 border border-red-900">
+                <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoFocus
+                placeholder="admin@hizorex.com"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send reset link"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMode("login"); setError(""); }}
+              className="w-full text-center text-xs font-semibold text-gray-500 hover:text-white transition-colors"
+            >
+              Back to sign in
+            </button>
+          </form>
+        )}
+
+        {mode === "sent" && (
+          <div className="bg-gray-900 rounded-2xl p-7 border border-gray-800 space-y-4 text-center">
+            <CheckCircle className="h-10 w-10 text-emerald-400 mx-auto" />
+            <p className="text-sm text-white font-semibold">Check your inbox</p>
+            <p className="text-xs text-gray-400">
+              If an account exists for {email}, a password reset link is on its way. It expires in 3 days.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setMode("login"); setError(""); }}
+              className="w-full text-center text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Back to sign in
+            </button>
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
-          </button>
-        </form>
+        )}
       </motion.div>
     </div>
   );

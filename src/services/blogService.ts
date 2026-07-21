@@ -53,6 +53,27 @@ export async function adminLogin(username: string, password: string): Promise<st
   return token;
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const res = await fetch(`${API}/api/auth/password-reset/request/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) throw new Error("Failed to request password reset");
+}
+
+export async function confirmPasswordReset(uid: string, token: string, newPassword: string): Promise<void> {
+  const res = await fetch(`${API}/api/auth/password-reset/confirm/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid, token, new_password: newPassword }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to reset password");
+  }
+}
+
 export async function adminFetchAllPosts(): Promise<BlogPost[]> {
   const res = await fetch(`${API}/api/blog/admin/posts/`, {
     headers: authHeaders(),

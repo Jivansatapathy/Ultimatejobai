@@ -387,3 +387,16 @@
 /* Dynamic bar/progress widths — set via CSS custom property --bar-pct */
 .bar-fill { width: var(--bar-pct, 0%); }
 .bar-height { height: var(--bar-h, 0%); }
+
+/* CKEditor — round the toolbar/content corners directly instead of clipping
+   the wrapper's overflow, which was cutting off the heading/table dropdown
+   panels (they render as absolutely-positioned children of the wrapper). */
+.ckeditor-wrapper .ck.ck-toolbar {
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+.ckeditor-wrapper .ck.ck-content {
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  min-height: 160px;
+}

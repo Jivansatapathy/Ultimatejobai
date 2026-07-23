@@ -79,7 +79,11 @@ function S3UploadAdapterPlugin(editor: any) {
 
 export function CKEditorComponent({ value, onChange, placeholder, toolbar }: CKEditorComponentProps) {
   return (
-    <div className="ckeditor-wrapper rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700">
+    // No overflow-hidden here — CKEditor's heading/table dropdown panels render
+    // as absolutely-positioned children of this wrapper, and clipping overflow
+    // to round the corners was cutting those panels off. Rounded via the
+    // toolbar/editable elements themselves instead (see ckeditor.css).
+    <div className="ckeditor-wrapper rounded-xl border border-gray-300 dark:border-gray-700">
       <CKEditor
         editor={ClassicEditor}
         data={value}

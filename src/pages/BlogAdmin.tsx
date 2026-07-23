@@ -479,7 +479,14 @@ export default function BlogAdmin() {
   };
 
   if (!authed) {
-    return <LoginScreen onLogin={() => setAuthed(true)} />;
+    return (
+      <LoginScreen
+        onLogin={(token) => {
+          localStorage.setItem("blog_admin_token", token);
+          setAuthed(true);
+        }}
+      />
+    );
   }
 
   return (

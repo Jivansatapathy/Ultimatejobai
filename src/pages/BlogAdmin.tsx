@@ -1,79 +1,21 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Plus, Edit3, Trash2, Eye, EyeOff, BookOpen,
-  ArrowLeft, Save, Loader2, Tag, X, CheckCircle, AlertCircle,
-  Globe, FileText,
+  ArrowLeft, Save, Loader2, X, CheckCircle, AlertCircle,
+  Globe, FolderPlus, Upload,
 } from "lucide-react";
 import {
   adminLogin, adminFetchAllPosts, adminFetchPost,
   adminCreatePost, adminUpdatePost, adminDeletePost,
-  adminTogglePublish, requestPasswordReset, BlogPost, BlogPostDetail,
+  adminTogglePublish, requestPasswordReset, fetchCategories,
+  adminCreateCategory, adminDeleteCategory, adminUploadImage,
+  BlogPost, BlogPostDetail, Category,
 } from "@/services/blogService";
+import { ContentBlockEditor } from "@/components/blog/ContentBlockEditor";
+import { ContentBlock, FaqItem, ImageFitMode } from "@/components/blog/blockTypes";
 
-// ── Tiny TipTap-like rich text toolbar (no external deps) ─────────────────────
-// Using a contenteditable div with execCommand for basic formatting
-
-function RichEditor({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (html: string) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== value) {
-      ref.current.innerHTML = value;
-    }
-  }, []); // only on mount
-
-  const exec = (cmd: string, arg?: string) => {
-    document.execCommand(cmd, false, arg);
-    ref.current?.focus();
-  };
-
-  const TOOLS = [
-    { label: "B", cmd: "bold", title: "Bold" },
-    { label: "I", cmd: "italic", title: "Italic" },
-    { label: "U", cmd: "underline", title: "Underline" },
-    { label: "H1", cmd: "formatBlock", arg: "h2", title: "Heading 1" },
-    { label: "H2", cmd: "formatBlock", arg: "h3", title: "Heading 2" },
-    { label: "¶", cmd: "formatBlock", arg: "p", title: "Paragraph" },
-    { label: "• List", cmd: "insertUnorderedList", title: "Bullet list" },
-    { label: "1. List", cmd: "insertOrderedList", title: "Ordered list" },
-    { label: "—", cmd: "insertHorizontalRule", title: "Divider" },
-  ];
-
-  return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
-      <div className="flex flex-wrap gap-1 bg-gray-50 border-b border-gray-200 p-2">
-        {TOOLS.map(t => (
-          <button
-            key={t.cmd + (t.arg ?? "")}
-            type="button"
-            title={t.title}
-            onMouseDown={e => { e.preventDefault(); exec(t.cmd, t.arg); }}
-            className="px-2.5 py-1 rounded text-xs font-semibold text-gray-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 transition-all"
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <div
-        ref={ref}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={() => onChange(ref.current?.innerHTML ?? "")}
-        className="min-h-[320px] p-4 outline-none prose prose-sm max-w-none focus:ring-0 text-gray-800"
-        style={{ lineHeight: 1.8 }}
-      />
-    </div>
-  );
-}
-
-// ── Tag input ──────────────────────────────────────────────────────────────────
+// ── Tag Input ─────────────────────────────────────────────────────────────────
 
 function TagInput({ tags, onChange }: { tags: string[]; onChange: (t: string[]) => void }) {
   const [input, setInput] = useState("");
@@ -85,22 +27,27 @@ function TagInput({ tags, onChange }: { tags: string[]; onChange: (t: string[]) 
   };
 
   return (
-    <div className="flex flex-wrap gap-2 items-center border border-gray-200 rounded-xl p-2.5 min-h-[44px]">
-      {tags.map(t => (
-        <span key={t} className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+    <div className="flex flex-wrap gap-2 items-center border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 min-h-[44px] bg-white dark:bg-gray-900">
+      {tags.map((t) => (
+        <span key={t} className="flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-full">
           {t}
-          <button type="button" onClick={() => onChange(tags.filter(x => x !== t))}>
+          <button type="button" onClick={() => onChange(tags.filter((x) => x !== t))}>
             <X className="h-3 w-3" />
           </button>
         </span>
       ))}
       <input
         value={input}
-        onChange={e => setInput(e.target.value)}
-        onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); } }}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            add();
+          }
+        }}
         onBlur={add}
         placeholder={tags.length === 0 ? "Add tags, press Enter" : ""}
-        className="flex-1 min-w-[120px] outline-none text-sm bg-transparent placeholder-gray-300"
+        className="flex-1 min-w-[120px] outline-none text-sm bg-transparent placeholder-gray-400 dark:text-white"
       />
     </div>
   );
@@ -129,6 +76,7 @@ type View = "list" | "create" | "edit";
 
 interface FormState {
   title: string;
+  subtitle: string;
   slug: string;
   excerpt: string;
   content: string;
@@ -136,24 +84,41 @@ interface FormState {
   author_name: string;
   tags: string[];
   status: "draft" | "published";
+  category_id: number | null;
+  date: string;
+  featured: boolean;
+  image_fit: ImageFitMode;
+  meta_title: string;
+  meta_description: string;
+  content_blocks: ContentBlock[];
+  faq: FaqItem[];
 }
 
 const BLANK: FormState = {
   title: "",
+  subtitle: "",
   slug: "",
   excerpt: "",
   content: "",
   cover_image_url: "",
-  author_name: "Hizorex Team",
+  author_name: "JobAI Team",
   tags: [],
   status: "draft",
+  category_id: null,
+  date: "",
+  featured: false,
+  image_fit: "fill",
+  meta_title: "",
+  meta_description: "",
+  content_blocks: [],
+  faq: [],
 };
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-// ── Login screen ──────────────────────────────────────────────────────────────
+// ── Login Screen ──────────────────────────────────────────────────────────────
 
 function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   const [mode, setMode] = useState<"login" | "forgot" | "sent">("login");
@@ -203,7 +168,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
           </div>
           <div>
             <h1 className="text-lg font-extrabold text-white">Blog Admin</h1>
-            <p className="text-xs text-gray-400">Hizorex · Staff only</p>
+            <p className="text-xs text-gray-400">JobAI · Staff only</p>
           </div>
         </div>
 
@@ -220,10 +185,10 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                placeholder="admin@hizorex.com"
+                placeholder="admin@jobai.com"
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
               />
             </div>
@@ -233,7 +198,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
@@ -248,21 +213,25 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
             </button>
 
-            <button
-              type="button"
-              onClick={() => { setMode("forgot"); setError(""); }}
-              className="w-full text-center text-xs font-semibold text-gray-500 hover:text-white transition-colors"
-            >
-              Forgot password?
-            </button>
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setMode("forgot");
+                }}
+                className="text-xs text-gray-400 hover:text-blue-400 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
           </form>
         )}
 
         {mode === "forgot" && (
           <form onSubmit={submitForgot} className="bg-gray-900 rounded-2xl p-7 border border-gray-800 space-y-4">
-            <p className="text-sm text-gray-400">
-              Enter your email and we'll send you a link to reset your password.
-            </p>
+            <h2 className="text-base font-bold text-white mb-1">Reset Password</h2>
+            <p className="text-xs text-gray-400 mb-4">Enter your email and we'll send reset instructions.</p>
 
             {error && (
               <div className="flex items-center gap-2 text-sm text-red-400 bg-red-950 rounded-xl px-4 py-2.5 border border-red-900">
@@ -275,10 +244,10 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                placeholder="admin@hizorex.com"
+                placeholder="admin@jobai.com"
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
               />
             </div>
@@ -288,32 +257,37 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-60"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send reset link"}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send Reset Link"}
             </button>
 
-            <button
-              type="button"
-              onClick={() => { setMode("login"); setError(""); }}
-              className="w-full text-center text-xs font-semibold text-gray-500 hover:text-white transition-colors"
-            >
-              Back to sign in
-            </button>
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setMode("login");
+                }}
+                className="text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Back to Sign In
+              </button>
+            </div>
           </form>
         )}
 
         {mode === "sent" && (
-          <div className="bg-gray-900 rounded-2xl p-7 border border-gray-800 space-y-4 text-center">
-            <CheckCircle className="h-10 w-10 text-emerald-400 mx-auto" />
-            <p className="text-sm text-white font-semibold">Check your inbox</p>
+          <div className="bg-gray-900 rounded-2xl p-7 border border-gray-800 text-center space-y-4">
+            <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
+            <h2 className="text-base font-bold text-white">Check Your Email</h2>
             <p className="text-xs text-gray-400">
-              If an account exists for {email}, a password reset link is on its way. It expires in 3 days.
+              We sent a password reset link to <span className="text-white">{email}</span>.
             </p>
             <button
               type="button"
-              onClick={() => { setMode("login"); setError(""); }}
-              className="w-full text-center text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+              onClick={() => setMode("login")}
+              className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors"
             >
-              Back to sign in
+              Back to Sign In
             </button>
           </div>
         )}
@@ -322,406 +296,668 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
   );
 }
 
-// ── Post form (create / edit) ─────────────────────────────────────────────────
-
-function PostForm({
-  initial,
-  onSave,
-  onBack,
-  saving,
-}: {
-  initial: FormState;
-  onSave: (data: FormState) => void;
-  onBack: () => void;
-  saving: boolean;
-}) {
-  const [form, setForm] = useState<FormState>(initial);
-
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
-    setForm(f => ({ ...f, [k]: v }));
-
-  const handleTitleChange = (v: string) => {
-    set("title", v);
-    if (!initial.slug) set("slug", slugify(v));
-  };
-
-  return (
-    <div className="max-w-3xl mx-auto">
-      <button
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-6 transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back to posts
-      </button>
-
-      <div className="space-y-5">
-        {/* Title */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Title *</label>
-          <input
-            value={form.title}
-            onChange={e => handleTitleChange(e.target.value)}
-            placeholder="Post title"
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-base text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors font-semibold"
-          />
-        </div>
-
-        {/* Slug */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Slug *</label>
-          <input
-            value={form.slug}
-            onChange={e => set("slug", e.target.value)}
-            placeholder="post-url-slug"
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors font-mono"
-          />
-        </div>
-
-        {/* Excerpt */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Excerpt (SEO description)</label>
-          <textarea
-            value={form.excerpt}
-            onChange={e => set("excerpt", e.target.value)}
-            rows={2}
-            placeholder="Short summary shown in search results and cards…"
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none"
-          />
-        </div>
-
-        {/* Cover image */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Cover image URL</label>
-          <input
-            value={form.cover_image_url}
-            onChange={e => set("cover_image_url", e.target.value)}
-            placeholder="https://..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
-
-        {/* Author */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Author name</label>
-            <input
-              value={form.author_name}
-              onChange={e => set("author_name", e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Status</label>
-            <select
-              value={form.status}
-              onChange={e => set("status", e.target.value as "draft" | "published")}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500 transition-colors"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Tags */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tags</label>
-          <div className="bg-white rounded-xl">
-            <TagInput tags={form.tags} onChange={v => set("tags", v)} />
-          </div>
-        </div>
-
-        {/* Content */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Content *</label>
-          <div className="bg-white rounded-xl">
-            <RichEditor value={form.content} onChange={v => set("content", v)} />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3 pt-2">
-          <button
-            onClick={() => onSave(form)}
-            disabled={saving || !form.title || !form.slug}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-6 py-2.5 text-sm transition-colors disabled:opacity-60"
-          >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {saving ? "Saving…" : "Save post"}
-          </button>
-          <button
-            onClick={onBack}
-            className="px-5 py-2.5 text-sm text-gray-400 hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Main admin shell ──────────────────────────────────────────────────────────
+// ── Main Dashboard ─────────────────────────────────────────────────────────────
 
 export default function BlogAdmin() {
-  const [token, setToken] = useState(() => localStorage.getItem("blog_admin_token") ?? "");
+  const [authed, setAuthed] = useState(() => Boolean(localStorage.getItem("blog_admin_token")));
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [view, setView] = useState<View>("list");
-  const [editPost, setEditPost] = useState<BlogPostDetail | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<FormState>(BLANK);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loadingPosts, setLoadingPosts] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
+
+  // New Category Dialog state
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [creatingCat, setCreatingCat] = useState(false);
 
   const showToast = (msg: string, type: "ok" | "err" = "ok") => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
-  const loadPosts = useCallback(async () => {
-    setLoadingPosts(true);
+  const loadData = async () => {
+    setLoading(true);
     try {
-      setPosts(await adminFetchAllPosts());
+      const [pData, cData] = await Promise.all([adminFetchAllPosts(), fetchCategories()]);
+      setPosts(pData);
+      setCategories(cData);
     } catch {
-      showToast("Failed to load posts", "err");
+      showToast("Session expired or unauthorized. Please sign in again.", "err");
+      localStorage.removeItem("blog_admin_token");
+      setAuthed(false);
     } finally {
-      setLoadingPosts(false);
+      setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    if (token) loadPosts();
-  }, [token, loadPosts]);
+    if (authed) loadData();
+  }, [authed]);
 
-  const handleLogin = (t: string) => {
-    localStorage.setItem("blog_admin_token", t);
-    setToken(t);
-  };
-
-  const logout = () => {
+  const handleLogout = () => {
     localStorage.removeItem("blog_admin_token");
-    setToken("");
+    setAuthed(false);
   };
 
-  const openEdit = async (id: number) => {
+  const handleCreateNew = () => {
+    setForm({ ...BLANK });
+    setEditingId(null);
+    setView("create");
+  };
+
+  const handleEdit = async (post: BlogPost) => {
+    setLoading(true);
     try {
-      const p = await adminFetchPost(id);
-      setEditPost(p);
+      const detail: BlogPostDetail = await adminFetchPost(post.id);
+      setForm({
+        title: detail.title || "",
+        subtitle: detail.subtitle || "",
+        slug: detail.slug || "",
+        excerpt: detail.excerpt || "",
+        content: detail.content || "",
+        cover_image_url: detail.cover_image_url || "",
+        author_name: detail.author_name || "JobAI Team",
+        tags: detail.tags || [],
+        status: detail.status || "draft",
+        category_id: detail.category?.id || null,
+        date: detail.date || "",
+        featured: detail.featured || false,
+        image_fit: detail.image_fit || "fill",
+        meta_title: detail.meta_title || "",
+        meta_description: detail.meta_description || "",
+        content_blocks: detail.content_blocks || [],
+        faq: detail.faq || [],
+      });
+      setEditingId(post.id);
       setView("edit");
     } catch {
-      showToast("Failed to load post", "err");
+      showToast("Failed to load post details", "err");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCreate = async (form: FormState) => {
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) {
+      showToast("Title is required", "err");
+      return;
+    }
+
     setSaving(true);
     try {
-      await adminCreatePost(form);
-      showToast("Post created!");
-      await loadPosts();
+      const payload: Partial<BlogPostDetail> = {
+        title: form.title,
+        subtitle: form.subtitle,
+        slug: form.slug || slugify(form.title),
+        excerpt: form.excerpt,
+        content: form.content,
+        cover_image_url: form.cover_image_url,
+        author_name: form.author_name,
+        tags: form.tags,
+        status: form.status,
+        category_id: form.category_id,
+        date: form.date || null,
+        featured: form.featured,
+        image_fit: form.image_fit,
+        meta_title: form.meta_title,
+        meta_description: form.meta_description,
+        content_blocks: form.content_blocks,
+        faq: form.faq,
+      };
+
+      if (view === "create") {
+        await adminCreatePost(payload);
+        showToast("Post created successfully!");
+      } else if (editingId) {
+        await adminUpdatePost(editingId, payload);
+        showToast("Post updated successfully!");
+      }
+
       setView("list");
-    } catch (e: unknown) {
-      showToast(String(e), "err");
+      loadData();
+    } catch (err: any) {
+      showToast(err.message || "Failed to save post", "err");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleUpdate = async (form: FormState) => {
-    if (!editPost) return;
-    setSaving(true);
-    try {
-      await adminUpdatePost(editPost.id, form);
-      showToast("Post updated!");
-      await loadPosts();
-      setView("list");
-    } catch (e: unknown) {
-      showToast(String(e), "err");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (id: number, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
     try {
       await adminDeletePost(id);
       showToast("Post deleted");
-      setPosts(ps => ps.filter(p => p.id !== id));
+      loadData();
     } catch {
-      showToast("Delete failed", "err");
+      showToast("Failed to delete post", "err");
     }
   };
 
-  const handleToggle = async (id: number) => {
+  const handleTogglePublish = async (id: number) => {
     try {
       const res = await adminTogglePublish(id);
-      setPosts(ps => ps.map(p => p.id === id ? { ...p, status: res.status as "draft" | "published", published_at: res.published_at } : p));
-      showToast(res.status === "published" ? "Post published!" : "Post unpublished");
+      showToast(`Post ${res.status === "published" ? "published" : "moved to draft"}`);
+      loadData();
     } catch {
-      showToast("Toggle failed", "err");
+      showToast("Failed to toggle status", "err");
     }
   };
 
-  if (!token) return <LoginScreen onLogin={handleLogin} />;
+  const handleCreateCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    setCreatingCat(true);
+    try {
+      const created = await adminCreateCategory(newCatName.trim());
+      setCategories([...categories, created]);
+      setForm({ ...form, category_id: created.id });
+      setNewCatName("");
+      setShowCategoryModal(false);
+      showToast("Category created!");
+    } catch (err: any) {
+      showToast(err.message || "Failed to create category", "err");
+    } finally {
+      setCreatingCat(false);
+    }
+  };
+
+  const handleCoverUpload = async (file: File) => {
+    try {
+      const url = await adminUploadImage(file);
+      setForm({ ...form, cover_image_url: url });
+      showToast("Cover image uploaded!");
+    } catch (err: any) {
+      showToast(err.message || "Cover upload failed", "err");
+    }
+  };
+
+  if (!authed) {
+    return <LoginScreen onLogin={() => setAuthed(true)} />;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Topbar */}
-      <header className="border-b border-gray-800 bg-gray-900 px-6 py-3 flex items-center justify-between sticky top-0 z-30">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors">
+      <AnimatePresence>{toast && <Toast msg={toast.msg} type={toast.type} />}</AnimatePresence>
+
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-            <BookOpen className="h-4 w-4 text-white" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600">
+            <BookOpen className="h-5 w-5 text-white" />
           </div>
-          <span className="text-sm font-bold text-white">Blog Admin</span>
-          <span className="text-gray-600 text-xs hidden sm:inline">· Hizorex</span>
+          <div>
+            <h1 className="font-extrabold text-lg leading-none">Blog Admin Dashboard</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Manage articles, categories, and content blocks</p>
+          </div>
         </div>
+
         <div className="flex items-center gap-3">
           <a
             href="/blog"
             target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-blue-600 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
           >
-            <Globe className="h-3.5 w-3.5" /> View blog
+            <Globe className="h-3.5 w-3.5" /> View Live Blog
           </a>
           <button
-            onClick={logout}
-            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-400 transition-colors"
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 px-3 py-1.5 rounded-lg transition"
           >
-            <LogOut className="h-3.5 w-3.5" /> Sign out
+            <LogOut className="h-3.5 w-3.5" /> Sign Out
           </button>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        <AnimatePresence mode="wait">
-          {view === "list" && (
-            <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {/* Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="text-2xl font-extrabold text-white">Blog Posts</h1>
-                  <p className="text-sm text-gray-400 mt-0.5">{posts.length} total · {posts.filter(p => p.status === "published").length} published</p>
-                </div>
-                <button
-                  onClick={() => setView("create")}
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors"
-                >
-                  <Plus className="h-4 w-4" /> New post
-                </button>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* LIST VIEW */}
+        {view === "list" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold">All Articles ({posts.length})</h2>
+                <p className="text-sm text-gray-500">Draft and published articles</p>
               </div>
 
-              {/* List */}
-              {loadingPosts ? (
-                <div className="flex justify-center py-20">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
-                </div>
-              ) : posts.length === 0 ? (
-                <div className="text-center py-20 text-gray-500">
-                  <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p>No posts yet. Create your first one!</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {posts.map(post => (
-                    <motion.div
-                      key={post.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-4 bg-gray-900 border border-gray-800 rounded-2xl px-5 py-4 hover:border-gray-700 transition-colors"
-                    >
-                      {/* Status pill */}
-                      <span className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
-                        ${post.status === "published" ? "bg-emerald-900 text-emerald-400" : "bg-gray-800 text-gray-400"}`}>
-                        {post.status}
-                      </span>
+              <button
+                type="button"
+                onClick={handleCreateNew}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md transition"
+              >
+                <Plus className="h-4 w-4" /> Create New Post
+              </button>
+            </div>
 
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-white truncate">{post.title}</p>
-                        <p className="text-xs text-gray-500 truncate mt-0.5">/{post.slug}</p>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-20 bg-white dark:bg-gray-900 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
+                <BookOpen className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+                <p className="text-gray-500 font-medium">No posts found.</p>
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {posts.map((post) => (
+                    <div key={post.id} className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition">
+                      <div className="flex items-center gap-4 min-w-0">
+                        {post.cover_image_url ? (
+                          <img src={post.cover_image_url} alt="" className="h-14 w-14 rounded-lg object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                            <BookOpen className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">{post.title}</h3>
+                            {post.featured && (
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                                Featured
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                            <span>{post.category?.name || "Uncategorized"}</span>
+                            <span>•</span>
+                            <span>{post.author_name}</span>
+                            <span>•</span>
+                            <span className={post.status === "published" ? "text-emerald-600 font-semibold" : "text-amber-600 font-semibold"}>
+                              {post.status.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Tags */}
-                      {(post.tags ?? []).length > 0 && (
-                        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-                          <Tag className="h-3 w-3 text-gray-500" />
-                          <span className="text-xs text-gray-500">{post.tags.slice(0, 2).join(", ")}</span>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleToggle(post.id)}
+                          type="button"
+                          onClick={() => handleTogglePublish(post.id)}
+                          className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                           title={post.status === "published" ? "Unpublish" : "Publish"}
-                          className={`p-2 rounded-lg transition-colors
-                            ${post.status === "published"
-                              ? "text-emerald-400 hover:bg-emerald-950"
-                              : "text-gray-500 hover:bg-gray-800"}`}
                         >
-                          {post.status === "published" ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                          {post.status === "published" ? <Eye className="h-4 w-4 text-emerald-600" /> : <EyeOff className="h-4 w-4" />}
                         </button>
                         <button
-                          onClick={() => openEdit(post.id)}
-                          title="Edit"
-                          className="p-2 rounded-lg text-gray-400 hover:bg-gray-800 transition-colors"
+                          type="button"
+                          onClick={() => handleEdit(post)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg"
                         >
                           <Edit3 className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(post.id, post.title)}
-                          title="Delete"
-                          className="p-2 rounded-lg text-gray-500 hover:bg-red-950 hover:text-red-400 transition-colors"
+                          type="button"
+                          onClick={() => handleDelete(post.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
-              )}
-            </motion.div>
-          )}
+              </div>
+            )}
+          </div>
+        )}
 
-          {view === "create" && (
-            <motion.div key="create" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
-              <h1 className="text-2xl font-extrabold text-white mb-8">New Post</h1>
-              <PostForm
-                initial={BLANK}
-                onSave={handleCreate}
-                onBack={() => setView("list")}
-                saving={saving}
+        {/* CREATE / EDIT FORM VIEW */}
+        {(view === "create" || view === "edit") && (
+          <form onSubmit={handleSave} className="space-y-8 max-w-5xl mx-auto">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to list
+              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setView("list")}
+                  className="px-4 py-2 text-sm font-semibold rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-xl shadow-md transition disabled:opacity-60"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {view === "create" ? "Publish Article" : "Save Changes"}
+                </button>
+              </div>
+            </div>
+
+            {/* General Info */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 space-y-5">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-600" /> Basic Information
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Post Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value, slug: slugify(e.target.value) })}
+                    placeholder="Enter article title..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-base font-semibold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Subtitle / Deck
+                    </label>
+                    <input
+                      type="text"
+                      value={form.subtitle}
+                      onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+                      placeholder="Secondary headline..."
+                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      URL Slug
+                    </label>
+                    <input
+                      type="text"
+                      value={form.slug}
+                      onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                      placeholder="custom-url-slug"
+                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Category
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={form.category_id || ""}
+                        onChange={(e) => setForm({ ...form, category_id: e.target.value ? Number(e.target.value) : null })}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                      >
+                        <option value="">-- No Category --</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryModal(true)}
+                        className="p-2 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        title="Add Category"
+                      >
+                        <FolderPlus className="h-4 w-4 text-blue-600" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Publish Status
+                    </label>
+                    <select
+                      value={form.status}
+                      onChange={(e) => setForm({ ...form, status: e.target.value as any })}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="published">Published</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Publication Date
+                    </label>
+                    <input
+                      type="date"
+                      value={form.date}
+                      onChange={(e) => setForm({ ...form, date: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Author Name
+                    </label>
+                    <input
+                      type="text"
+                      value={form.author_name}
+                      onChange={(e) => setForm({ ...form, author_name: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-6 pt-5">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={form.featured}
+                        onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+                        className="h-4 w-4 rounded text-blue-600"
+                      />
+                      <span>Featured Article</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Excerpt / Card Summary
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={form.excerpt}
+                    onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                    placeholder="Short summary for list cards and search engines..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                  />
+                </div>
+
+                {/* Cover Image */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Cover Image URL
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={form.cover_image_url}
+                        onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })}
+                        placeholder="https://example.com/cover.jpg"
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                      />
+                      <label className="flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 cursor-pointer hover:bg-gray-200">
+                        <Upload className="h-3.5 w-3.5" /> Upload
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleCoverUpload(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Cover Image Fit
+                    </label>
+                    <select
+                      value={form.image_fit}
+                      onChange={(e) => setForm({ ...form, image_fit: e.target.value as ImageFitMode })}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    >
+                      <option value="fill">Fill (Cover)</option>
+                      <option value="fit">Fit (Contain)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Tags
+                  </label>
+                  <TagInput tags={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
+                </div>
+              </div>
+            </div>
+
+            {/* Content Blocks Editor */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 space-y-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-blue-600" /> Article Content Blocks
+              </h3>
+              <p className="text-xs text-gray-500">
+                Build rich content visually using block elements (CKEditor Rich Text, FAQ Accordions, Images, Videos, Callouts, Quotes, Code).
+              </p>
+
+              <ContentBlockEditor
+                blocks={form.content_blocks}
+                onChange={(blocks) => setForm({ ...form, content_blocks: blocks })}
               />
-            </motion.div>
-          )}
+            </div>
 
-          {view === "edit" && editPost && (
-            <motion.div key="edit" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
-              <h1 className="text-2xl font-extrabold text-white mb-8">Edit Post</h1>
-              <PostForm
-                initial={{
-                  title: editPost.title,
-                  slug: editPost.slug,
-                  excerpt: editPost.excerpt,
-                  content: editPost.content,
-                  cover_image_url: editPost.cover_image_url,
-                  author_name: editPost.author_name,
-                  tags: editPost.tags ?? [],
-                  status: editPost.status,
-                }}
-                onSave={handleUpdate}
-                onBack={() => setView("list")}
-                saving={saving}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            {/* SEO Metadata */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 space-y-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Globe className="h-5 w-5 text-blue-600" /> SEO & Social Metadata
+              </h3>
 
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && <Toast key="toast" msg={toast.msg} type={toast.type} />}
-      </AnimatePresence>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Meta Title (Recommended max 60 chars)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.meta_title}
+                    onChange={(e) => setForm({ ...form, meta_title: e.target.value })}
+                    placeholder={form.title || "Meta title for search results"}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Meta Description (Recommended max 160 chars)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={form.meta_description}
+                    onChange={(e) => setForm({ ...form, meta_description: e.target.value })}
+                    placeholder={form.excerpt || "Meta description for Google search..."}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Save Action */}
+            <div className="flex justify-end pt-4">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold px-8 py-3 rounded-xl shadow-lg transition disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                {view === "create" ? "Publish Article" : "Save Changes"}
+              </button>
+            </div>
+          </form>
+        )}
+      </main>
+
+      {/* Category Creation Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Add New Category</h3>
+              <button
+                type="button"
+                onClick={() => setShowCategoryModal(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCategorySubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Category Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  placeholder="e.g. Salary Advice, Career Planning"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  className="px-4 py-2 text-sm font-semibold rounded-xl border border-gray-300 dark:border-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingCat}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-xl transition"
+                >
+                  {creatingCat ? "Creating..." : "Create Category"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

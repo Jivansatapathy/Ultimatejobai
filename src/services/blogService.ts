@@ -1,20 +1,39 @@
+import { ContentBlock, FaqItem } from "@/components/blog/blockTypes";
+
 const API = import.meta.env.VITE_API_URL ?? "";
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  created_at?: string;
+}
 
 export interface BlogPost {
   id: number;
   title: string;
   slug: string;
   excerpt: string;
+  subtitle?: string;
   cover_image_url: string;
   author_name: string;
   tags: string[];
   status: "draft" | "published";
   published_at: string | null;
   created_at: string;
+  category?: Category | null;
+  category_id?: number | null;
+  date?: string | null;
+  featured?: boolean;
+  image_fit?: "fill" | "fit";
+  meta_title?: string;
+  meta_description?: string;
 }
 
 export interface BlogPostDetail extends BlogPost {
   content: string;
+  content_blocks?: ContentBlock[];
+  faq?: FaqItem[];
   updated_at: string;
 }
 
@@ -23,10 +42,45 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// ── Categories ───────────────────────────────────────────────────────────────
+
+export async function fetchCategories(): Promise<Category[]> {
+  const res = await fetch(`${API}/api/blog/categories/`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.results ?? []);
+}
+
+export async function adminCreateCategory(name: string): Promise<Category> {
+  const res = await fetch(`${API}/api/blog/admin/categories/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.name?.[0] || err.error || "Failed to create category");
+  }
+  return res.json();
+}
+
+export async function adminDeleteCategory(id: number): Promise<void> {
+  const res = await fetch(`${API}/api/blog/admin/categories/${id}/`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to delete category");
+}
+
 // ── Public ────────────────────────────────────────────────────────────────────
 
-export async function fetchPublishedPosts(): Promise<BlogPost[]> {
-  const res = await fetch(`${API}/api/blog/posts/`);
+export async function fetchPublishedPosts(params?: { category?: string; featured?: boolean }): Promise<BlogPost[]> {
+  const query = new URLSearchParams();
+  if (params?.category) query.append("category", params.category);
+  if (params?.featured) query.append("featured", "true");
+
+  const url = `${API}/api/blog/posts/${query.toString() ? `?${query.toString()}` : ""}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to load posts");
   const data = await res.json();
   return Array.isArray(data) ? data : (data.results ?? []);
@@ -80,7 +134,6 @@ export async function adminFetchAllPosts(): Promise<BlogPost[]> {
   });
   if (!res.ok) throw new Error("Unauthorized");
   const data = await res.json();
-  // Handle DRF pagination wrapper { count, results } or plain array
   return Array.isArray(data) ? data : (data.results ?? []);
 }
 
@@ -133,4 +186,22 @@ export async function adminTogglePublish(id: number): Promise<{ status: string; 
   });
   if (!res.ok) throw new Error("Toggle failed");
   return res.json();
+}
+
+export async function adminUploadImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch(`${API}/api/blog/admin/upload-image/`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Image upload failed");
+  }
+  const data = await res.json();
+  return data.url;
 }

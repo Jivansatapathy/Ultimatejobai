@@ -1,46 +1,44 @@
-import { ContentBlock, Heading } from "./blockTypes";
-import { slugifyFromHtml, stripHtml } from "@/lib/sanitize";
+import { ContentBlock } from "./blockTypes";
+import { slugifyText } from "@/lib/sanitize";
 
-interface ComputedHeading extends Heading {
-  blockIndex: number;
+export interface TocItem {
+  id: string;
+  text: string;
+  level: number; // 2, 3, 4
 }
 
-/** Single source of truth for heading anchor ids — both the on-page anchors
- * (BlockRenderer) and the sidebar TOC read from this same pass, so they can
- * never drift out of sync with each other. Slugifying happens on plain text
- * (not raw HTML), otherwise a heading containing a link leaves stray
- * href/tag fragments in the id. */
-function computeHeadings(blocks: ContentBlock[]): ComputedHeading[] {
+function collectHeadingsFromHtml(html: string): { level: number; text: string }[] {
+  if (!html) return [];
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return Array.from(doc.querySelectorAll("h2, h3, h4"))
+    .map((node) => ({ level: Number(node.tagName[1]), text: (node.textContent || "").trim() }))
+    .filter((h) => h.text);
+}
+
+/** Table-of-contents entries from the post body — walks rich_text blocks (or
+ * the legacy single-HTML-blob body when there are no blocks yet) looking for
+ * h2/h3/h4 elements. Ids are assigned here and must be attached to the actual
+ * rendered DOM afterward (see BlogPost.tsx) since a single rich_text block's
+ * HTML can contain multiple headings — there's no per-block id to hang off. */
+export function extractHeadings(blocks: ContentBlock[] | undefined, legacyContent?: string): TocItem[] {
+  const raw: { level: number; text: string }[] = [];
+
+  if (blocks && blocks.length > 0) {
+    for (const block of blocks) {
+      if (block.type === "rich_text") {
+        raw.push(...collectHeadingsFromHtml(block.html));
+      }
+    }
+  } else if (legacyContent) {
+    raw.push(...collectHeadingsFromHtml(legacyContent));
+  }
+
   const seen = new Map<string, number>();
-  const headings: ComputedHeading[] = [];
-
-  blocks.forEach((block, blockIndex) => {
-    if (block.type !== "heading") return;
-    const text = stripHtml(block.html);
-    if (!text) return;
-
-    let id = slugifyFromHtml(block.html) || "section";
+  return raw.map(({ level, text }) => {
+    let id = slugifyText(text) || "section";
     const count = seen.get(id) ?? 0;
     seen.set(id, count + 1);
     if (count > 0) id = `${id}-${count + 1}`;
-
-    headings.push({ level: block.level, text, id, blockIndex });
+    return { id, text, level };
   });
-
-  return headings;
-}
-
-/** Heading list for the sidebar table of contents. */
-export function extractHeadings(blocks: ContentBlock[]): Heading[] {
-  return computeHeadings(blocks).map(({ level, text, id }) => ({ level, text, id }));
-}
-
-/** Anchor id for each block index (undefined for non-heading / empty-text blocks) —
- * what BlockRenderer uses so its ids always match the TOC above. */
-export function computeAnchorIdsByBlockIndex(blocks: ContentBlock[]): Map<number, string> {
-  const map = new Map<number, string>();
-  for (const h of computeHeadings(blocks)) {
-    map.set(h.blockIndex, h.id);
-  }
-  return map;
 }

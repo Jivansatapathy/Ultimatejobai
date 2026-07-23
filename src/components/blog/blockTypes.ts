@@ -1,97 +1,69 @@
-export interface HeadingBlock {
-  type: "heading";
-  level: "h2" | "h3";
+export type ImageFitMode = "fill" | "fit";
+export type CalloutStyle = "info" | "warning" | "success" | "tip";
+
+interface BaseBlock {
+  id: string;
+}
+
+export interface RichTextBlock extends BaseBlock {
+  type: "rich_text";
   html: string;
 }
 
-export interface ParagraphBlock {
-  type: "paragraph";
-  html: string;
+export interface FaqBlock extends BaseBlock {
+  type: "faq";
+  title?: string;
+  items: FaqItem[];
 }
 
-export interface ImageBlock {
+export interface ImageBlock extends BaseBlock {
   type: "image";
-  src: string;
+  url: string;
   caption?: string;
-  fit: "fill" | "fit";
+  alt?: string;
+  image_fit?: ImageFitMode;
 }
 
-export interface ListBlock {
-  type: "list";
-  ordered: boolean;
-  items: string[];
-}
-
-export interface VideoBlock {
+export interface VideoBlock extends BaseBlock {
   type: "video";
   url: string;
+  caption?: string;
 }
 
-export interface LinkBlock {
-  type: "link";
-  url: string;
-  label: string;
+export interface CalloutBlock extends BaseBlock {
+  type: "callout";
+  text: string;
+  style?: CalloutStyle;
 }
 
-export interface SlideshowBlock {
-  type: "slideshow";
-  images: string[];
+export interface QuoteBlock extends BaseBlock {
+  type: "quote";
+  text: string;
+  author?: string;
 }
 
-export interface LegacyBlock {
-  type: "legacy";
-  html: string;
+export interface CodeBlock extends BaseBlock {
+  type: "code";
+  code: string;
+  language?: string;
+}
+
+export interface TocBlock extends BaseBlock {
+  type: "toc";
+  title?: string;
 }
 
 export type ContentBlock =
-  | HeadingBlock
-  | ParagraphBlock
+  | RichTextBlock
+  | FaqBlock
   | ImageBlock
-  | ListBlock
   | VideoBlock
-  | LinkBlock
-  | SlideshowBlock
-  | LegacyBlock;
+  | CalloutBlock
+  | QuoteBlock
+  | CodeBlock
+  | TocBlock;
 
 export interface FaqItem {
   question: string;
   answer: string;
-}
-
-export interface Heading {
-  level: "h2" | "h3";
-  text: string;
-  id: string;
-}
-
-export const BLOCK_TYPE_LABELS: Record<ContentBlock["type"], string> = {
-  heading: "Heading",
-  paragraph: "Paragraph",
-  image: "Image",
-  list: "List",
-  video: "Video",
-  link: "Link",
-  slideshow: "Image Slideshow",
-  legacy: "Legacy (read-only)",
-};
-
-export function blankBlock(type: ContentBlock["type"]): ContentBlock {
-  switch (type) {
-    case "heading":
-      return { type: "heading", level: "h2", html: "" };
-    case "paragraph":
-      return { type: "paragraph", html: "" };
-    case "image":
-      return { type: "image", src: "", caption: "", fit: "fill" };
-    case "list":
-      return { type: "list", ordered: false, items: [""] };
-    case "video":
-      return { type: "video", url: "" };
-    case "link":
-      return { type: "link", url: "", label: "" };
-    case "slideshow":
-      return { type: "slideshow", images: [] };
-    case "legacy":
-      return { type: "legacy", html: "" };
-  }
 }

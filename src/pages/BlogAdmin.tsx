@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Plus, Edit3, Trash2, Eye, EyeOff, BookOpen,
   ArrowLeft, Save, Loader2, X, CheckCircle, AlertCircle,
-  Globe, FolderPlus, Upload,
+  Globe, FolderPlus, Upload, FileText,
 } from "lucide-react";
 import {
   adminLogin, adminFetchAllPosts, adminFetchPost,
@@ -13,7 +13,9 @@ import {
   BlogPost, BlogPostDetail, Category,
 } from "@/services/blogService";
 import { ContentBlockEditor } from "@/components/blog/ContentBlockEditor";
+import { CKEditorComponent, COMPACT_TOOLBAR } from "@/components/blog/CKEditorComponent";
 import { ContentBlock, FaqItem, ImageFitMode } from "@/components/blog/blockTypes";
+import { stripHtml, slugifyText } from "@/lib/sanitize";
 
 // ── Tag Input ─────────────────────────────────────────────────────────────────
 
@@ -101,7 +103,7 @@ const BLANK: FormState = {
   excerpt: "",
   content: "",
   cover_image_url: "",
-  author_name: "JobAI Team",
+  author_name: "Hizorex Team",
   tags: [],
   status: "draft",
   category_id: null,
@@ -114,8 +116,8 @@ const BLANK: FormState = {
   faq: [],
 };
 
-function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+function slugifyFromRichText(html: string) {
+  return slugifyText(stripHtml(html));
 }
 
 // ── Login Screen ──────────────────────────────────────────────────────────────
@@ -168,7 +170,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
           </div>
           <div>
             <h1 className="text-lg font-extrabold text-white">Blog Admin</h1>
-            <p className="text-xs text-gray-400">JobAI · Staff only</p>
+            <p className="text-xs text-gray-400">Hizorex · Staff only</p>
           </div>
         </div>
 
@@ -188,7 +190,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                placeholder="admin@jobai.com"
+                placeholder="admin@hizorex.com"
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
               />
             </div>
@@ -247,7 +249,7 @@ function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                placeholder="admin@jobai.com"
+                placeholder="admin@hizorex.com"
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
               />
             </div>
@@ -360,7 +362,7 @@ export default function BlogAdmin() {
         excerpt: detail.excerpt || "",
         content: detail.content || "",
         cover_image_url: detail.cover_image_url || "",
-        author_name: detail.author_name || "JobAI Team",
+        author_name: detail.author_name || "Hizorex Team",
         tags: detail.tags || [],
         status: detail.status || "draft",
         category_id: detail.category?.id || null,
@@ -383,7 +385,7 @@ export default function BlogAdmin() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim()) {
+    if (!stripHtml(form.title).trim()) {
       showToast("Title is required", "err");
       return;
     }
@@ -393,7 +395,7 @@ export default function BlogAdmin() {
       const payload: Partial<BlogPostDetail> = {
         title: form.title,
         subtitle: form.subtitle,
-        slug: form.slug || slugify(form.title),
+        slug: form.slug || slugifyFromRichText(form.title),
         excerpt: form.excerpt,
         content: form.content,
         cover_image_url: form.cover_image_url,
@@ -560,7 +562,7 @@ export default function BlogAdmin() {
                         )}
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">{post.title}</h3>
+                            <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">{stripHtml(post.title)}</h3>
                             {post.featured && (
                               <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
                                 Featured
@@ -653,41 +655,45 @@ export default function BlogAdmin() {
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     Post Title *
                   </label>
-                  <input
-                    type="text"
-                    required
+                  <CKEditorComponent
                     value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value, slug: slugify(e.target.value) })}
+                    toolbar={COMPACT_TOOLBAR}
                     placeholder="Enter article title..."
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-base font-semibold"
+                    onChange={(html) =>
+                      setForm((f) => ({
+                        ...f,
+                        title: html,
+                        // Only auto-fill the slug on a fresh, untouched post — never
+                        // clobber a slug the admin already saved or edited by hand.
+                        slug: view === "create" && !f.slug ? slugifyFromRichText(html) : f.slug,
+                      }))
+                    }
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Subtitle / Deck
-                    </label>
-                    <input
-                      type="text"
-                      value={form.subtitle}
-                      onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-                      placeholder="Secondary headline..."
-                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      URL Slug
-                    </label>
-                    <input
-                      type="text"
-                      value={form.slug}
-                      onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                      placeholder="custom-url-slug"
-                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-mono"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Subtitle / Deck
+                  </label>
+                  <CKEditorComponent
+                    value={form.subtitle}
+                    toolbar={COMPACT_TOOLBAR}
+                    placeholder="Secondary headline..."
+                    onChange={(html) => setForm({ ...form, subtitle: html })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    URL Slug
+                  </label>
+                  <input
+                    type="text"
+                    value={form.slug}
+                    onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                    placeholder="custom-url-slug"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-mono"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -746,42 +752,39 @@ export default function BlogAdmin() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Author Name
-                    </label>
-                    <input
-                      type="text"
-                      value={form.author_name}
-                      onChange={(e) => setForm({ ...form, author_name: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
-                    />
-                  </div>
+                <div className="pt-2">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Author
+                  </label>
+                  <CKEditorComponent
+                    value={form.author_name}
+                    toolbar={COMPACT_TOOLBAR}
+                    placeholder="Author byline..."
+                    onChange={(html) => setForm({ ...form, author_name: html })}
+                  />
+                </div>
 
-                  <div className="flex items-center gap-6 pt-5">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
-                      <input
-                        type="checkbox"
-                        checked={form.featured}
-                        onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-                        className="h-4 w-4 rounded text-blue-600"
-                      />
-                      <span>Featured Article</span>
-                    </label>
-                  </div>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={form.featured}
+                      onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+                      className="h-4 w-4 rounded text-blue-600"
+                    />
+                    <span>Featured Article</span>
+                  </label>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     Excerpt / Card Summary
                   </label>
-                  <textarea
-                    rows={2}
+                  <CKEditorComponent
                     value={form.excerpt}
-                    onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                    toolbar={COMPACT_TOOLBAR}
                     placeholder="Short summary for list cards and search engines..."
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    onChange={(html) => setForm({ ...form, excerpt: html })}
                   />
                 </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, User, Tag, ArrowLeft, ChevronRight, Folder } from "lucide-react";
@@ -10,6 +10,7 @@ import { BlogToc } from "@/components/blog/BlogToc";
 import { BlogFaq } from "@/components/blog/BlogFaq";
 import { ContentBlockRenderer } from "@/components/blog/ContentBlockRenderer";
 import { extractHeadings } from "@/components/blog/extractHeadings";
+import { stripHtml } from "@/lib/sanitize";
 
 function formatDate(d: string | null | undefined) {
   if (!d) return "";
@@ -32,11 +33,26 @@ const BlogPost = () => {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  const contentRef = useRef<HTMLDivElement>(null);
+
   // Generate Table of Contents items from blocks or html content
   const tocItems = useMemo(() => {
     if (!post) return [];
     return extractHeadings(post.content_blocks, post.content);
   }, [post]);
+
+  // The TOC's ids are computed from the same source HTML the content renders
+  // from, in the same order — so the i-th heading found in the live DOM after
+  // render is always the i-th tocItems entry. Assigning ids here (rather than
+  // baking them into the HTML before render) works regardless of how many
+  // rich_text blocks a heading is nested inside.
+  useEffect(() => {
+    if (!contentRef.current || tocItems.length === 0) return;
+    const headingEls = contentRef.current.querySelectorAll("h2, h3, h4");
+    headingEls.forEach((el, i) => {
+      if (tocItems[i]) el.id = tocItems[i].id;
+    });
+  }, [tocItems, post]);
 
   if (loading) {
     return (
@@ -72,16 +88,16 @@ const BlogPost = () => {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: post.meta_title || post.title,
-    description: post.meta_description || post.excerpt,
+    headline: stripHtml(post.meta_title || post.title),
+    description: stripHtml(post.meta_description || post.excerpt),
     image: post.cover_image_url || undefined,
-    author: { "@type": "Person", name: post.author_name },
+    author: { "@type": "Person", name: stripHtml(post.author_name) },
     datePublished: post.published_at || post.date || post.created_at,
     dateModified: post.updated_at,
     publisher: {
       "@type": "Organization",
-      name: "JobAI",
-      url: "https://jobai.com",
+      name: "Hizorex",
+      url: "https://hizorex.com",
     },
     articleSection: post.category?.name,
   };
@@ -104,7 +120,7 @@ const BlogPost = () => {
           >
             <img
               src={post.cover_image_url}
-              alt={post.title}
+              alt={stripHtml(post.title)}
               className={`w-full ${
                 post.image_fit === "fit"
                   ? "max-h-[400px] w-auto object-contain"
@@ -129,7 +145,7 @@ const BlogPost = () => {
               </>
             )}
             <ChevronRight className="h-3.5 w-3.5" />
-            <span className="text-gray-600 dark:text-gray-300 truncate max-w-xs">{post.title}</span>
+            <span className="text-gray-600 dark:text-gray-300 truncate max-w-xs">{stripHtml(post.title)}</span>
           </nav>
 
           {/* Main Grid: Left Article Content, Right Sticky TOC */}
@@ -161,27 +177,33 @@ const BlogPost = () => {
               </div>
 
               {/* Title & Subtitle */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
-                {post.title}
-              </h1>
+              <RichHtml
+                as="h1"
+                html={post.title}
+                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight"
+              />
 
               {post.subtitle && (
-                <h2 className="text-xl sm:text-2xl font-medium text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-                  {post.subtitle}
-                </h2>
+                <RichHtml
+                  as="h2"
+                  html={post.subtitle}
+                  className="text-xl sm:text-2xl font-medium text-gray-600 dark:text-gray-300 mb-4 leading-relaxed"
+                />
               )}
 
               {post.excerpt && !post.subtitle && (
-                <p className="text-xl text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                  {post.excerpt}
-                </p>
+                <RichHtml
+                  as="p"
+                  html={post.excerpt}
+                  className="text-xl text-gray-500 dark:text-gray-400 mb-6 leading-relaxed"
+                />
               )}
 
               {/* Author & Date Meta */}
               <div className="flex flex-wrap items-center gap-5 text-sm text-gray-500 dark:text-gray-400 pb-8 border-b border-gray-100 dark:border-gray-800 mb-8">
                 <span className="flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
                   <User className="h-4 w-4 text-blue-600" />
-                  {post.author_name}
+                  <RichHtml as="span" html={post.author_name} />
                 </span>
                 {(post.date || post.published_at) && (
                   <span className="flex items-center gap-1.5">
@@ -199,13 +221,15 @@ const BlogPost = () => {
               )}
 
               {/* Content Body: Render Block-Based or Fallback Classic Content */}
-              {hasBlocks ? (
-                <ContentBlockRenderer blocks={post.content_blocks!} />
-              ) : (
-                <div className="prose prose-lg dark:prose-invert max-w-none">
-                  <RichHtml html={post.content} />
-                </div>
-              )}
+              <div ref={contentRef}>
+                {hasBlocks ? (
+                  <ContentBlockRenderer blocks={post.content_blocks!} />
+                ) : (
+                  <div className="prose prose-lg dark:prose-invert max-w-none">
+                    <RichHtml html={post.content} />
+                  </div>
+                )}
+              </div>
 
               {/* FAQ Accordion Section (if present at post root) */}
               {(post.faq ?? []).length > 0 && <BlogFaq items={post.faq!} />}

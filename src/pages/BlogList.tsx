@@ -5,6 +5,7 @@ import { Calendar, User, Tag, BookOpen, Search, Folder, Sparkles } from "lucide-
 import { fetchPublishedPosts, fetchCategories, BlogPost, Category } from "@/services/blogService";
 import { NavbarV2 } from "@/components/landing2/NavbarV2";
 import { FooterV2 } from "@/components/landing2/FooterV2";
+import { stripHtml } from "@/lib/sanitize";
 
 function formatDate(d: string | null | undefined) {
   if (!d) return "";
@@ -32,11 +33,12 @@ const BlogList = () => {
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
       const matchesCat = !selectedCategory || post.category?.slug === selectedCategory;
+      const q = searchQuery.toLowerCase();
       const matchesSearch =
         !searchQuery ||
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.subtitle?.toLowerCase().includes(searchQuery.toLowerCase());
+        stripHtml(post.title).toLowerCase().includes(q) ||
+        stripHtml(post.excerpt ?? "").toLowerCase().includes(q) ||
+        stripHtml(post.subtitle ?? "").toLowerCase().includes(q);
       return matchesCat && matchesSearch;
     });
   }, [posts, selectedCategory, searchQuery]);
@@ -60,9 +62,9 @@ const BlogList = () => {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Blog",
-            name: "JobAI Career & Hiring Blog",
+            name: "Hizorex Career & Hiring Blog",
             description: "Insights on career growth, salary negotiation, resume optimization, and executive hiring.",
-            url: "https://jobai.com/blog",
+            url: "https://hizorex.com/blog",
           }),
         }}
       />
@@ -72,7 +74,7 @@ const BlogList = () => {
         <section className="bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950 py-16 px-4 relative overflow-hidden">
           <div className="mx-auto max-w-5xl text-center relative z-10">
             <div className="inline-flex items-center gap-2 rounded-full bg-blue-900/60 border border-blue-700/50 px-4 py-1.5 text-xs font-semibold text-blue-200 mb-6 backdrop-blur-sm">
-              <BookOpen className="h-3.5 w-3.5 text-blue-400" /> JobAI Career & Insights Blog
+              <BookOpen className="h-3.5 w-3.5 text-blue-400" /> Hizorex Career & Insights Blog
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight">
               Master Your Next Career Move
@@ -164,7 +166,7 @@ const BlogList = () => {
                       {featuredPost.cover_image_url ? (
                         <img
                           src={featuredPost.cover_image_url}
-                          alt={featuredPost.title}
+                          alt={stripHtml(featuredPost.title)}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
@@ -184,17 +186,17 @@ const BlogList = () => {
                         </span>
                       )}
                       <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors mb-3 leading-tight">
-                        {featuredPost.title}
+                        {stripHtml(featuredPost.title)}
                       </h2>
                       {(featuredPost.subtitle || featuredPost.excerpt) && (
                         <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base line-clamp-3 mb-6 leading-relaxed">
-                          {featuredPost.subtitle || featuredPost.excerpt}
+                          {stripHtml(featuredPost.subtitle || featuredPost.excerpt || "")}
                         </p>
                       )}
                       <div className="flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-gray-400 mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
                         <span className="flex items-center gap-1.5">
                           <User className="h-3.5 w-3.5 text-blue-600" />
-                          {featuredPost.author_name}
+                          {stripHtml(featuredPost.author_name)}
                         </span>
                         {(featuredPost.date || featuredPost.published_at) && (
                           <span className="flex items-center gap-1.5">
@@ -225,7 +227,7 @@ const BlogList = () => {
                         {post.cover_image_url ? (
                           <img
                             src={post.cover_image_url}
-                            alt={post.title}
+                            alt={stripHtml(post.title)}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
@@ -242,15 +244,15 @@ const BlogList = () => {
 
                       <div className="flex flex-col flex-1 p-5">
                         <h3 className="font-extrabold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors text-lg mb-2 line-clamp-2 leading-snug">
-                          {post.title}
+                          {stripHtml(post.title)}
                         </h3>
                         {(post.subtitle || post.excerpt) && (
                           <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 leading-relaxed">
-                            {post.subtitle || post.excerpt}
+                            {stripHtml(post.subtitle || post.excerpt || "")}
                           </p>
                         )}
                         <div className="mt-auto flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 pt-3 border-t border-gray-100 dark:border-gray-800">
-                          <span>{post.author_name}</span>
+                          <span>{stripHtml(post.author_name)}</span>
                           {(post.date || post.published_at) && (
                             <span>{formatDate(post.date || post.published_at)}</span>
                           )}

@@ -14,6 +14,7 @@ import {
 } from "@/services/blogService";
 import { ContentBlockEditor } from "@/components/blog/ContentBlockEditor";
 import { CKEditorComponent, COMPACT_TOOLBAR } from "@/components/blog/CKEditorComponent";
+import { BlogPreview } from "@/components/blog/BlogPreview";
 import { ContentBlock, FaqItem, ImageFitMode } from "@/components/blog/blockTypes";
 import { stripHtml, slugifyText } from "@/lib/sanitize";
 
@@ -76,7 +77,7 @@ function Toast({ msg, type }: { msg: string; type: "ok" | "err" }) {
 
 type View = "list" | "create" | "edit";
 
-interface FormState {
+export interface FormState {
   title: string;
   subtitle: string;
   slug: string;
@@ -309,6 +310,7 @@ export default function BlogAdmin() {
   const [form, setForm] = useState<FormState>(BLANK);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
 
   // New Category Dialog state
@@ -348,11 +350,13 @@ export default function BlogAdmin() {
   const handleCreateNew = () => {
     setForm({ ...BLANK });
     setEditingId(null);
+    setPreviewMode(false);
     setView("create");
   };
 
   const handleEdit = async (post: BlogPost) => {
     setLoading(true);
+    setPreviewMode(false);
     try {
       const detail: BlogPostDetail = await adminFetchPost(post.id);
       setForm({
@@ -635,6 +639,17 @@ export default function BlogAdmin() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
+                  onClick={() => setPreviewMode((p) => !p)}
+                  className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border transition ${
+                    previewMode
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <Eye className="h-4 w-4" /> {previewMode ? "Back to Editing" : "Preview"}
+                </button>
+                <button
+                  type="button"
                   onClick={() => setView("list")}
                   className="px-4 py-2 text-sm font-semibold rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100"
                 >
@@ -651,6 +666,10 @@ export default function BlogAdmin() {
               </div>
             </div>
 
+            {previewMode && <BlogPreview form={form} categories={categories} />}
+
+            {!previewMode && (
+            <>
             {/* General Info */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 space-y-5">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -909,6 +928,8 @@ export default function BlogAdmin() {
                 {view === "create" ? "Publish Article" : "Save Changes"}
               </button>
             </div>
+            </>
+            )}
           </form>
         )}
       </main>

@@ -569,7 +569,7 @@ export default function BlogAdmin() {
                     <div key={post.id} className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition">
                       <div className="flex items-center gap-4 min-w-0">
                         {post.cover_image_url ? (
-                          <img src={post.cover_image_url} alt="" className="h-14 w-14 rounded-lg object-cover flex-shrink-0" />
+                          <img src={post.cover_image_url} alt={post.cover_image_alt || stripHtml(post.title)} className="h-14 w-14 rounded-lg object-cover flex-shrink-0" />
                         ) : (
                           <div className="h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
                             <BookOpen className="h-6 w-6 text-gray-400" />

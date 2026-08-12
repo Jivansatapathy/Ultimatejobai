@@ -11,6 +11,7 @@ import { BlogFaq } from "@/components/blog/BlogFaq";
 import { ContentBlockRenderer } from "@/components/blog/ContentBlockRenderer";
 import { extractHeadings } from "@/components/blog/extractHeadings";
 import { stripHtml } from "@/lib/sanitize";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 function formatDate(d: string | null | undefined) {
   if (!d) return "";
@@ -53,6 +54,15 @@ const BlogPost = () => {
       if (tocItems[i]) el.id = tocItems[i].id;
     });
   }, [tocItems, post]);
+
+  useDocumentMeta({
+    title: post ? `${post.meta_title || stripHtml(post.title)} | Hizorex Blog` : "",
+    description: post?.meta_description || stripHtml(post?.excerpt || ""),
+    image: post?.cover_image_url,
+    imageAlt: post?.cover_image_alt || (post ? stripHtml(post.title) : undefined),
+    url: post ? `https://www.hizorex.com/blog/${post.slug}` : undefined,
+    type: "article",
+  });
 
   if (loading) {
     return (

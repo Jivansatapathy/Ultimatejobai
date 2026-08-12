@@ -6,6 +6,7 @@ import { fetchPublishedPosts, fetchCategories, BlogPost, Category } from "@/serv
 import { NavbarV2 } from "@/components/landing2/NavbarV2";
 import { FooterV2 } from "@/components/landing2/FooterV2";
 import { stripHtml } from "@/lib/sanitize";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 function formatDate(d: string | null | undefined) {
   if (!d) return "";
@@ -28,6 +29,12 @@ const BlogList = () => {
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, []);
+
+  useDocumentMeta({
+    title: "Hizorex Career & Hiring Blog",
+    description: "Insights on career growth, salary negotiation, resume optimization, and executive hiring.",
+    url: "https://www.hizorex.com/blog",
+  });
 
   // Filter posts by category & search query
   const filteredPosts = useMemo(() => {

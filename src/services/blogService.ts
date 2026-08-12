@@ -16,6 +16,7 @@ export interface BlogPost {
   excerpt: string;
   subtitle?: string;
   cover_image_url: string;
+  cover_image_alt?: string;
   author_name: string;
   tags: string[];
   status: "draft" | "published";

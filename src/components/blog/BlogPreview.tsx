@@ -6,6 +6,7 @@ import { BlogFaq } from "./BlogFaq";
 import { ContentBlockRenderer } from "./ContentBlockRenderer";
 import { extractHeadings } from "./extractHeadings";
 import { Category } from "@/services/blogService";
+import { stripHtml } from "@/lib/sanitize";
 import type { FormState } from "@/pages/BlogAdmin";
 
 interface BlogPreviewProps {
@@ -51,7 +52,7 @@ export function BlogPreview({ form, categories }: BlogPreviewProps) {
           >
             <img
               src={form.cover_image_url}
-              alt=""
+              alt={form.cover_image_alt || stripHtml(form.title)}
               className={`w-full ${
                 form.image_fit === "fit" ? "max-h-[400px] w-auto object-contain" : "h-full object-cover"
               }`}

@@ -120,7 +120,7 @@ const BlogPost = () => {
           >
             <img
               src={post.cover_image_url}
-              alt={stripHtml(post.title)}
+              alt={post.cover_image_alt || stripHtml(post.title)}
               className={`w-full ${
                 post.image_fit === "fit"
                   ? "max-h-[400px] w-auto object-contain"

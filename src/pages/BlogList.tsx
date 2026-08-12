@@ -166,7 +166,7 @@ const BlogList = () => {
                       {featuredPost.cover_image_url ? (
                         <img
                           src={featuredPost.cover_image_url}
-                          alt={stripHtml(featuredPost.title)}
+                          alt={featuredPost.cover_image_alt || stripHtml(featuredPost.title)}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
@@ -227,7 +227,7 @@ const BlogList = () => {
                         {post.cover_image_url ? (
                           <img
                             src={post.cover_image_url}
-                            alt={stripHtml(post.title)}
+                            alt={post.cover_image_alt || stripHtml(post.title)}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (

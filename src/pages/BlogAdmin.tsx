@@ -84,6 +84,7 @@ export interface FormState {
   excerpt: string;
   content: string;
   cover_image_url: string;
+  cover_image_alt: string;
   author_name: string;
   tags: string[];
   status: "draft" | "published";
@@ -104,6 +105,7 @@ const BLANK: FormState = {
   excerpt: "",
   content: "",
   cover_image_url: "",
+  cover_image_alt: "",
   author_name: "Hizorex Team",
   tags: [],
   status: "draft",
@@ -366,6 +368,7 @@ export default function BlogAdmin() {
         excerpt: detail.excerpt || "",
         content: detail.content || "",
         cover_image_url: detail.cover_image_url || "",
+        cover_image_alt: detail.cover_image_alt || "",
         author_name: detail.author_name || "Hizorex Team",
         tags: detail.tags || [],
         status: detail.status || "draft",
@@ -403,6 +406,7 @@ export default function BlogAdmin() {
         excerpt: form.excerpt,
         content: form.content,
         cover_image_url: form.cover_image_url,
+        cover_image_alt: form.cover_image_alt,
         author_name: form.author_name,
         tags: form.tags,
         status: form.status,
@@ -855,6 +859,20 @@ export default function BlogAdmin() {
                       <option value="fill">Fill (Cover)</option>
                       <option value="fit">Fit (Contain)</option>
                     </select>
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Cover Image Alt Text <span className="text-gray-400 font-normal">(for SEO & screen readers)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.cover_image_alt}
+                      onChange={(e) => setForm({ ...form, cover_image_alt: e.target.value })}
+                      placeholder={stripHtml(form.title) || "Describe what's in the image..."}
+                      maxLength={300}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                    />
                   </div>
                 </div>
 

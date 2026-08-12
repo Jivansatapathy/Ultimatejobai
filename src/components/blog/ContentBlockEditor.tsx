@@ -275,6 +275,19 @@ export function ContentBlockEditor({ blocks, onChange }: ContentBlockEditorProps
                     </select>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Alt Text <span className="text-gray-400 font-normal">(for SEO & screen readers)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={block.alt || ""}
+                    onChange={(e) => updateBlock(block.id, { ...block, alt: e.target.value })}
+                    placeholder="Describe what's in the image..."
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
+                  />
+                </div>
               </div>
             )}
 

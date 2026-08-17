@@ -434,6 +434,12 @@ export const NavbarV2 = () => {
                   >
                     Pricing
                   </button>
+                  <Link
+                    to="/contact"
+                    className="px-3 py-1.5 text-[13px] font-medium text-gray-500 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50 whitespace-nowrap"
+                  >
+                    Contact
+                  </Link>
                 </>
               )}
             </nav>
@@ -634,6 +640,7 @@ export const NavbarV2 = () => {
                       <Link to="/interim" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-teal-700 hover:bg-teal-50 transition-all">Interim</Link>
                       <Link to="/browse-roles" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Browse A–Z</Link>
                       <Link to="/blog" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition-all">Blog</Link>
+                      <Link to="/contact" onClick={closeMenu} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">Contact</Link>
                       <button
                         type="button"
                         onClick={() => {

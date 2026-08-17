@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { FooterV2 } from "@/components/landing2/FooterV2";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/context/SubscriptionContext";
+import { subscriptionService } from "@/services/subscriptionService";
 import { Link } from "react-router-dom";
 import api from "@/services/api";
 import {
@@ -77,7 +80,7 @@ const CALL_TIERS = [
     calendlyUrl: "https://calendly.com/hizorexai/60-minute-meeting",
   },
   {
-    id: "personal",
+    id: "executive_search",
     name: "Dedicated Recruiter",
     price: "$999/mo",
     duration: "3 × 30 min",
@@ -94,10 +97,29 @@ const CALL_TIERS = [
 
 export default function Contact() {
   const { isAuthenticated } = useAuth();
+  const { refreshSummary } = useSubscription();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [bookingTierId, setBookingTierId] = useState<string | null>(null);
+
+  const handleBook = async (tierId: string, calendlyUrl: string) => {
+    setBookingTierId(tierId);
+    try {
+      const result = await subscriptionService.consumeCallSession();
+      if (!result.allowed) {
+        toast.error(result.message || "You've used all your call sessions for this month.");
+        return;
+      }
+      openCalendly(calendlyUrl);
+      refreshSummary();
+    } catch {
+      toast.error("Couldn't check your call session quota. Please try again.");
+    } finally {
+      setBookingTierId(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -300,10 +322,15 @@ export default function Contact() {
                         {isAuthenticated ? (
                           <button
                             type="button"
-                            onClick={() => openCalendly(tier.calendlyUrl)}
-                            className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${tier.ctaCls}`}
+                            disabled={bookingTierId === tier.id}
+                            onClick={() => handleBook(tier.id, tier.calendlyUrl)}
+                            className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-60 ${tier.ctaCls}`}
                           >
-                            <Calendar className="h-3 w-3" />
+                            {bookingTierId === tier.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Calendar className="h-3 w-3" />
+                            )}
                             Book
                           </button>
                         ) : (

@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { NavbarV2 as Navbar } from "@/components/landing2/NavbarV2";
 import { FooterV2 } from "@/components/landing2/FooterV2";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { useAuth } from "@/context/AuthContext";
+import { subscriptionService } from "@/services/subscriptionService";
 import { Link } from "react-router-dom";
 import {
   Phone,
@@ -15,6 +18,7 @@ import {
   ArrowRight,
   Calendar,
   Zap,
+  Loader2,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -106,7 +110,7 @@ const CALL_PLANS = [
     iconCls: "bg-white/20 text-white",
   },
   {
-    id: "personal",
+    id: "executive_search",
     name: "Personal Executive Search Plan",
     price: "$999",
     priceNote: "per month",
@@ -147,9 +151,28 @@ function openCalendly(url: string) {
 // ─── Component ──────────────────────────────────────────────────────────────────
 export default function BookACall() {
   const { isAuthenticated } = useAuth();
-  const { summary } = useSubscription();
+  const { summary, refreshSummary } = useSubscription();
+  const [bookingPlanId, setBookingPlanId] = useState<string | null>(null);
 
-  const currentPlanSlug = summary?.plan_slug ?? "free";
+  const currentPlanSlug = summary?.plan?.slug ?? "free";
+  const callUsage = summary?.current_usage.find((row) => row.feature_key === "recruiter_call_access");
+
+  const handleBook = async (planId: string, calendlyUrl: string) => {
+    setBookingPlanId(planId);
+    try {
+      const result = await subscriptionService.consumeCallSession();
+      if (!result.allowed) {
+        toast.error(result.message || "You've used all your call sessions for this month.");
+        return;
+      }
+      openCalendly(calendlyUrl);
+      refreshSummary();
+    } catch {
+      toast.error("Couldn't check your call session quota. Please try again.");
+    } finally {
+      setBookingPlanId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -179,9 +202,9 @@ export default function BookACall() {
         <div className="max-w-6xl mx-auto grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-start">
           {CALL_PLANS.map((plan, i) => {
             const Icon = plan.icon;
-            const isCurrentPlan = currentPlanSlug?.includes(plan.id);
+            const isCurrentPlan = currentPlanSlug === plan.id;
             const isPro = plan.id === "professional";
-            const isPremium = plan.id === "personal";
+            const isPremium = plan.id === "executive_search";
             const isDark = isPro || isPremium;
 
             return (
@@ -222,7 +245,11 @@ export default function BookACall() {
                   <Clock className="h-4 w-4 text-teal-500 shrink-0" />
                   <div>
                     <p className="text-xs font-bold text-gray-900">{plan.duration}</p>
-                    <p className="text-[11px] text-gray-500">{plan.sessionLabel}</p>
+                    <p className="text-[11px] text-gray-500">
+                      {isCurrentPlan && callUsage && !callUsage.is_unlimited
+                        ? `${callUsage.remaining_count ?? 0} of ${callUsage.limit} sessions left this month`
+                        : plan.sessionLabel}
+                    </p>
                   </div>
                 </div>
 
@@ -241,10 +268,15 @@ export default function BookACall() {
                   {isAuthenticated ? (
                     <button
                       type="button"
-                      onClick={() => openCalendly(plan.calendlyUrl)}
-                      className={`w-full h-10 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${plan.ctaCls}`}
+                      disabled={bookingPlanId === plan.id}
+                      onClick={() => handleBook(plan.id, plan.calendlyUrl)}
+                      className={`w-full h-10 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${plan.ctaCls}`}
                     >
-                      <Calendar className="h-4 w-4" />
+                      {bookingPlanId === plan.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Calendar className="h-4 w-4" />
+                      )}
                       {plan.cta}
                     </button>
                   ) : (

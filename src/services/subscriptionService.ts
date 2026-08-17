@@ -81,4 +81,16 @@ export const subscriptionService = {
     const response = await api.post("/api/subscriptions/stripe/upgrade/", { plan_slug: planSlug });
     return response.data;
   },
+
+  async consumeCallSession(): Promise<{ allowed: boolean; message: string; remaining: number | null }> {
+    try {
+      const response = await api.post("/api/subscriptions/calls/consume/");
+      return response.data;
+    } catch (err: any) {
+      if (err?.response?.status === 403 && err.response.data) {
+        return err.response.data;
+      }
+      throw err;
+    }
+  },
 };

@@ -48,7 +48,7 @@ const CALL_TIERS = [
     icon: Sparkles,
     iconBg: "bg-gray-100",
     iconCls: "text-gray-600",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/15-min-consultation",
+    calendlyUrl: "https://calendly.com/hizorexai/15-minute-meeting",
   },
   {
     id: "beginner",
@@ -61,7 +61,7 @@ const CALL_TIERS = [
     icon: Phone,
     iconBg: "bg-teal-50",
     iconCls: "text-teal-600",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/30-min-executive-session",
+    calendlyUrl: "https://calendly.com/hizorexai/30min",
   },
   {
     id: "professional",
@@ -74,7 +74,7 @@ const CALL_TIERS = [
     icon: Star,
     iconBg: "bg-teal-50",
     iconCls: "text-teal-600",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/30-min-executive-session",
+    calendlyUrl: "https://calendly.com/hizorexai/60-minute-meeting",
   },
   {
     id: "personal",
@@ -87,7 +87,8 @@ const CALL_TIERS = [
     icon: Shield,
     iconBg: "bg-orange-50",
     iconCls: "text-orange-600",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/dedicated-executive-search",
+    // No distinct 90-min event yet — reusing the 60-min link until one exists.
+    calendlyUrl: "https://calendly.com/hizorexai/60-minute-meeting",
   },
 ];
 

@@ -44,7 +44,7 @@ const CALL_PLANS = [
     badgeCls: "",
     cta: "Book Free Consultation",
     ctaCls: "bg-gray-900 hover:bg-gray-800 text-white",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/15-min-consultation",
+    calendlyUrl: "https://calendly.com/hizorexai/15-minute-meeting",
     features: [
       "One 15-minute career consultation",
       "Resume quick-review overview",
@@ -69,7 +69,7 @@ const CALL_PLANS = [
     badgeCls: "",
     cta: "Book Your Session",
     ctaCls: "bg-teal-500 hover:bg-teal-600 text-white",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/30-min-executive-session",
+    calendlyUrl: "https://calendly.com/hizorexai/30min",
     features: [
       "One 30-minute executive recruiter session per month",
       "Personalized career strategy",
@@ -94,7 +94,7 @@ const CALL_PLANS = [
     badgeCls: "bg-teal-500 text-white",
     cta: "Book Your Sessions",
     ctaCls: "bg-teal-500 hover:bg-teal-600 text-white",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/30-min-executive-session",
+    calendlyUrl: "https://calendly.com/hizorexai/60-minute-meeting",
     features: [
       "Two 30-minute sessions per month (60 min total)",
       "Priority scheduling with senior recruiters",
@@ -120,7 +120,8 @@ const CALL_PLANS = [
     badgeCls: "bg-orange-500 text-white",
     cta: "Book with Your Recruiter",
     ctaCls: "bg-orange-500 hover:bg-orange-600 text-white",
-    calendlyUrl: "https://calendly.com/YOUR_TEAM/dedicated-executive-search",
+    // No distinct 90-min event yet — reusing the 60-min link until one exists.
+    calendlyUrl: "https://calendly.com/hizorexai/60-minute-meeting",
     features: [
       "Three 30-minute sessions per month (90 min total)",
       "Dedicated executive recruiter assigned",

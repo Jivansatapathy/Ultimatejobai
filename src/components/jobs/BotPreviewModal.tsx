@@ -97,12 +97,14 @@ export function BotPreviewModal({
   onCancel,
 }: BotPreviewModalProps) {
   const [state, setState] = useState<ModalState>("idle");
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   // Track whether the modal was previously open so we don't fire cancel on initial mount
   const wasOpenRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
       setState("idle");
+      setUserAnswers({});
       wasOpenRef.current = true;
     }
   }, [isOpen, taskId]);

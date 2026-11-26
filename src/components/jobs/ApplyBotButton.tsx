@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, CheckCircle2 } from "lucide-react";
+import { Bot, CheckCircle2, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
 import { API_BASE_URL } from "@/config";
@@ -10,7 +10,7 @@ type BotStatus =
   | "solving_captcha" | "preview_ready" | "confirmed" | "submitted"
   | "cancelled" | "failed";
 
-type Phase = "idle" | "applying" | "confirmed" | "applied";
+type Phase = "idle" | "applying" | "confirmed" | "applied" | "queued";
 
 interface ApplyBotButtonProps {
   jobUrl: string;
@@ -19,6 +19,8 @@ interface ApplyBotButtonProps {
   jobId?: string;
   selectedResumeId?: number;
   alreadyApplied?: boolean;
+  alreadyQueued?: boolean;
+  onQueued?: (jobId: string) => void;
   onApplied?: (jobId: string) => void;
   onDismiss?: () => void;
   variant?: "dark" | "light";
@@ -47,7 +49,7 @@ const APPLY_MS = 4000;
 const DIRECT_APPLY_MS = 900;
 const CONFIRM_MS = 2000;
 
-export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResumeId, alreadyApplied, onApplied, variant = "dark", directApplyUrl }: ApplyBotButtonProps) {
+export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResumeId, alreadyApplied, alreadyQueued, onApplied, onQueued, variant = "dark", directApplyUrl }: ApplyBotButtonProps) {
   const [phase, setPhase] = useState<Phase>(alreadyApplied ? "applied" : "idle");
   const [progress, setProgress] = useState(0);
 
@@ -147,7 +149,7 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResum
     timerRef.current = setTimeout(markConfirmed, APPLY_MS);
 
     try {
-      const res = await api.post<{ task_id: string; status?: BotStatus }>("/api/bot/apply/", {
+      const res = await api.post<{ task_id: string; queued?: boolean }>("/api/bot/apply/", {
         job_url: jobUrl,
         job_id: jobId ?? "",
         job_title: jobTitle,
@@ -155,6 +157,13 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResum
         auto_submit: true,
         ...(selectedResumeId != null ? { selected_resume_id: selectedResumeId } : {}),
       });
+      if (res.data.queued) {
+        // Another application is running; this one has not been submitted yet.
+        stopTimers();
+        setPhase("queued");
+        if (jobId) onQueued?.(jobId);
+        return;
+      }
       connectWs(res.data.task_id);
     } catch (err: any) {
       const errorCode = err?.response?.data?.error;
@@ -183,6 +192,21 @@ export function ApplyBotButton({ jobUrl, jobTitle, company, jobId, selectedResum
       <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-emerald-400">
         <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
         Applied via Apex™
+      </div>
+    );
+  }
+
+  if (alreadyQueued || phase === "queued") {
+    return (
+      <div
+        className={
+          variant === "light"
+            ? "flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-700"
+            : "flex items-center gap-1.5 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-amber-400"
+        }
+      >
+        <Clock className="h-3.5 w-3.5 shrink-0" />
+        Queued for Apex™
       </div>
     );
   }

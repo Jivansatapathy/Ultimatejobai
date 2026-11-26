@@ -42,8 +42,6 @@ import {
   fetchJobFilterOptions,
   fetchJobLocationOptions,
   fetchJobById,
-  fetchLeverJobDetails,
-  fetchGreenhouseJobDetails,
   Job,
   JobSearchFilters,
   ApifySearchStatus,
@@ -345,6 +343,14 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [queuedJobIds, setQueuedJobIds] = useState<Set<string>>(new Set());
   const [appliedHistoryItems, setAppliedHistoryItems] = useState<ApplicationHistoryItem[]>([]);
+  const [dismissedJobIds, setDismissedJobIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("dismissed_bot_jobs");
+      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
   const [feedTab, setFeedTab] = useState<"all" | "queued" | "applied">("all");
   const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const apifyUnsubscribeRef = useRef<(() => void) | null>(null);
@@ -383,89 +389,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
       // non-fatal
     }
   }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (feedTab !== "applied" || appliedHistoryItems.length === 0) return;
-
-    const toResolve = appliedHistoryItems.filter(item => !appliedResolvedJobs.has(String(item.id)));
-    if (toResolve.length === 0) return;
-
-    Promise.allSettled(
-      toResolve.map(async (item): Promise<{ itemId: string; job: Job } | null> => {
-        // 1. Try DB lookup by job_id
-        if (item.job_id) {
-          const id = String(item.job_id);
-          const fromDisplay = displayJobs.find(j => String(j.id) === id);
-          if (fromDisplay) return { itemId: String(item.id), job: fromDisplay };
-          const fetched = await fetchJobById(id);
-          if (fetched) return { itemId: String(item.id), job: fetched };
-        }
-
-        // 2. Lever / Greenhouse public API fallback — gives us the real job title from the URL
-        if (item.job_url) {
-          const leverMatch = item.job_url.match(/jobs\.lever\.co\/([^/]+)\/([^/?#\s]+)/);
-          if (leverMatch) {
-            const details = await fetchLeverJobDetails(leverMatch[1], leverMatch[2]);
-            if (details?.text) {
-              return {
-                itemId: String(item.id),
-                job: {
-                  id: item.job_id || item.id,
-                  title: details.text,
-                  company: item.company || leverMatch[1],
-                  location: "",
-                  salary: "",
-                  posted: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Applied",
-                  match: 0,
-                  tags: [],
-                  saved: false,
-                  hasEmail: false,
-                  apply_url: item.job_url,
-                  url: item.job_url,
-                  source: "external",
-                },
-              };
-            }
-          }
-
-          const ghMatch = item.job_url.match(/greenhouse\.io\/([^/]+)\/jobs\/(\d+)/);
-          if (ghMatch) {
-            const details = await fetchGreenhouseJobDetails(ghMatch[1], ghMatch[2]);
-            if (details?.title) {
-              return {
-                itemId: String(item.id),
-                job: {
-                  id: item.job_id || item.id,
-                  title: details.title,
-                  company: item.company || ghMatch[1],
-                  location: details.location?.name || "",
-                  salary: "",
-                  posted: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Applied",
-                  match: 0,
-                  tags: [],
-                  saved: false,
-                  hasEmail: false,
-                  apply_url: item.job_url,
-                  url: item.job_url,
-                  source: "external",
-                },
-              };
-            }
-          }
-        }
-
-        return null;
-      })
-    ).then(results => {
-      setAppliedResolvedJobs(prev => {
-        const next = new Map(prev);
-        results.forEach(r => {
-          if (r.status === "fulfilled" && r.value) next.set(r.value.itemId, r.value.job);
-        });
-        return next;
-      });
-    });
-  }, [feedTab, appliedHistoryItems]);
 
   const loadSavedJobs = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -839,7 +762,8 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
   // Apply All logic: Only pick jobs that are NOT applied yet
   const autoApplyJobs = toShow.filter(j => j.hasEmail && !appliedJobIds.has(String(j.id)) && !queuedJobIds.has(String(j.id)));
   const regularJobs = toShow.filter(j => !j.hasEmail);
-  const displayJobs = showAutoApplyOnly ? autoApplyJobs : [...toShow];
+  const displayJobs = (showAutoApplyOnly ? autoApplyJobs : [...toShow])
+    .filter(j => !dismissedJobIds.has(String(j.id)));
   const isApifySearching = apifyStatus === "pending" || apifyStatus === "processing";
 
   // Client-side pagination — 10 jobs per page
@@ -2073,16 +1997,6 @@ export function PublicJobDiscovery({ mode = "results" }: PublicJobDiscoveryProps
                       </div>
                     )}
                   </div>
-
-                  {/* Queue bar — always visible above results */}
-                  <AutoApplyQueueBar key={queueKey} onJobApplied={(jobId) => {
-                    setQueuedJobIds(prev => {
-                      const next = new Set(prev);
-                      next.delete(String(jobId));
-                      return next;
-                    });
-                    setAppliedJobIds(prev => new Set(prev).add(jobId));
-                  }} />
 
                   {(isInitialLoad || (isRefreshing || isApifySearching || serpApiLoading) && jobs.length === 0 && serpApiJobs.length === 0) ? (
                     <div className="space-y-4">

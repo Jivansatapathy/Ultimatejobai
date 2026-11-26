@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCircle2, XCircle, AlertCircle, Loader2, Bot, ChevronDown, ChevronUp, X } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, Loader2, Bot, ChevronDown, ChevronUp, X, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/services/api";
 
